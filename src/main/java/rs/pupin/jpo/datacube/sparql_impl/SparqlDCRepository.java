@@ -50,11 +50,11 @@ public class SparqlDCRepository implements DataCubeRepository{
     public Collection<DataCubeGraph> getDataCubeGraphs() {
         if (graphs != null) return graphs;
         
-        graphs = new LinkedList<DataCubeGraph>();
         try {
             RepositoryConnection conn = repository.getConnection();
             TupleQuery q = conn.prepareTupleQuery(QueryLanguage.SPARQL, SparqlUtils.PREFIXES + QUERY);
             TupleQueryResult results = q.evaluate();
+            graphs = new LinkedList<DataCubeGraph>();
             while (results.hasNext()){
                 BindingSet set = results.next();
                 String g = set.getValue("g").stringValue();
