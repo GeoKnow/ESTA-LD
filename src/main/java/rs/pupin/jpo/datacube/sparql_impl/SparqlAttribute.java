@@ -25,10 +25,7 @@ import rs.pupin.jpo.esta_ld.utils.SparqlUtils;
  *
  * @author vukm
  */
-public class SparqlAttribute implements Attribute {
-    private final Repository repository;
-    private final String uri;
-    private final String graph;
+public class SparqlAttribute extends SparqlThing implements Attribute {
     
     private String range;
     private Structure structure;
@@ -56,9 +53,7 @@ public class SparqlAttribute implements Attribute {
             + "}";
     
     public SparqlAttribute(Repository repository, String uri, String graph){
-        this.repository = repository;
-        this.uri = uri;
-        this.graph = graph;
+        super(repository, uri, graph);
         
         this.range = null;
         this.structure = null;
@@ -148,12 +143,8 @@ public class SparqlAttribute implements Attribute {
         return range;
     }
 
-    public String getUri() {
-        return uri;
-    }
-
-    public String getGraph() {
-        return graph;
+    public void setStructure(Structure structure) {
+        this.structure = structure;
     }
     
 }

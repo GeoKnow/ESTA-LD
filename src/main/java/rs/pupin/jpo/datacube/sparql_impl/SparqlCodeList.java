@@ -25,10 +25,7 @@ import rs.pupin.jpo.esta_ld.utils.SparqlUtils;
  *
  * @author vukm
  */
-public class SparqlCodeList implements CodeList {
-    private final Repository repository;
-    private final String uri;
-    private final String graph;
+public class SparqlCodeList extends SparqlThing implements CodeList {
     
     private Collection<String> codes;
     
@@ -41,9 +38,7 @@ public class SparqlCodeList implements CodeList {
             + "}";
     
     public SparqlCodeList(Repository repository, String uri, String graph){
-        this.repository = repository;
-        this.uri = uri;
-        this.graph = graph;
+        super(repository, uri, graph);
         
         this.codes = null;
     }
@@ -78,14 +73,6 @@ public class SparqlCodeList implements CodeList {
 
     public int numCodeLevels() {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    public String getUri() {
-        return uri;
-    }
-
-    public String getGraph() {
-        return graph;
     }
     
 }

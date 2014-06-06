@@ -15,5 +15,6 @@ import java.util.Collection;
 public interface DataSet extends Thing{
     
     public Structure getStructure();
+    public Collection<String> getValuesForDimension(Dimension dimension);
     
 }

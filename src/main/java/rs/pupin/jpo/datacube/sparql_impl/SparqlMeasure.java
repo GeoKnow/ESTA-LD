@@ -25,10 +25,7 @@ import rs.pupin.jpo.esta_ld.utils.SparqlUtils;
  *
  * @author vukm
  */
-public class SparqlMeasure implements Measure {
-    private final Repository repository;
-    private final String uri;
-    private final String graph;
+public class SparqlMeasure extends SparqlThing implements Measure {
     
     private String range;
     private Structure structure;
@@ -55,9 +52,7 @@ public class SparqlMeasure implements Measure {
             + "}";
     
     public SparqlMeasure(Repository repository, String uri, String graph){
-        this.repository = repository;
-        this.uri = uri;
-        this.graph = graph;
+        super(repository, uri, graph);
         
         this.range = null;
         this.structure = null;
@@ -142,12 +137,8 @@ public class SparqlMeasure implements Measure {
         return range;
     }
 
-    public String getUri() {
-        return uri;
-    }
-
-    public String getGraph() {
-        return graph;
+    public void setStructure(Structure structure) {
+        this.structure = structure;
     }
     
 }

@@ -30,10 +30,7 @@ import rs.pupin.jpo.esta_ld.utils.SparqlUtils;
  *
  * @author vukm
  */
-public class SparqlStructure implements Structure {
-    private final Repository repository;
-    private final String uri;
-    private final String graph;
+public class SparqlStructure extends SparqlThing implements Structure {
     
     private Collection<DataSet> datasets;
     private Collection<Dimension> dimensions;
@@ -74,9 +71,8 @@ public class SparqlStructure implements Structure {
             + "}";
     
     public SparqlStructure(Repository repository, String uri, String graph){
-        this.repository = repository;
-        this.uri = uri;
-        this.graph = graph;
+        super(repository, uri, graph);
+        
         this.datasets = null;
         this.dimensions = null;
         this.attributes = null;
@@ -123,9 +119,9 @@ public class SparqlStructure implements Structure {
             while (results.hasNext()){
                 BindingSet set = results.next();
                 String dim = set.getValue("dim").stringValue();
-                SparqlDataSet sparql_dim = new SparqlDataSet(repository, dim, graph);
+                SparqlDimension sparql_dim = new SparqlDimension(repository, dim, graph);
                 sparql_dim.setStructure(this);
-                datasets.add(sparql_dim);
+                dimensions.add(sparql_dim);
             }
         } catch (RepositoryException ex) {
             Logger.getLogger(SparqlStructure.class.getName()).log(Level.SEVERE, null, ex);
@@ -140,23 +136,59 @@ public class SparqlStructure implements Structure {
     public Collection<Attribute> getAttributes() {
         if (attributes != null) return attributes;
         
-        //TODO: implement
+        try {
+            RepositoryConnection conn = repository.getConnection();
+            String query = SparqlUtils.PREFIXES + QUERY_ATTRIBUTES;
+            query = query.replace("@graph", graph).replace("@dsd", uri);
+            TupleQuery q = conn.prepareTupleQuery(QueryLanguage.SPARQL, query);
+            TupleQueryResult results = q.evaluate();
+            attributes = new LinkedList<Attribute>();
+            while (results.hasNext()){
+                BindingSet set = results.next();
+                String attr = set.getValue("attr").stringValue();
+                SparqlAttribute sparql_attr = new SparqlAttribute(repository, attr, graph);
+                sparql_attr.setStructure(this);
+                attributes.add(sparql_attr);
+            }
+        } catch (RepositoryException ex) {
+            Logger.getLogger(SparqlStructure.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (MalformedQueryException ex) {
+            Logger.getLogger(SparqlStructure.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (QueryEvaluationException ex) {
+            Logger.getLogger(SparqlStructure.class.getName()).log(Level.SEVERE, null, ex);
+        }
         return attributes;
     }
 
     public Collection<Measure> getMeasures() {
         if (measures != null) return measures;
         
-        //TODO: implement
+        try {
+            RepositoryConnection conn = repository.getConnection();
+            String query = SparqlUtils.PREFIXES + QUERY_MEASURES;
+            query = query.replace("@graph", graph).replace("@dsd", uri);
+            TupleQuery q = conn.prepareTupleQuery(QueryLanguage.SPARQL, query);
+            TupleQueryResult results = q.evaluate();
+            measures = new LinkedList<Measure>();
+            while (results.hasNext()){
+                BindingSet set = results.next();
+                String meas = set.getValue("meas").stringValue();
+                SparqlMeasure sparql_meas = new SparqlMeasure(repository, meas, graph);
+                sparql_meas.setStructure(this);
+                measures.add(sparql_meas);
+            }
+        } catch (RepositoryException ex) {
+            Logger.getLogger(SparqlStructure.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (MalformedQueryException ex) {
+            Logger.getLogger(SparqlStructure.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (QueryEvaluationException ex) {
+            Logger.getLogger(SparqlStructure.class.getName()).log(Level.SEVERE, null, ex);
+        }
         return measures;
     }
 
-    public String getUri() {
-        return uri;
-    }
-
-    public String getGraph() {
-        return graph;
+    public void setDatasets(Collection<DataSet> datasets) {
+        this.datasets = datasets;
     }
     
 }

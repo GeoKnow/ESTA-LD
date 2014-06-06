@@ -25,10 +25,7 @@ import rs.pupin.jpo.esta_ld.utils.SparqlUtils;
  *
  * @author vukm
  */
-public class SparqlDimension implements Dimension {
-    private final Repository repository;
-    private final String uri;
-    private final String graph;
+public class SparqlDimension extends SparqlThing implements Dimension {
     
     private String range;
     private Structure structure;
@@ -48,7 +45,7 @@ public class SparqlDimension implements Dimension {
         "http://www.w3.org/2002/07/owl#time"
     };
     private static final String[] GEO_RANGES = new String [] {
-        "http://elpo.stat.gov.rs/lod2/RS-DIC/geo" //TODO 
+        "http://elpo.stat.gov.rs/lod2/RS-DIC/rs/geo"
     } ;
     private static final String QUERY_CODELIST = "SELECT ?cl \n"
             + "FROM <@graph> \n"
@@ -65,9 +62,7 @@ public class SparqlDimension implements Dimension {
             + "}";
     
     public SparqlDimension(Repository repository, String uri, String graph){
-        this.repository = repository;
-        this.uri = uri;
-        this.graph = graph;
+        super(repository, uri, graph);
         
         this.range = null;
         this.structure = null;
@@ -172,14 +167,6 @@ public class SparqlDimension implements Dimension {
             Logger.getLogger(SparqlDimension.class.getName()).log(Level.SEVERE, null, ex);
         }
         return range;
-    }
-
-    public String getUri() {
-        return uri;
-    }
-
-    public String getGraph() {
-        return graph;
     }
 
     public void setRange(String range) {

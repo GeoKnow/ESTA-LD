@@ -6,6 +6,8 @@
 
 package rs.pupin.jpo.datacube.sparql_impl;
 
+import java.util.Collection;
+import java.util.LinkedList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.openrdf.query.BindingSet;
@@ -18,6 +20,7 @@ import org.openrdf.repository.Repository;
 import org.openrdf.repository.RepositoryConnection;
 import org.openrdf.repository.RepositoryException;
 import rs.pupin.jpo.datacube.DataSet;
+import rs.pupin.jpo.datacube.Dimension;
 import rs.pupin.jpo.datacube.Structure;
 import rs.pupin.jpo.esta_ld.utils.SparqlUtils;
 
@@ -25,10 +28,7 @@ import rs.pupin.jpo.esta_ld.utils.SparqlUtils;
  *
  * @author vukm
  */
-public class SparqlDataSet implements DataSet {
-    private Repository repository;
-    private String uri;
-    private String graph;
+public class SparqlDataSet extends SparqlThing implements DataSet {
     
     private Structure structure;
     
@@ -37,11 +37,16 @@ public class SparqlDataSet implements DataSet {
             + "WHERE { \n"
             + "  <@ds> qb:structure ?dsd . \n"
             + "}";
+    private static final String QUERY_DIM_VALUES = "SELECT DISTINCT ?val \n"
+            + "FROM <@graph> \n"
+            + "WHERE { \n"
+            + "  ?obs qb:dataSet <@ds> . \n"
+            + "  ?obs <@dim> ?val . \n"
+            + "}";
     
     public SparqlDataSet(Repository repository, String uri, String graph){
-        this.repository = repository;
-        this.uri = uri;
-        this.graph = graph;
+        super(repository, uri, graph);
+        
         this.structure = null;
     }
 
@@ -73,12 +78,28 @@ public class SparqlDataSet implements DataSet {
         this.structure = structure;
     }
 
-    public String getUri() {
-        return uri;
-    }
-
-    public String getGraph() {
-        return graph;
+    public Collection<String> getValuesForDimension(Dimension dimension) {
+        for (Dimension dim: getStructure().getDimensions())
+            if (dim.equals(dimension)) {
+                try {
+                    RepositoryConnection conn = repository.getConnection();
+                    String query = SparqlUtils.PREFIXES + QUERY_DIM_VALUES;
+                    query = query.replace("@graph", graph).replace("@ds", uri).replace("@dim", dimension.getUri());
+                    TupleQuery q = conn.prepareTupleQuery(QueryLanguage.SPARQL, query);
+                    TupleQueryResult results = q.evaluate();
+                    LinkedList<String> codes = new LinkedList<String>();
+                    while (results.hasNext())
+                        codes.add(results.next().getValue("val").stringValue());
+                    return codes;
+                } catch (RepositoryException ex) {
+                    Logger.getLogger(SparqlDataSet.class.getName()).log(Level.SEVERE, null, ex);
+                } catch (MalformedQueryException ex) {
+                    Logger.getLogger(SparqlDataSet.class.getName()).log(Level.SEVERE, null, ex);
+                } catch (QueryEvaluationException ex) {
+                    Logger.getLogger(SparqlDataSet.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+        return null;
     }
     
 }

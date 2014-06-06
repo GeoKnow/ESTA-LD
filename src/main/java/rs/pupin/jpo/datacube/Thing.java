@@ -14,5 +14,7 @@ public interface Thing {
     
     public String getUri();
     public String getGraph();
+    public String getLabel();
+    public boolean hasLabel();
     
 }

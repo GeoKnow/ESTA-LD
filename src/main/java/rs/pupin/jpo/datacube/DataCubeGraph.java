@@ -16,5 +16,6 @@ public interface DataCubeGraph {
     
     public Collection<DataSet> getDataSets();
     public Collection<Structure> getStructures();
+    public String getUri();
     
 }
