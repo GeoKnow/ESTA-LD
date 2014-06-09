@@ -56,5 +56,10 @@ public class SparqlDCGraph implements DataCubeGraph {
     public String getUri() {
         return uri;
     }
+
+    @Override
+    public String toString() {
+        return uri;
+    }
     
 }

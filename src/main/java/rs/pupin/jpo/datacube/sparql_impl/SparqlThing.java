@@ -78,5 +78,10 @@ public abstract class SparqlThing implements Thing {
     public String getGraph() {
         return graph;
     }
+
+    @Override
+    public String toString() {
+        return (hasLabel())?label:uri;
+    }
     
 }

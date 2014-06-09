@@ -77,6 +77,7 @@ public class SimpleTest {
     private static void printDCDimension(Dimension dcDimension) {
         System.out.print("       ");
         printThing(dcDimension);
+        System.out.format("        isTime: %b\n        isGeo: %b\n", dcDimension.isTimeDimension(), dcDimension.isGeoDimension());
         if (dcDimension.getCodeList() == null) return;
         
 //        System.out.println("--------- Codes");

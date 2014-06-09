@@ -85,7 +85,10 @@ public class MyVaadinApplication extends Application
                 getMainWindow().showNotification(output.toString());
             }
         });
-        window.addComponent(btn);
+        
+        EstaLdComponent component = new EstaLdComponent();
+        
+        window.addComponent(component);
     }
     
 }

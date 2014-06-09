@@ -86,7 +86,7 @@ public class SparqlDimension extends SparqlThing implements Dimension {
         if (indGeoDimension != null) return indGeoDimension;
         
         for (String r: GEO_RANGES){
-            if (r.equals(getRange())) 
+            if (r.equals(uri)) 
                 return indGeoDimension = Boolean.TRUE;
         }
         return indGeoDimension = Boolean.FALSE;
