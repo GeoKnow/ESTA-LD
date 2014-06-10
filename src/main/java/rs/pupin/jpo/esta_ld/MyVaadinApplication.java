@@ -42,7 +42,7 @@ public class MyVaadinApplication extends Application
     @Override
     public void init()
     {
-        window = new Window("My Vaadin Application");
+        window = new Window("ESTA-LD");
         setMainWindow(window);
         
         String query = "SELECT DISTINCT isiri(?val) as ?i datatype(?val) as ?t \n"

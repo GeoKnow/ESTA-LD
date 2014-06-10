@@ -7,6 +7,7 @@
 package rs.pupin.jpo.esta_ld;
 
 import com.vaadin.data.Property;
+import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.ComboBox;
 import com.vaadin.ui.CustomComponent;
@@ -45,6 +46,13 @@ public class EstaLdComponent extends CustomComponent {
     private ComboBox selectDataSet;
     private Button[] dimNames;
     private ComboBox[] dimValues;
+    private static final String LEVEL_LABEL_CONTENT = 
+            "Geo granularity level "
+            + "<input id=\"geominus\" type=\"button\" style=\" width:25px; height:25px;\" value=\"-\"></input>"
+            + "<input id=\"geoLevelLabel\" type=\"text\" readonly=\"\" value=\"Level 1\" style=\"width: 140px; height: 25 px; text-align: center;\"></input>"
+            + "<input id=\"geoplus\" type=\"button\" style=\" width:25px; height:25px;\" value=\"+\"></input>";
+    private static final String GEO_PART_WIDTH = "600px";
+    private static final String CONTENT_ELEM_HEIGHT = "25px";
     
     public EstaLdComponent(Repository repository){
         this.repository = repository;
@@ -134,18 +142,26 @@ public class EstaLdComponent extends CustomComponent {
     private void refresh(){
         contentLayout.removeAllComponents();
         
+        // create left part where the map goes
+        // first create a vertical layout for components
         geoLayout = new VerticalLayout();
         geoLayout.setSizeUndefined();
-        geoLayout.setWidth("500px");
+        geoLayout.setWidth(GEO_PART_WIDTH);
         geoLayout.setSpacing(true);
         contentLayout.addComponent(geoLayout);
         contentLayout.setExpandRatio(geoLayout, 0.0f);
-        //TODO treba ukolpiti onaj slajder za levo desno
+        // create Level and +- controls
+        final Label levelLabel = new Label(LEVEL_LABEL_CONTENT, Label.CONTENT_XHTML);
+        geoLayout.addComponent(levelLabel);
+        // create a layout for the map
         mapLayout = new VerticalLayout();
         mapLayout.setSizeUndefined();
         mapLayout.setWidth("100%");
-        mapLayout.setDebugId("mapContainer");
+        mapLayout.setDebugId("map");
+        mapLayout.addStyleName("leaflet-container");
+        mapLayout.addStyleName("leaflet-fade-anim");
         geoLayout.addComponent(mapLayout);
+        geoLayout.setExpandRatio(mapLayout, 2.0f);
         
         rightLayout = new VerticalLayout();
         rightLayout.setSizeUndefined();
@@ -194,6 +210,7 @@ public class EstaLdComponent extends CustomComponent {
             Button btnName = new Button(dim.toString());
             btnName.setSizeUndefined();
             btnName.setWidth("100%");
+            btnName.setHeight(CONTENT_ELEM_HEIGHT);
             btnName.setData(dim);
             btnName.addStyleName("dim-name");
             dimNames[i] = btnName;
@@ -203,6 +220,7 @@ public class EstaLdComponent extends CustomComponent {
             boxValue.setImmediate(true);
             boxValue.setSizeUndefined();
             boxValue.setWidth("100%");
+            boxValue.setHeight(CONTENT_ELEM_HEIGHT);
             boxValue.addStyleName("dim-value");
             dimValues[i] = boxValue;
             
@@ -219,6 +237,7 @@ public class EstaLdComponent extends CustomComponent {
             lLayout.addComponent(btnName);
             lLayout.setExpandRatio(btnName, 2.0f);
             rLayout.addComponent(boxValue);
+            rLayout.setComponentAlignment(boxValue, Alignment.BOTTOM_LEFT);
         }
     }
 
