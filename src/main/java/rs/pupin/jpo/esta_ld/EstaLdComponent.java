@@ -90,9 +90,6 @@ public class EstaLdComponent extends CustomComponent {
     }
     
     private void createDataSetLayout(){
-//        BeanContainer<DataCubeGraph,DataCubeGraph> graphContainer = new BeanContainer<DataCubeGraph, DataCubeGraph>(DataCubeGraph.class);
-//        graphContainer.setBeanIdProperty("uri");
-//        graphContainer.addAll(dcRepo.getDataCubeGraphs());
         Label lbl = new Label("Choose graph: ");
         lbl.setSizeUndefined();
         datasetLayout.addComponent(lbl);
@@ -157,6 +154,7 @@ public class EstaLdComponent extends CustomComponent {
         mapLayout = new VerticalLayout();
         mapLayout.setSizeUndefined();
         mapLayout.setWidth("100%");
+        mapLayout.setHeight("500px");
         mapLayout.setDebugId("map");
         mapLayout.addStyleName("leaflet-container");
         mapLayout.addStyleName("leaflet-fade-anim");
@@ -178,8 +176,13 @@ public class EstaLdComponent extends CustomComponent {
         chartLayout = new VerticalLayout();
         chartLayout.setSizeFull();
         chartLayout.setWidth("100%");
-        chartLayout.setDebugId("chartContainer");
+        chartLayout.setDebugId("highchartsbarsingle");
         rightLayout.addComponent(chartLayout);
+        VerticalLayout chartLayout2 = new VerticalLayout();
+        chartLayout2.setSizeFull();
+        chartLayout2.setWidth("100%");
+        chartLayout2.setDebugId("highchartsbarmultiple");
+        rightLayout.addComponent(chartLayout2);
     }
     
     private void refreshDimensions(){

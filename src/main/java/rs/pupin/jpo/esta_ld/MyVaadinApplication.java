@@ -17,6 +17,7 @@ package rs.pupin.jpo.esta_ld;
 
 import com.vaadin.Application;
 import com.vaadin.ui.Button;
+import com.vaadin.ui.Label;
 import com.vaadin.ui.Window;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -89,6 +90,17 @@ public class MyVaadinApplication extends Application
         EstaLdComponent component = new EstaLdComponent();
         
         window.addComponent(component);
+        window.executeJavaScript("estamainInitVuk()");
+        window.executeJavaScript("sparqlqueryInitVuk()");
+        window.executeJavaScript("rammapInitVuk()");
+        window.executeJavaScript("chartsInitVuk()");
+        window.executeJavaScript("timechartInitVuk()");
+//        final String scripts = "<script src=\"/esta-ld/VAADIN/js/control/estamain.js\" ></script>\n"
+//                + "<script src=\"/esta-ld/VAADIN/js/sparql/sparqlquery.js\" ></script>\n"
+//                + "<script src=\"/esta-ld/VAADIN/js/map/rammap.js\" ></script>\n"
+//                + "<script src=\"/esta-ld/VAADIN/js/highcharts/charts.js\" ></script>\n"
+//                + "<script src=\"/esta-ld/VAADIN/js/highcharts/timechart.js\" ></script>\n";
+//        window.addComponent(new Label(scripts, Label.CONTENT_XHTML));
     }
     
 }
