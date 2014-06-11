@@ -1,6 +1,6 @@
-var javaSelectedDimensions;
-var javaDimensionValues;
-var javaFreeDimensions;
+var javaSelectedDimensions = [];
+var javaDimensionValues = [];
+var javaFreeDimensions = [];
 
 function javaSetSelectedDimensions(dims){
     javaSelectedDimensions = dims;

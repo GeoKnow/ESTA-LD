@@ -74,6 +74,10 @@ public class EstaLdComponent extends CustomComponent {
         
         dimListener = new Property.ValueChangeListener() {
             public void valueChange(Property.ValueChangeEvent event) {
+                if (dimNames == null && dimNames.length == 0){
+                    getWindow().executeJavaScript("javaSetAll([],[],[]);");
+                    return;
+                }
                 StringBuilder builderDims = new StringBuilder();
                 StringBuilder builderVals = new StringBuilder();
                 StringBuilder builderFree = new StringBuilder();
@@ -87,10 +91,10 @@ public class EstaLdComponent extends CustomComponent {
                         builderVals.append(",'").append(val).append("'");
                     }
                 }
-                String javaDims = "[" + builderDims.substring(1) + "]";
-                String javaVals = "[" + builderVals.substring(1) + "]";
-                String javaFree = "[" + builderFree.substring(1) + "]";
-                String function = "javaSetAll(" + javaDims + javaVals + javaFree + ")";
+                String javaDims = (builderDims.length()==0)?"[]":"[" + builderDims.substring(1) + "]";
+                String javaVals = (builderVals.length()==0)?"[]":"[" + builderVals.substring(1) + "]";
+                String javaFree = (builderFree.length()==0)?"[]":"[" + builderFree.substring(1) + "]";
+                String function = "javaSetAll(" + javaDims + "," + javaVals + "," + javaFree + ");";
                 getWindow().executeJavaScript(function);
             }
         };
@@ -215,12 +219,6 @@ public class EstaLdComponent extends CustomComponent {
         
         if (selectDataSet.getValue() == null) return;
         
-        final DataSet ds = (DataSet) selectDataSet.getValue();
-        Collection<Dimension> dimensions = ds.getStructure().getDimensions();
-        dimNames = new Button[dimensions.size()];
-        dimValues = new ComboBox[dimensions.size()];
-        int i=0;
-        
         VerticalLayout lLayout = new VerticalLayout();
         lLayout.setSizeUndefined();
         lLayout.setSpacing(true);
@@ -232,10 +230,14 @@ public class EstaLdComponent extends CustomComponent {
         dimLayout.addComponent(rLayout);
         dimLayout.setExpandRatio(rLayout, 2.0f);
         
+        final DataSet ds = (DataSet) selectDataSet.getValue();
         LinkedList<Dimension> dimsForShow = new LinkedList<Dimension>();
         for (Dimension dim: ds.getStructure().getDimensions())
             if (!dim.isGeoDimension())
                 dimsForShow.add(dim);
+        dimNames = new Button[dimsForShow.size()];
+        dimValues = new ComboBox[dimsForShow.size()];
+        int i=0;
         
         for (Dimension dim: dimsForShow){
             // add dimension pick
@@ -272,6 +274,7 @@ public class EstaLdComponent extends CustomComponent {
             lLayout.setExpandRatio(btnName, 2.0f);
             rLayout.addComponent(boxValue);
             rLayout.setComponentAlignment(boxValue, Alignment.BOTTOM_LEFT);
+            i++;
         }
         dimListener.valueChange(null);
     }
