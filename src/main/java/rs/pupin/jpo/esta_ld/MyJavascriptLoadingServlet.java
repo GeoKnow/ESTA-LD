@@ -32,6 +32,7 @@ public class MyJavascriptLoadingServlet extends ApplicationServlet {
     }
     
     private void writeOtherStuff(BufferedWriter page) throws IOException {
+        page.write("<script src=\"/esta-ld/VAADIN/js/control/java-bridge.js\" ></script>\n");
         page.write("<script src=\"/esta-ld/VAADIN/js/control/estamain-vuk.js\" ></script>\n");
         page.write("<script src=\"/esta-ld/VAADIN/js/sparql/sparqlquery-vuk.js\" ></script>\n");
         page.write("<script src=\"/esta-ld/VAADIN/js/map/rammap-vuk.js\" ></script>\n");

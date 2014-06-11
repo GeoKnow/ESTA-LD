@@ -15,6 +15,7 @@ import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.VerticalLayout;
 import java.util.Collection;
+import java.util.LinkedList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.openrdf.repository.Repository;
@@ -53,6 +54,7 @@ public class EstaLdComponent extends CustomComponent {
             + "<input id=\"geoplus\" type=\"button\" style=\" width:25px; height:25px;\" value=\"+\"></input>";
     private static final String GEO_PART_WIDTH = "600px";
     private static final String CONTENT_ELEM_HEIGHT = "25px";
+    private Property.ValueChangeListener dimListener;
     
     public EstaLdComponent(Repository repository){
         this.repository = repository;
@@ -69,6 +71,29 @@ public class EstaLdComponent extends CustomComponent {
             Logger.getLogger(EstaLdComponent.class.getName()).log(Level.SEVERE, null, ex);
         }
         dcRepo = new SparqlDCRepository(repository);
+        
+        dimListener = new Property.ValueChangeListener() {
+            public void valueChange(Property.ValueChangeEvent event) {
+                StringBuilder builderDims = new StringBuilder();
+                StringBuilder builderVals = new StringBuilder();
+                StringBuilder builderFree = new StringBuilder();
+                for (int i=0; i<dimNames.length; i++){
+                    Dimension d = (Dimension) dimNames[i].getData();
+                    String val = (String) dimValues[i].getValue();
+                    if (val == null){
+                        builderFree.append(",'").append(d.getUri()).append("'");
+                    } else {
+                        builderDims.append(",'").append(d.getUri()).append("'");
+                        builderVals.append(",'").append(val).append("'");
+                    }
+                }
+                String javaDims = "[" + builderDims.substring(1) + "]";
+                String javaVals = "[" + builderVals.substring(1) + "]";
+                String javaFree = "[" + builderFree.substring(1) + "]";
+                String function = "javaSetAll(" + javaDims + javaVals + javaFree + ")";
+                getWindow().executeJavaScript(function);
+            }
+        };
         
         mainLayout = new VerticalLayout();
         mainLayout.setWidth("100%");
@@ -207,7 +232,12 @@ public class EstaLdComponent extends CustomComponent {
         dimLayout.addComponent(rLayout);
         dimLayout.setExpandRatio(rLayout, 2.0f);
         
-        for (Dimension dim: ds.getStructure().getDimensions()){
+        LinkedList<Dimension> dimsForShow = new LinkedList<Dimension>();
+        for (Dimension dim: ds.getStructure().getDimensions())
+            if (!dim.isGeoDimension())
+                dimsForShow.add(dim);
+        
+        for (Dimension dim: dimsForShow){
             // add dimension pick
             // first create a button to represent dimension name
             Button btnName = new Button(dim.toString());
@@ -225,6 +255,7 @@ public class EstaLdComponent extends CustomComponent {
             boxValue.setWidth("100%");
             boxValue.setHeight(CONTENT_ELEM_HEIGHT);
             boxValue.addStyleName("dim-value");
+            boxValue.addListener(dimListener);
             dimValues[i] = boxValue;
             
             // put them in a horizontal layout and add to the view
@@ -242,6 +273,7 @@ public class EstaLdComponent extends CustomComponent {
             rLayout.addComponent(boxValue);
             rLayout.setComponentAlignment(boxValue, Alignment.BOTTOM_LEFT);
         }
+        dimListener.valueChange(null);
     }
 
     @Override
