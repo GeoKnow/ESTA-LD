@@ -29,10 +29,15 @@ public class MyJavascriptLoadingServlet extends ApplicationServlet {
         page.write("<script src=\"/esta-ld/VAADIN/resources/libs/leaflet/0.7.2/leaflet.js\"></script>\n");
         page.write("<script src=\"/esta-ld/VAADIN/resources/libs/urlEncode.js\"></script>\n");
         page.write("<script src=\"/esta-ld/VAADIN/js/geojson/geojson-data.js\" ></script>\n");
+        page.write("<script src=\"/esta-ld/VAADIN/js/geojson/geojson-area.js\" ></script>\n");
+        page.write("<script src=\"/esta-ld/VAADIN/js/geojson/geojson-region.js\" ></script>\n");
+        page.write("<script src=\"/esta-ld/VAADIN/js/geojson/geojson-municipality.js\" ></script>\n");
+        page.write("<script src=\"/esta-ld/VAADIN/js/geojson/geojson-country.js\" ></script>\n");
     }
     
     private void writeOtherStuff(BufferedWriter page) throws IOException {
         page.write("<script src=\"/esta-ld/VAADIN/js/control/java-bridge.js\" ></script>\n");
+        page.write("<script src=\"/esta-ld/VAADIN/js/control/selectionmain.js\" ></script>\n");
         page.write("<script src=\"/esta-ld/VAADIN/js/control/estamain-vuk.js\" ></script>\n");
         page.write("<script src=\"/esta-ld/VAADIN/js/sparql/sparqlquery-vuk.js\" ></script>\n");
         page.write("<script src=\"/esta-ld/VAADIN/js/map/rammap-vuk.js\" ></script>\n");

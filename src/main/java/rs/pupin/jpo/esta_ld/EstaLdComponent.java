@@ -96,6 +96,7 @@ public class EstaLdComponent extends CustomComponent {
                 String javaFree = (builderFree.length()==0)?"[]":"[" + builderFree.substring(1) + "]";
                 String function = "javaSetAll(" + javaDims + "," + javaVals + "," + javaFree + ");";
                 getWindow().executeJavaScript(function);
+//                getWindow().executeJavaScript("javaPrintAll()");
             }
         };
         
@@ -160,6 +161,10 @@ public class EstaLdComponent extends CustomComponent {
         });
         selectDataSet.addListener(new Property.ValueChangeListener() {
             public void valueChange(Property.ValueChangeEvent event) {
+                DataSet ds = (DataSet) event.getProperty().getValue();
+                final String function = "javaSetGraphAndDataSet('" +
+                        ds.getGraph() + "','" + ds.getUri() + "')";
+                getWindow().executeJavaScript(function);
                 refreshDimensions();
             }
         });
@@ -183,7 +188,7 @@ public class EstaLdComponent extends CustomComponent {
         mapLayout = new VerticalLayout();
         mapLayout.setSizeUndefined();
         mapLayout.setWidth("100%");
-        mapLayout.setHeight("500px");
+        mapLayout.setHeight("700px");
         mapLayout.setDebugId("map");
         mapLayout.addStyleName("leaflet-container");
         mapLayout.addStyleName("leaflet-fade-anim");
@@ -205,11 +210,13 @@ public class EstaLdComponent extends CustomComponent {
         chartLayout = new VerticalLayout();
         chartLayout.setSizeFull();
         chartLayout.setWidth("100%");
+        chartLayout.setHeight("500px");
         chartLayout.setDebugId("highchartsbarsingle");
         rightLayout.addComponent(chartLayout);
         VerticalLayout chartLayout2 = new VerticalLayout();
         chartLayout2.setSizeFull();
         chartLayout2.setWidth("100%");
+        chartLayout2.setHeight("500px");
         chartLayout2.setDebugId("highchartsbarmultiple");
         rightLayout.addComponent(chartLayout2);
     }
@@ -251,8 +258,11 @@ public class EstaLdComponent extends CustomComponent {
             dimNames[i] = btnName;
             
             // create a combo box for picking dimension value
-            ComboBox boxValue = new ComboBox(null, ds.getValuesForDimension(dim));
+            Collection<String> vals = ds.getValuesForDimension(dim);
+            ComboBox boxValue = new ComboBox(null, vals);
             boxValue.setImmediate(true);
+            boxValue.setNullSelectionAllowed(false);
+            boxValue.select(vals.iterator().next());
             boxValue.setSizeUndefined();
             boxValue.setWidth("100%");
             boxValue.setHeight(CONTENT_ELEM_HEIGHT);
