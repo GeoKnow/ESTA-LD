@@ -264,6 +264,8 @@ function loadGeoNamesAndValues() {
 
 //callback function - fills the hash with the keys and values and finds new min and max observation values
 //from sparql query with year and incentive fixed
+var cbfuncForGeoMap;
+
 var cbfuncYearIncentive;
 
 
@@ -422,6 +424,19 @@ function getRangesLabelsForChart() {
 	return rangesLabels;
 }
 
+//run sparql query with year and incentive parameters (execute cbfuncYearIncentive in the end)
+function runSparqlForGeoMapVuk() {
+	hideCharts();
+//	loading = true;
+	
+//	var year = $('#year').val();
+//	var incentiveCode = $('#incentive').val();
+//	
+	$('body').css('cursor', 'wait');
+	
+	execSparqlForGeoMapVuk(cbfuncForGeoMap);
+}
+
 
 //run sparql query with year and incentive parameters (execute cbfuncYearIncentive in the end)
 function runSparqlYearIncentive() {
@@ -535,6 +550,29 @@ function populateGeoLevelsLists() {
 
 function estamainInitVuk(){
     analysisType = sessionStorage.getItem("analysistype");
+    
+    cbfuncForGeoMap = function(data) {
+        hashCodeToObservationValues = new Object();
+        $(data.results.bindings).each(function(key, val){
+            var rsgeoUri  = val.rsgeo.value;
+            var code = rsgeoUri.substring(CODE_PREFIX.length, rsgeoUri.length);
+            var value = val.observation.value;
+            hashCodeToObservationValues[code] = value;//fill the hash with the keys and values
+        });
+        loadGeoNamesAndValues(); // or not
+        $('body').css('cursor', 'default');
+    
+        //refresh map and chart
+	info.update();//to display initial info when mouse is out of the map
+        refreshMap();
+        
+        // TODO see wheter to keep this part
+        if ((analysisType === 'bartime') && firstRun) {//if it is the first run and bartime analysis do not show this chart (another one will be displayed)
+            firstRun = false;
+        } else {
+            refreshSpaceChart();
+        }
+    };
 
 
 cbfuncYearIncentive = function(data) {

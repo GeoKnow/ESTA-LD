@@ -150,10 +150,12 @@ public class EstaLdComponent extends CustomComponent {
                 Object prop = event.getProperty().getValue();
                 selectDataSet.removeAllItems();
                 if (prop == null) {
+                    if (dcRepo.getDataSets() == null) return;
                     for (DataSet ds: dcRepo.getDataSets())
                         selectDataSet.addItem(ds);
                 } else {
                     DataCubeGraph graph = (DataCubeGraph) prop;
+                    if (graph.getDataSets() == null) return;
                     for (DataSet ds: graph.getDataSets())
                         selectDataSet.addItem(ds);
                 }

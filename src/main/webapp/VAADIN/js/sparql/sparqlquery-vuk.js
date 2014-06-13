@@ -143,6 +143,26 @@ function execSparqlBroaderNarrowerForArray(codePrefix, geoStringArray, callbackF
 //	$.getJSON(queryUrlEncoded, callbackFunction).error(function() { alert("There was an error during communication with the sparql endpoint"); });
 //}
 
+function execSparqlForGeoMapVuk(callbackFunction){
+    var sparqlQuery = 'prefix rs: <http://elpo.stat.gov.rs/lod2/RS-DIC/rs/> ' +
+				'prefix geo: <http://elpo.stat.gov.rs/lod2/RS-DIC/geo/> ' +
+				'prefix apr: <http://stat.apr.gov.rs/lod2/> ' +
+                                'prefix qb: <http://purl.org/linked-data/cube#> ' + 
+				'prefix sdmx-measure: <http://purl.org/linked-data/sdmx/2009/measure#> ' +
+				'select distinct ?rsgeo ?observation ' + 
+                                'from <' + javaGraph + '> ' +
+                                'where { ?y qb:dataSet <' + javaDataSet + '> . ' + 
+                                '?y rs:geo ?rsgeo . ' + 
+                                '?y sdmx-measure:obsValue ?observation . ';
+    for (i=0; i<javaSelectedDimensions.length; i++){
+        sparqlQuery += '?y <' + javaSelectedDimensions[i] + '> <' + javaDimensionValues[i] + '> . ';
+    }
+    sparqlQuery += '}';
+    
+    var queryUrlEncoded = endpoint + '?query=' + $.URLEncode(sparqlQuery);
+
+    $.getJSON(queryUrlEncoded, callbackFunction).error(function() { alert("There was an error during communication with the sparql endpoint\n"+sparqlQuery); });
+}
 
 function execSparqlRegionalDevelopment(querySubstring, callbackFunction) {
 	
