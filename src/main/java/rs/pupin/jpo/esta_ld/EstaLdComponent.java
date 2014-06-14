@@ -323,4 +323,8 @@ public class EstaLdComponent extends CustomComponent {
         }
     }
     
+    public void refreshJS(){
+        dimListener.valueChange(null);
+    }
+    
 }

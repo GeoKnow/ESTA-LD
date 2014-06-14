@@ -5,8 +5,8 @@ var chartBarMultipleOptions;
 
 
 function hideCharts() {
-	$('#highchartsbarsingle').hide();
-	$('#highchartsbarmultiple').hide();
+//	$('#highchartsbarsingle').hide();
+//	$('#highchartsbarmultiple').hide();
 }
 
 

@@ -224,6 +224,26 @@ function execSparqlRsgeo(rsgeoString, callbackFunction) {
 	execSparqlRegionalDevelopment(querySubstring, callbackFunction);
 }
 
+function execSparqlGeoSelectedVuk(rsgeoString, callbackFunction) {
+    var sparqlQuery = 'prefix rs: <http://elpo.stat.gov.rs/lod2/RS-DIC/rs/> ' +
+				'prefix geo: <http://elpo.stat.gov.rs/lod2/RS-DIC/geo/> ' +
+				'prefix apr: <http://stat.apr.gov.rs/lod2/> ' +
+                                'prefix qb: <http://purl.org/linked-data/cube#> ' + 
+				'prefix sdmx-measure: <http://purl.org/linked-data/sdmx/2009/measure#> ' +
+				'select distinct ?observation ?dim1 ?dim2 ' + 
+                                'from <' + javaGraph + '> ' +
+                                'where { ?y qb:dataSet <' + javaDataSet + '> . ' + 
+                                '?y rs:geo <' + rsgeoString + '> . ' + 
+                                '?y sdmx-measure:obsValue ?observation . ' + 
+                                '?y <' + javaSelectedDimensions[0] + '> ?dim1 . ' +
+                                '?y <' + javaSelectedDimensions[1] + '> ?dim2 . }' +
+                                'order by ?dim1 ?dim2';
+    
+    var queryUrlEncoded = endpoint + '?query=' + $.URLEncode(sparqlQuery);
+
+    $.getJSON(queryUrlEncoded, callbackFunction).error(function() { alert("There was an error during communication with the sparql endpoint\n"+sparqlQuery); });
+}
+
 function execSparqlIncentive(incentiveUrlString, callbackFunction) {
 	var querySubstring = '?y apr:incentiveAim ' + incentiveUrlString + '. ' ;
 	execSparqlRegionalDevelopment(querySubstring, callbackFunction);

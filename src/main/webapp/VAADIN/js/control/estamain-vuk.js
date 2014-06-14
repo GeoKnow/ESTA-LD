@@ -286,6 +286,8 @@ var cbfuncRsgeoYear;
 //callback function //from sparql query with Rsgeo fixed
 var cbfuncRsgeo;
 
+var cbfuncGeoSelectedVuk;
+
 //callback function //from sparql query with Incentive fixed
 var cbfuncIncentive;
 
@@ -496,6 +498,11 @@ function runSparqlRsgeo(rsgeo) {
 	execSparqlRsgeo(CODE_PREFIX + rsgeo, cbfuncRsgeo);
 }
 
+// run sparql query with rsgeo parameter (execute cbfuncGeoSelectedVuk)
+function runSparqlGeoSelectedVuk(rsgeo) {
+    execSparqlGeoSelectedVuk(CODE_PREFIX + rsgeo, cbfuncGeoSelectedVuk);
+}
+
 //run sparql query with Incentive parameter (execute cbfuncIncentive in the end)
 function runSparqlIncentive() {
 	hideCharts();
@@ -527,7 +534,8 @@ function getSelectedRsgeoData(e) {
 	//run appropriate sparql query
 	rsgeoSelected = layer.feature.properties.NSTJ_CODE; // save rsgeo selection
 	
-	runSparqlRsgeo(rsgeoSelected);
+//	runSparqlRsgeo(rsgeoSelected);
+        runSparqlGeoSelectedVuk(rsgeoSelected);
 }
 
 function populateGeoLevelsLists() {
@@ -766,6 +774,65 @@ cbfuncRsgeo = function(data) {
     createChartBarMultiple(chartSubtitle, arrayYearIncentive, INCENTIVE_NAMES[1], YEARS);
 	
 //    loading = false;
+};
+
+cbfuncGeoSelectedVuk = function(data) {
+    var arrayYearIncentive = new Array(YEARS.length);
+    for (var i = 0; i < YEARS.length; i++) {
+            var size = INCENTIVE_NAMES[0].length;
+            arrayYearIncentive[i] = new Array(size);
+            for (var j = 0; j < size; j++) {
+                    arrayYearIncentive[i][j] = 0;
+            }
+    }
+    
+    var doubleArray = new Array();
+    var prevTime = '';
+    var prevIncentive = '';
+    var singleArray = new Array();
+    
+    var dim1Array = new Array(); // series 
+    var dim2Array = new Array(); // categories
+    var firstPass = true;
+
+    $(data.results.bindings).each(function(key, val){
+            var timeUri = val.dim1.value;
+            var incentiveUri = val.dim2.value;
+            var value = val.observation.value;
+
+            var year = timeUri.substring(YEAR_PREFIX.length - 1, timeUri.length);// -1, since prefix starts with '<'
+            var incentiveCode = incentiveUri.substring(INCENTIVE_PREFIX.length - 1, incentiveUri.length);
+            
+            year += 'v';
+            incentiveCode += 'v';
+            
+            if (timeUri != prevTime){
+                doubleArray.push(singleArray);
+                singleArray = new Array();
+                dim1Array.push(year);
+                firstPass = false;
+            }
+            if (incentiveUri != prevIncentive){
+                singleArray.push(value);
+                if (firstPass){
+                    dim2Array.push(incentiveCode);
+                }
+            }
+            singleArray.push(value);
+            prevTime = timeUri;
+            prevIncentive = incentiveUri;
+
+//            var indexI = findIndex(YEARS, year);
+//            var indexJ = findIndex(INCENTIVE_NAMES[0], incentiveCode);
+//            arrayYearIncentive[indexI][indexJ] = value;
+
+    });
+    doubleArray.push(singleArray);
+    
+    $('body').css('cursor', 'default');
+    var chartSubtitle = 'Area: ' + hashCodeToNames[rsgeoSelected];
+    
+    createChartBarMultiple(chartSubtitle+'v', doubleArray, dim2Array, dim1Array);
 };
 
 cbfuncIncentive = function(data) {
