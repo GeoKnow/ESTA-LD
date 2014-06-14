@@ -15,6 +15,7 @@ import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.VerticalLayout;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -50,7 +51,7 @@ public class EstaLdComponent extends CustomComponent {
     private static final String LEVEL_LABEL_CONTENT = 
             "Geo granularity level "
             + "<input id=\"geominus\" type=\"button\" style=\" width:25px; height:25px;\" value=\"-\"></input>"
-            + "<input id=\"geoLevelLabel\" type=\"text\" readonly=\"\" value=\"Level 1\" style=\"width: 140px; height: 25 px; text-align: center;\"></input>"
+            + "<input id=\"geoLevelLabel\" type=\"text\" readonly=\"\" value=\"Level 2\" style=\"width: 140px; height: 25 px; text-align: center;\"></input>"
             + "<input id=\"geoplus\" type=\"button\" style=\" width:25px; height:25px;\" value=\"+\"></input>";
     private static final String GEO_PART_WIDTH = "600px";
     private static final String CONTENT_ELEM_HEIGHT = "25px";
@@ -74,7 +75,7 @@ public class EstaLdComponent extends CustomComponent {
         
         dimListener = new Property.ValueChangeListener() {
             public void valueChange(Property.ValueChangeEvent event) {
-                if (dimNames == null && dimNames.length == 0){
+                if (dimNames == null || dimNames.length == 0){
                     getWindow().executeJavaScript("javaSetAll([],[],[]);");
                     return;
                 }
@@ -151,13 +152,25 @@ public class EstaLdComponent extends CustomComponent {
                 selectDataSet.removeAllItems();
                 if (prop == null) {
                     if (dcRepo.getDataSets() == null) return;
-                    for (DataSet ds: dcRepo.getDataSets())
+                    boolean firstPass = true;
+                    for (DataSet ds: dcRepo.getDataSets()){
                         selectDataSet.addItem(ds);
+                        if (firstPass){
+                            selectDataSet.select(ds);
+                            firstPass = false;
+                        }
+                    }
                 } else {
                     DataCubeGraph graph = (DataCubeGraph) prop;
                     if (graph.getDataSets() == null) return;
-                    for (DataSet ds: graph.getDataSets())
+                    boolean firstPass = true;
+                    for (DataSet ds: graph.getDataSets()){
                         selectDataSet.addItem(ds);
+                        if (firstPass){
+                            selectDataSet.select(ds);
+                            firstPass = false;
+                        }
+                    }
                 }
             }
         });
@@ -214,7 +227,7 @@ public class EstaLdComponent extends CustomComponent {
         chartLayout.setWidth("100%");
         chartLayout.setHeight("500px");
         chartLayout.setDebugId("highchartsbarsingle");
-        rightLayout.addComponent(chartLayout);
+//        rightLayout.addComponent(chartLayout);
         VerticalLayout chartLayout2 = new VerticalLayout();
         chartLayout2.setSizeFull();
         chartLayout2.setWidth("100%");
@@ -300,6 +313,14 @@ public class EstaLdComponent extends CustomComponent {
     public void attach() {
         refresh();
         super.attach();
+        Iterator<DataCubeGraph> iter = dcRepo.getDataCubeGraphs().iterator();
+        while (iter.hasNext()){
+            DataCubeGraph g = iter.next();
+            if (g.getUri().equalsIgnoreCase("http://stat.apr.gov.rs/lod2/id/Register/RegionalDevelopmentMeasuresandIncentives")){
+                selectGraph.select(g);
+                break;
+            }
+        }
     }
     
 }
