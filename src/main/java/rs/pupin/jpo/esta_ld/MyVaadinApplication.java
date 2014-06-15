@@ -45,6 +45,7 @@ public class MyVaadinApplication extends Application
     {
         window = new Window("ESTA-LD");
         setMainWindow(window);
+        setTheme("esta-ld");
         
         String query = "SELECT DISTINCT isiri(?val) as ?i datatype(?val) as ?t \n"
                 + "FROM <@gSource> \n"

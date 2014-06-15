@@ -95,7 +95,7 @@ public class EstaLdComponent extends CustomComponent {
                 String javaDims = (builderDims.length()==0)?"[]":"[" + builderDims.substring(1) + "]";
                 String javaVals = (builderVals.length()==0)?"[]":"[" + builderVals.substring(1) + "]";
                 String javaFree = (builderFree.length()==0)?"[]":"[" + builderFree.substring(1) + "]";
-                String function = "javaSetAll(" + javaDims + "," + javaVals + "," + javaFree + ");";
+                String function = "javaSetDimsVals(" + javaDims + "," + javaVals + ");";
                 getWindow().executeJavaScript(function);
 //                getWindow().executeJavaScript("javaPrintAll()");
             }
@@ -262,16 +262,31 @@ public class EstaLdComponent extends CustomComponent {
         int i=0;
         
         StringBuilder builderPossibleValues = new StringBuilder();
+        boolean firstPass = true;
         
         for (Dimension dim: dimsForShow){
             // add dimension pick
             // first create a button to represent dimension name
-            Button btnName = new Button(dim.toString());
+            final Button btnName = new Button(dim.toString());
             btnName.setSizeUndefined();
             btnName.setWidth("100%");
             btnName.setHeight(CONTENT_ELEM_HEIGHT);
             btnName.setData(dim);
             btnName.addStyleName("dim-name");
+            if (firstPass){
+                btnName.addStyleName("selected");
+                firstPass = false;
+            }
+            btnName.addListener(new Button.ClickListener() {
+                public void buttonClick(Button.ClickEvent event) {
+                    if (btnName.getStyleName().contains("selected")){
+                        btnName.removeStyleName("selected");
+                    } else {
+                        btnName.addStyleName("selected");
+                    }
+                    freeDimensionsChanged();
+                }
+            });
             dimNames[i] = btnName;
             
             // create a combo box for picking dimension value
@@ -338,6 +353,19 @@ public class EstaLdComponent extends CustomComponent {
         for (String s: vals)
             builder.append(",'").append(s).append("'");
         return builder.replace(0, 1, "[").append("]").toString();
+    }
+    
+    private void freeDimensionsChanged() {
+        StringBuilder builder = new StringBuilder();
+        for (int i=0; i<dimNames.length; i++){
+            if (dimNames[i].getStyleName().contains("selected"))
+                builder.append(",").append(i);
+        }
+        if (builder.length() > 0)
+            builder.replace(0, 1, "javaSetFreeDimensions([").append("])");
+        else 
+            builder.append("javaSetFreeDimensions([])");
+        getWindow().executeJavaScript(builder.toString());
     }
     
 }

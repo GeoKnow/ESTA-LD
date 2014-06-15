@@ -1,9 +1,11 @@
 var javaSelectedDimensions = [];
 var javaDimensionValues = [];
 var javaPossibleValues = [[]];
-var javaFreeDimensions = [0,1];
+var javaFreeDimensions = [0];
 var javaGraph = '';
 var javaDataSet = '';
+
+var javaGeoValue;
 
 function javaSetSelectedDimensions(dims){
     javaSelectedDimensions = dims;
@@ -15,13 +17,22 @@ function javaSetDimensionValues(vals){
 
 function javaSetFreeDimensions(dims){
     javaFreeDimensions = dims;
+    runSparqlFreeDimensionsChangedVuk();
+}
+
+function javaSetDimsVals(dims,vals){
+    javaSelectedDimensions = dims;
+    javaDimensionValues = vals;
+//    runSparqlForGeoMapVuk();
+    runSparqlDimensionValueChangedVuk();
 }
 
 function javaSetAll(dims,vals,free){
     javaSelectedDimensions = dims;
     javaDimensionValues = vals;
     javaFreeDimensions = free;
-    runSparqlForGeoMapVuk();
+//    runSparqlForGeoMapVuk();
+    runSparqlDimensionValueChangedVuk();
 }
 
 function javaSetPossibleValues(vals){
@@ -66,4 +77,8 @@ function findIndexForDimension(dimNumber, uri){
             return i;
     }
     alert('Couldnt find index of ' + uri + ' in ' + javaSelectedDimensions[dimNumber]);
+}
+
+function uriLastPart(uri){
+    return uri.substring(uri.lastIndexOf('/')+1, uri.length);
 }

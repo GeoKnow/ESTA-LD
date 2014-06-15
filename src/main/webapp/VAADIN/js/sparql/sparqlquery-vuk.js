@@ -244,6 +244,38 @@ function execSparqlGeoSelectedVuk(rsgeoString, callbackFunction) {
     $.getJSON(queryUrlEncoded, callbackFunction).error(function() { alert("There was an error during communication with the sparql endpoint\n"+sparqlQuery); });
 }
 
+function execSparqlDimensionValueChangedVuk(cbfuncOneFreeVuk,cbfuncTwoFreeVuk){
+    var sparqlQuery = 'prefix rs: <http://elpo.stat.gov.rs/lod2/RS-DIC/rs/> ' +
+				'prefix geo: <http://elpo.stat.gov.rs/lod2/RS-DIC/geo/> ' +
+				'prefix apr: <http://stat.apr.gov.rs/lod2/> ' +
+                                'prefix qb: <http://purl.org/linked-data/cube#> ' + 
+				'prefix sdmx-measure: <http://purl.org/linked-data/sdmx/2009/measure#> ' +
+				'select distinct ?observation ?dim1 ?dim2 ' + 
+                                'from <' + javaGraph + '> ' +
+                                'where { ?y qb:dataSet <' + javaDataSet + '> . ' + 
+                                '?y rs:geo <' + javaGeoValue + '> . ' + 
+                                '?y sdmx-measure:obsValue ?observation . ';
+    for (var i=0; i<javaSelectedDimensions.length; i++){
+        var freeIndex = javaFreeDimensions.indexOf(i);
+        if (freeIndex == -1){
+            sparqlQuery += '?y <' + javaSelectedDimensions[i] + '> <' + javaDimensionValues[i] + '> . ';
+        } else {
+            var dim = '?dim' + (freeIndex+1).toString();
+            sparqlQuery += '?y <' + javaSelectedDimensions[i] + '> ' + dim + ' . ';
+        }
+    }
+    sparqlQuery += '} order by ?dim1';
+    if (javaFreeDimensions.length ==2) sparqlQuery += ' ?dim2';
+    
+    var queryUrlEncoded = endpoint + '?query=' + $.URLEncode(sparqlQuery);
+    
+    if (javaFreeDimensions.length == 2){
+        $.getJSON(queryUrlEncoded, cbfuncTwoFreeVuk).error(function() { alert("There was an error during communication with the sparql endpoint\n"+sparqlQuery); });
+    } else if (javaFreeDimensions.length == 1){
+        $.getJSON(queryUrlEncoded, cbfuncOneFreeVuk).error(function() { alert("There was an error during communication with the sparql endpoint\n"+sparqlQuery); });
+    }
+}
+
 function execSparqlIncentive(incentiveUrlString, callbackFunction) {
 	var querySubstring = '?y apr:incentiveAim ' + incentiveUrlString + '. ' ;
 	execSparqlRegionalDevelopment(querySubstring, callbackFunction);

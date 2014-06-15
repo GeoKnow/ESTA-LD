@@ -36,27 +36,22 @@ function createChartBarMultiple(chartSubtitle, arrayMultiple, chartCategories, s
 
 function createChartBarSingle(chartSubtitle, chartCategories, chartValues, seriesName) {
 	var chartBarSingle = new Highcharts.Chart(chartBarSingleOptions);
-	chartBarSingle.setTitle({text: 'Regional development incentives'}, {text: chartSubtitle});
+	chartBarSingle.setTitle({text: seriesName}, {text: chartSubtitle});
 	chartBarSingle.xAxis[0].setCategories(chartCategories, false);
 	chartBarSingle.series[0].setData(chartValues, true);
 	chartBarSingle.series[0].name=seriesName;
 	chartBarSingle.redraw();
-    
-    //show
-//    if (!loading && visibleLayer !== 'Municipalities') {
-    if (chartValues.length > 0) {
-		
-		$('#highchartsbarsingle').show('slow', function() {
-		    // Animation complete.
-		});
-	    
-	}
+        $('#highchartsbarmultiple').show();
+//        $('#highchartsbarmultiple').show('slow', function() {
+            // Animation complete.
+//        });
+	
 }
 
 function chartsInitVuk(){
     chartBarSingleOptions = {
 	    chart: {
-	    	renderTo: 'highchartsbarsingle',
+	    	renderTo: 'highchartsbarmultiple',
 	    	type: 'bar',
             margin: [50, 70, 70, 130]
 	    },

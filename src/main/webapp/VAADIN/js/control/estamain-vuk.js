@@ -296,6 +296,9 @@ var cbfuncYear;
 
 var cbfuncGetGeoCodes;
 
+var cbfuncOneFreeVuk;
+var cbfuncTwoFreeVuk;
+
 //function sorts arrays with values and names
 function sortArrays(arrayWithValues, arrayWithNames, ascending) {
 	var size = arrayWithValues.length;
@@ -500,7 +503,30 @@ function runSparqlRsgeo(rsgeo) {
 
 // run sparql query with rsgeo parameter (execute cbfuncGeoSelectedVuk)
 function runSparqlGeoSelectedVuk(rsgeo) {
-    execSparqlGeoSelectedVuk(CODE_PREFIX + rsgeo, cbfuncGeoSelectedVuk);
+    javaGeoValue = CODE_PREFIX + rsgeo;
+    if (javaFreeDimensions.length > 2) {
+        alert('Number of free dimensions is greater than 2, namely ' + javaFreeDimensions.length);
+        return;
+    }
+//    execSparqlGeoSelectedVuk(CODE_PREFIX + rsgeo, cbfuncGeoSelectedVuk);
+    execSparqlDimensionValueChangedVuk(cbfuncOneFreeVuk,cbfuncTwoFreeVuk);
+}
+
+function runSparqlDimensionValueChangedVuk(){
+    runSparqlForGeoMapVuk();
+    if (javaFreeDimensions.length >2){
+        alert('Cannot show more than 2 dimensions');
+        return;
+    }
+    execSparqlDimensionValueChangedVuk(cbfuncOneFreeVuk,cbfuncTwoFreeVuk);
+}
+
+function runSparqlFreeDimensionsChangedVuk(){
+    if (javaFreeDimensions.length >2){
+        alert('Cannot show more than 2 dimensions');
+        return;
+    }
+    execSparqlDimensionValueChangedVuk(cbfuncOneFreeVuk,cbfuncTwoFreeVuk);
 }
 
 //run sparql query with Incentive parameter (execute cbfuncIncentive in the end)
@@ -777,32 +803,27 @@ cbfuncRsgeo = function(data) {
 };
 
 cbfuncGeoSelectedVuk = function(data) {
-//    var arrayYearIncentive = new Array(YEARS.length);
-//    for (var i = 0; i < YEARS.length; i++) {
-//            var size = INCENTIVE_NAMES[0].length;
-//            arrayYearIncentive[i] = new Array(size);
-//            for (var j = 0; j < size; j++) {
-//                    arrayYearIncentive[i][j] = 0;
-//            }
-//    }
-    
     var doubleArray = new Array(javaPossibleValues[0].length);
     var seriesArray = new Array(); // series 
     var categoriesArray = new Array(); // categories
-    for (var i=0; i<javaPossibleValues[0].length; i++) {
-        var size = javaPossibleValues[1].length;
+    var seriesIndex = javaFreeDimensions[0];
+    var categoriesIndex = javaFreeDimensions[1];
+    for (var i=0; i<javaPossibleValues[seriesIndex].length; i++) {
+        var size = javaPossibleValues[categoriesIndex].length;
         doubleArray[i] = new Array(size);
-        var year = javaPossibleValues[0][i].substring(YEAR_PREFIX.length - 1, 
-                javaPossibleValues[0][i].length);
-        seriesArray.push(year);
+//        var year = javaPossibleValues[seriesIndex][i].substring(YEAR_PREFIX.length - 1, 
+//                javaPossibleValues[seriesIndex][i].length);var s='s';
+        var seriesName = uriLastPart(javaPossibleValues[seriesIndex][i]);
+        seriesArray.push(seriesName);
         for (var j=0; j<size; j++){
             doubleArray[i][j] = 0;
         }
     }
-    for (var i=0; i<javaPossibleValues[1].length; i++){
-        var incentiveCode = javaPossibleValues[1][i].substring(INCENTIVE_PREFIX.length - 1, 
-                javaPossibleValues[1][i].length);
-        categoriesArray.push(incentiveCode);
+    for (var i=0; i<javaPossibleValues[categoriesIndex].length; i++){
+//        var incentiveCode = javaPossibleValues[1][i].substring(INCENTIVE_PREFIX.length - 1, 
+//                javaPossibleValues[1][i].length);
+        var categoryName = uriLastPart(javaPossibleValues[categoriesIndex][i]);
+        categoriesArray.push(categoryName);
     }
 //    var prevTime = '';
 //    var prevIncentive = '';
@@ -812,36 +833,12 @@ cbfuncGeoSelectedVuk = function(data) {
 //    var firstPass = true;
 
     $(data.results.bindings).each(function(key, val){
-            var timeUri = val.dim1.value;
-            var incentiveUri = val.dim2.value;
+            var seriesUri = val.dim1.value;
+            var categoriesUri = val.dim2.value;
             var value = val.observation.value;
 
-//            var year = timeUri.substring(YEAR_PREFIX.length - 1, timeUri.length);// -1, since prefix starts with '<'
-//            var incentiveCode = incentiveUri.substring(INCENTIVE_PREFIX.length - 1, incentiveUri.length);
-//            
-//            year += 'v';
-//            incentiveCode += 'v';
-            
-//            if (timeUri != prevTime){
-//                singleArray = new Array();
-//                doubleArray.push(singleArray);
-//                dim1Array.push(year);
-//                firstPass = false;
-//            }
-//            if (incentiveUri != prevIncentive){
-//                if (firstPass){
-//                    dim2Array.push(incentiveCode);
-//                }
-//            }
-//            singleArray.push(value);
-//            prevTime = timeUri;
-//            prevIncentive = incentiveUri;
-
-//            var indexI = findIndex(YEARS, year);
-//            var indexJ = findIndex(INCENTIVE_NAMES[0], incentiveCode);
-//            arrayYearIncentive[indexI][indexJ] = value;
-            var indexI = findIndexForDimension(0, timeUri);
-            var indexJ = findIndexForDimension(1, incentiveUri);
+            var indexI = findIndexForDimension(0, seriesUri);
+            var indexJ = findIndexForDimension(1, categoriesUri);
             doubleArray[indexI][indexJ] = value;
 
     });
@@ -851,6 +848,73 @@ cbfuncGeoSelectedVuk = function(data) {
     
     createChartBarMultiple(chartSubtitle, doubleArray, categoriesArray, seriesArray);
 };
+
+cbfuncTwoFreeVuk = function(data) {
+    var doubleArray = new Array(javaPossibleValues[0].length);
+    var seriesArray = new Array(); // series 
+    var categoriesArray = new Array(); // categories
+    var seriesIndex = javaFreeDimensions[0];
+    var categoriesIndex = javaFreeDimensions[1];
+    for (var i=0; i<javaPossibleValues[seriesIndex].length; i++) {
+        var size = javaPossibleValues[categoriesIndex].length;
+        doubleArray[i] = new Array(size);
+        var seriesName = uriLastPart(javaPossibleValues[seriesIndex][i]);
+        seriesArray.push(seriesName);
+        for (var j=0; j<size; j++){
+            doubleArray[i][j] = 0;
+        }
+    }
+    for (var i=0; i<javaPossibleValues[categoriesIndex].length; i++){
+        var categoryName = uriLastPart(javaPossibleValues[categoriesIndex][i]);
+        categoriesArray.push(categoryName);
+    }
+
+    $(data.results.bindings).each(function(key, val){
+            var seriesUri = val.dim1.value;
+            var categoriesUri = val.dim2.value;
+            var value = val.observation.value;
+
+            var indexI = findIndexForDimension(0, seriesUri);
+            var indexJ = findIndexForDimension(1, categoriesUri);
+            doubleArray[indexI][indexJ] = value;
+
+    });
+    
+    $('body').css('cursor', 'default');
+    var chartSubtitle = 'Area: ' + hashCodeToNames[rsgeoSelected];
+    
+    createChartBarMultiple(chartSubtitle, doubleArray, categoriesArray, seriesArray);
+}
+
+cbfuncOneFreeVuk = function(data) {
+    var categoriesIndex = javaFreeDimensions[0];
+    var categoriesArray = new Array(javaPossibleValues[categoriesIndex].length);
+    for (var i=0; i<categoriesArray.length; i++)
+        categoriesArray[i] = uriLastPart(javaPossibleValues[categoriesIndex][i]);
+    var valuesArray = new Array(categoriesArray.length);
+    for (var i=0; i<valuesArray.length; i++)
+        valuesArray[i] = 0;
+
+    $(data.results.bindings).each(function(key, val){
+            var dim1Uri = val.dim1.value;
+            var code = uriLastPart(dim1Uri);
+            var value = val.observation.value;
+            var intValue = parseInt(value);
+            var indexI = findIndexForDimension(categoriesIndex,dim1Uri);
+            valuesArray[indexI] = intValue;
+    });
+
+//    var displayYear = $('#year').val();//year displayed in the info and charts
+//    var displayRsgeo = hashCodeToNames[rsgeoSelected];//incentive aim displayed in the info and charts
+//    var geo = 'Area: ' + displayRsgeo;
+//
+//    var subtitle = 'Year: ' + displayYear + ', ' + geo;
+
+//    sortArrays(chartBarValues, chartBarCategories, false);
+//    $('body').css('cursor', 'default');
+
+    createChartBarSingle('', categoriesArray, valuesArray, javaSelectedDimensions[javaFreeDimensions[0]]);
+}
 
 cbfuncIncentive = function(data) {
 //												var requiredCodeLength = 0;
