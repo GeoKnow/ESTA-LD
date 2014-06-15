@@ -42,7 +42,7 @@ public class SparqlDataSet extends SparqlThing implements DataSet {
             + "WHERE { \n"
             + "  ?obs qb:dataSet <@ds> . \n"
             + "  ?obs <@dim> ?val . \n"
-            + "}";
+            + "} order by ?val";
     
     public SparqlDataSet(Repository repository, String uri, String graph){
         super(repository, uri, graph);

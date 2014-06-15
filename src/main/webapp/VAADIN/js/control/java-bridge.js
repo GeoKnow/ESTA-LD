@@ -1,6 +1,7 @@
 var javaSelectedDimensions = [];
 var javaDimensionValues = [];
-var javaFreeDimensions = [];
+var javaPossibleValues = [[]];
+var javaFreeDimensions = [0,1];
 var javaGraph = '';
 var javaDataSet = '';
 
@@ -21,6 +22,10 @@ function javaSetAll(dims,vals,free){
     javaDimensionValues = vals;
     javaFreeDimensions = free;
     runSparqlForGeoMapVuk();
+}
+
+function javaSetPossibleValues(vals){
+    javaPossibleValues = vals;
 }
 
 function javaSetGraphAndDataSet(graph,ds){
@@ -53,4 +58,12 @@ function javaPrintAll(){
             '\nSelected dims: ' + javaSelectedDimensions.toString() +
             '\nSelected values: ' + javaDimensionValues.toString() +
             '\nFree dims: ' + javaFreeDimensions.toString());
+}
+
+function findIndexForDimension(dimNumber, uri){
+    for (var i=0; i<javaPossibleValues[dimNumber].length; i++){
+        if (uri == javaPossibleValues[dimNumber][i])
+            return i;
+    }
+    alert('Couldnt find index of ' + uri + ' in ' + javaSelectedDimensions[dimNumber]);
 }

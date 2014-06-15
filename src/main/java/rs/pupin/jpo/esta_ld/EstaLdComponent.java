@@ -261,6 +261,8 @@ public class EstaLdComponent extends CustomComponent {
         dimValues = new ComboBox[dimsForShow.size()];
         int i=0;
         
+        StringBuilder builderPossibleValues = new StringBuilder();
+        
         for (Dimension dim: dimsForShow){
             // add dimension pick
             // first create a button to represent dimension name
@@ -274,6 +276,7 @@ public class EstaLdComponent extends CustomComponent {
             
             // create a combo box for picking dimension value
             Collection<String> vals = ds.getValuesForDimension(dim);
+            builderPossibleValues.append(",").append(stringifyCollection(vals));
             ComboBox boxValue = new ComboBox(null, vals);
             boxValue.setImmediate(true);
             boxValue.setNullSelectionAllowed(false);
@@ -301,6 +304,9 @@ public class EstaLdComponent extends CustomComponent {
             rLayout.setComponentAlignment(boxValue, Alignment.BOTTOM_LEFT);
             i++;
         }
+        builderPossibleValues.replace(0, 1, "javaSetPossibleValues([");
+        builderPossibleValues.append("])");
+        getWindow().executeJavaScript(builderPossibleValues.toString());
         dimListener.valueChange(null);
     }
 
@@ -325,6 +331,13 @@ public class EstaLdComponent extends CustomComponent {
     
     public void refreshJS(){
         dimListener.valueChange(null);
+    }
+
+    private String stringifyCollection(Collection<String> vals) {
+        StringBuilder builder = new StringBuilder();
+        for (String s: vals)
+            builder.append(",'").append(s).append("'");
+        return builder.replace(0, 1, "[").append("]").toString();
     }
     
 }

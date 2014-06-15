@@ -777,62 +777,79 @@ cbfuncRsgeo = function(data) {
 };
 
 cbfuncGeoSelectedVuk = function(data) {
-    var arrayYearIncentive = new Array(YEARS.length);
-    for (var i = 0; i < YEARS.length; i++) {
-            var size = INCENTIVE_NAMES[0].length;
-            arrayYearIncentive[i] = new Array(size);
-            for (var j = 0; j < size; j++) {
-                    arrayYearIncentive[i][j] = 0;
-            }
+//    var arrayYearIncentive = new Array(YEARS.length);
+//    for (var i = 0; i < YEARS.length; i++) {
+//            var size = INCENTIVE_NAMES[0].length;
+//            arrayYearIncentive[i] = new Array(size);
+//            for (var j = 0; j < size; j++) {
+//                    arrayYearIncentive[i][j] = 0;
+//            }
+//    }
+    
+    var doubleArray = new Array(javaPossibleValues[0].length);
+    var seriesArray = new Array(); // series 
+    var categoriesArray = new Array(); // categories
+    for (var i=0; i<javaPossibleValues[0].length; i++) {
+        var size = javaPossibleValues[1].length;
+        doubleArray[i] = new Array(size);
+        var year = javaPossibleValues[0][i].substring(YEAR_PREFIX.length - 1, 
+                javaPossibleValues[0][i].length);
+        seriesArray.push(year);
+        for (var j=0; j<size; j++){
+            doubleArray[i][j] = 0;
+        }
     }
-    
-    var doubleArray = new Array();
-    var prevTime = '';
-    var prevIncentive = '';
-    var singleArray = new Array();
-    
-    var dim1Array = new Array(); // series 
-    var dim2Array = new Array(); // categories
-    var firstPass = true;
+    for (var i=0; i<javaPossibleValues[1].length; i++){
+        var incentiveCode = javaPossibleValues[1][i].substring(INCENTIVE_PREFIX.length - 1, 
+                javaPossibleValues[1][i].length);
+        categoriesArray.push(incentiveCode);
+    }
+//    var prevTime = '';
+//    var prevIncentive = '';
+//    var singleArray = new Array();
+//    
+//    
+//    var firstPass = true;
 
     $(data.results.bindings).each(function(key, val){
             var timeUri = val.dim1.value;
             var incentiveUri = val.dim2.value;
             var value = val.observation.value;
 
-            var year = timeUri.substring(YEAR_PREFIX.length - 1, timeUri.length);// -1, since prefix starts with '<'
-            var incentiveCode = incentiveUri.substring(INCENTIVE_PREFIX.length - 1, incentiveUri.length);
+//            var year = timeUri.substring(YEAR_PREFIX.length - 1, timeUri.length);// -1, since prefix starts with '<'
+//            var incentiveCode = incentiveUri.substring(INCENTIVE_PREFIX.length - 1, incentiveUri.length);
+//            
+//            year += 'v';
+//            incentiveCode += 'v';
             
-            year += 'v';
-            incentiveCode += 'v';
-            
-            if (timeUri != prevTime){
-                doubleArray.push(singleArray);
-                singleArray = new Array();
-                dim1Array.push(year);
-                firstPass = false;
-            }
-            if (incentiveUri != prevIncentive){
-                singleArray.push(value);
-                if (firstPass){
-                    dim2Array.push(incentiveCode);
-                }
-            }
-            singleArray.push(value);
-            prevTime = timeUri;
-            prevIncentive = incentiveUri;
+//            if (timeUri != prevTime){
+//                singleArray = new Array();
+//                doubleArray.push(singleArray);
+//                dim1Array.push(year);
+//                firstPass = false;
+//            }
+//            if (incentiveUri != prevIncentive){
+//                if (firstPass){
+//                    dim2Array.push(incentiveCode);
+//                }
+//            }
+//            singleArray.push(value);
+//            prevTime = timeUri;
+//            prevIncentive = incentiveUri;
 
 //            var indexI = findIndex(YEARS, year);
 //            var indexJ = findIndex(INCENTIVE_NAMES[0], incentiveCode);
 //            arrayYearIncentive[indexI][indexJ] = value;
+            var indexI = findIndexForDimension(0, timeUri);
+            var indexJ = findIndexForDimension(1, incentiveUri);
+            doubleArray[indexI][indexJ] = value;
 
     });
-    doubleArray.push(singleArray);
     
     $('body').css('cursor', 'default');
     var chartSubtitle = 'Area: ' + hashCodeToNames[rsgeoSelected];
     
-    createChartBarMultiple(chartSubtitle+'v', doubleArray, dim2Array, dim1Array);
+    createChartBarMultiple(chartSubtitle, doubleArray, categoriesArray, seriesArray);
 };
 
 cbfuncIncentive = function(data) {
