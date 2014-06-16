@@ -253,8 +253,17 @@ function execSparqlDimensionValueChangedVuk(cbfuncOneFreeVuk,cbfuncTwoFreeVuk){
 				'select distinct ?observation ?dim1 ?dim2 ' + 
                                 'from <' + javaGraph + '> ' +
                                 'where { ?y qb:dataSet <' + javaDataSet + '> . ' + 
-                                '?y rs:geo <' + javaGeoValue + '> . ' + 
                                 '?y sdmx-measure:obsValue ?observation . ';
+    if (javaGeoValue != null && javaGeoValue != ''){
+        if (javaGeoFree){
+            if (javaSelectedDimensions.length == 0)
+                sparqlQuery += '?y rs:geo ?dim1 . ';
+            else
+                sparqlQuery += '?y rs:geo ?dim2 . ';
+        } else {
+            sparqlQuery += '?y rs:geo <' + javaGeoValue + '> . ';
+        }
+    }
     for (var i=0; i<javaSelectedDimensions.length; i++){
         var freeIndex = javaFreeDimensions.indexOf(i);
         if (freeIndex == -1){
@@ -265,13 +274,15 @@ function execSparqlDimensionValueChangedVuk(cbfuncOneFreeVuk,cbfuncTwoFreeVuk){
         }
     }
     sparqlQuery += '} order by ?dim1';
-    if (javaFreeDimensions.length ==2) sparqlQuery += ' ?dim2';
+    var numFree = javaFreeDimensions.length;
+    if (javaGeoValue != null && javaGeoValue != '' && javaGeoFree) numFree++;
+    if (numFree == 2) sparqlQuery += ' ?dim2';
     
     var queryUrlEncoded = endpoint + '?query=' + $.URLEncode(sparqlQuery);
     
-    if (javaFreeDimensions.length == 2){
+    if (numFree == 2){
         $.getJSON(queryUrlEncoded, cbfuncTwoFreeVuk).error(function() { alert("There was an error during communication with the sparql endpoint\n"+sparqlQuery); });
-    } else if (javaFreeDimensions.length == 1){
+    } else if (numFree == 1){
         $.getJSON(queryUrlEncoded, cbfuncOneFreeVuk).error(function() { alert("There was an error during communication with the sparql endpoint\n"+sparqlQuery); });
     }
 }

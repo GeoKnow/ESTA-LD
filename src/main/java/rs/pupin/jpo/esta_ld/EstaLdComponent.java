@@ -56,6 +56,10 @@ public class EstaLdComponent extends CustomComponent {
     private static final String GEO_PART_WIDTH = "600px";
     private static final String CONTENT_ELEM_HEIGHT = "25px";
     private Property.ValueChangeListener dimListener;
+    private Property.ValueChangeListener geoListener;
+    private Dimension geoDimension;
+    private Button btnGeo;
+    private ComboBox boxGeo;
     
     public EstaLdComponent(Repository repository){
         this.repository = repository;
@@ -72,6 +76,7 @@ public class EstaLdComponent extends CustomComponent {
             Logger.getLogger(EstaLdComponent.class.getName()).log(Level.SEVERE, null, ex);
         }
         dcRepo = new SparqlDCRepository(repository);
+        geoDimension = null;
         
         dimListener = new Property.ValueChangeListener() {
             public void valueChange(Property.ValueChangeEvent event) {
@@ -98,6 +103,20 @@ public class EstaLdComponent extends CustomComponent {
                 String function = "javaSetDimsVals(" + javaDims + "," + javaVals + ");";
                 getWindow().executeJavaScript(function);
 //                getWindow().executeJavaScript("javaPrintAll()");
+            }
+        };
+        geoListener = new Property.ValueChangeListener() {
+            public void valueChange(Property.ValueChangeEvent event) {
+                if (geoDimension == null){
+                    getWindow().executeJavaScript("javaSetGeoAll(null,[],null);");
+                    return;
+                }
+                StringBuilder builder = new StringBuilder();
+                builder.append("javaSetGeoValue('");
+                builder.append((String)boxGeo.getValue());
+                builder.append("')");
+                
+                getWindow().executeJavaScript(builder.toString());
             }
         };
         
@@ -237,7 +256,13 @@ public class EstaLdComponent extends CustomComponent {
     }
     
     private void refreshDimensions(){
+        // clean everything just in case
         dimLayout.removeAllComponents();
+        geoDimension = null;
+        btnGeo = null;
+        boxGeo = null;
+        dimNames = null;
+        dimValues = null;
         
         if (selectDataSet.getValue() == null) return;
         
@@ -257,6 +282,7 @@ public class EstaLdComponent extends CustomComponent {
         for (Dimension dim: ds.getStructure().getDimensions())
             if (!dim.isGeoDimension())
                 dimsForShow.add(dim);
+            else geoDimension = dim;
         dimNames = new Button[dimsForShow.size()];
         dimValues = new ComboBox[dimsForShow.size()];
         int i=0;
@@ -319,6 +345,53 @@ public class EstaLdComponent extends CustomComponent {
             rLayout.setComponentAlignment(boxValue, Alignment.BOTTOM_LEFT);
             i++;
         }
+        if (geoDimension != null){
+            btnGeo = new Button(geoDimension.toString());
+            btnGeo.setSizeUndefined();
+            btnGeo.setWidth("100%");
+            btnGeo.setHeight(CONTENT_ELEM_HEIGHT);
+            btnGeo.setData(geoDimension);
+            btnGeo.addStyleName("geo-name");
+            btnGeo.addListener(new Button.ClickListener() {
+                public void buttonClick(Button.ClickEvent event) {
+                    if (btnGeo.getStyleName().contains("selected")){
+                        btnGeo.removeStyleName("selected");
+                    } else {
+                        btnGeo.addStyleName("selected");
+                    }
+                    freeDimensionsChanged();
+                }
+            });
+            
+            StringBuilder builder = new StringBuilder();
+            Collection<String> posVals = ds.getValuesForDimension(geoDimension);
+            String selectedVal = posVals.iterator().next();
+            builder.append("javaSetGeoAll('").append(geoDimension.getUri());
+            builder.append("',").append(stringifyCollection(posVals));
+            builder.append(",'").append(selectedVal).append("')");
+            boxGeo = new ComboBox(null, posVals);
+            boxGeo.setDebugId("geoValue");
+            boxGeo.setData(posVals);
+            boxGeo.setImmediate(true);
+            boxGeo.setNullSelectionAllowed(false);
+            boxGeo.select(selectedVal);
+            boxGeo.setSizeUndefined();
+            boxGeo.setWidth("100%");
+            boxGeo.setHeight(CONTENT_ELEM_HEIGHT);
+            boxGeo.addStyleName("geo-value");
+            boxGeo.addListener(geoListener);
+            
+            lLayout.addComponent(btnGeo);
+            lLayout.setExpandRatio(btnGeo, 2.0f);
+            rLayout.addComponent(boxGeo);
+            rLayout.setComponentAlignment(boxGeo, Alignment.BOTTOM_LEFT);
+            
+            getWindow().executeJavaScript(builder.toString());
+        } else {
+            getWindow().executeJavaScript("javaSetGeoAll('',[],'')");
+        }
+        // TODO cover the case where there is more than 1 geo dimension
+        
         builderPossibleValues.replace(0, 1, "javaSetPossibleValues([");
         builderPossibleValues.append("])");
         getWindow().executeJavaScript(builderPossibleValues.toString());
@@ -356,6 +429,20 @@ public class EstaLdComponent extends CustomComponent {
     }
     
     private void freeDimensionsChanged() {
+        // first determine if geo is selected (and exists) because that one doesn't draw graphs
+        String selection = null;
+        if (btnGeo != null){
+            if (btnGeo.getStyleName().contains("selected")) {
+                selection = "true";
+            }
+            else {
+                selection = "false";
+            }
+        } else {
+            selection = "false";
+        }
+        getWindow().executeJavaScript("javaSetGeoFree(" + selection + ")");
+        
         StringBuilder builder = new StringBuilder();
         for (int i=0; i<dimNames.length; i++){
             if (dimNames[i].getStyleName().contains("selected"))

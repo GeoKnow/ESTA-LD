@@ -503,13 +503,28 @@ function runSparqlRsgeo(rsgeo) {
 
 // run sparql query with rsgeo parameter (execute cbfuncGeoSelectedVuk)
 function runSparqlGeoSelectedVuk(rsgeo) {
-    javaGeoValue = CODE_PREFIX + rsgeo;
-    if (javaFreeDimensions.length > 2) {
-        alert('Number of free dimensions is greater than 2, namely ' + javaFreeDimensions.length);
+    // add JS code to put the value in the ComboBox
+    var value = CODE_PREFIX + rsgeo;
+    var isInTheList = false;
+    for (var i=0; i<javaGeoPossibleValues.length; i++){
+        if (value == javaGeoPossibleValues[i]){
+            isInTheList = true;
+//            break;
+        }
+    }
+    if (isInTheList) {
+        // change value of geo-values
+        $('#geoValue .v-filterselect-input').val(value);
+    } else {
+        alert('not in the list: ' + value + ' \n' + javaGeoPossibleValues.toString());
         return;
     }
-//    execSparqlGeoSelectedVuk(CODE_PREFIX + rsgeo, cbfuncGeoSelectedVuk);
-    execSparqlDimensionValueChangedVuk(cbfuncOneFreeVuk,cbfuncTwoFreeVuk);
+//    if (javaFreeDimensions.length > 2) {
+//        alert('Number of free dimensions is greater than 2, namely ' + javaFreeDimensions.length);
+//        return;
+//    }
+//    execSparqlDimensionValueChangedVuk(cbfuncOneFreeVuk,cbfuncTwoFreeVuk);
+    javaSetGeoValue(value);
 }
 
 function runSparqlDimensionValueChangedVuk(){
@@ -522,7 +537,10 @@ function runSparqlDimensionValueChangedVuk(){
 }
 
 function runSparqlFreeDimensionsChangedVuk(){
-    if (javaFreeDimensions.length >2){
+    var numFree = javaFreeDimensions.length;
+    if (javaGeoValue != null && javaGeoValue != '' && javaGeoFree) numFree++;
+    
+    if (numFree > 2){
         alert('Cannot show more than 2 dimensions');
         return;
     }
@@ -850,70 +868,128 @@ cbfuncGeoSelectedVuk = function(data) {
 };
 
 cbfuncTwoFreeVuk = function(data) {
-    var doubleArray = new Array(javaPossibleValues[0].length);
-    var seriesArray = new Array(); // series 
-    var categoriesArray = new Array(); // categories
-    var seriesIndex = javaFreeDimensions[0];
-    var categoriesIndex = javaFreeDimensions[1];
-    for (var i=0; i<javaPossibleValues[seriesIndex].length; i++) {
-        var size = javaPossibleValues[categoriesIndex].length;
-        doubleArray[i] = new Array(size);
-        var seriesName = uriLastPart(javaPossibleValues[seriesIndex][i]);
-        seriesArray.push(seriesName);
-        for (var j=0; j<size; j++){
-            doubleArray[i][j] = 0;
+    if (javaGeoValue != null && javaGeoValue != '' && javaGeoFree){
+        var seriesIndex = javaFreeDimensions[0];
+        var doubleArray = new Array(javaPossibleValues[seriesIndex].length);
+        var seriesArray = new Array(); // series 
+        var categoriesArray = new Array(); // categories
+        
+        for (var i=0; i<javaPossibleValues[seriesIndex].length; i++) {
+            var size = javaGeoPossibleValues.length;
+            doubleArray[i] = new Array(size);
+            var seriesName = uriLastPart(javaPossibleValues[seriesIndex][i]);
+            seriesArray.push(seriesName);
+            for (var j=0; j<size; j++){
+                doubleArray[i][j] = 0;
+            }
         }
+        for (var i=0; i<javaGeoPossibleValues.length; i++){
+            var categoryName = uriLastPart(javaGeoPossibleValues[i]);
+            categoriesArray.push(categoryName);
+        }
+        
+        $(data.results.bindings).each(function(key, val){
+                var seriesUri = val.dim1.value;
+                var categoriesUri = val.dim2.value;
+                var value = val.observation.value;
+
+                var indexI = findIndexForDimension(seriesIndex, seriesUri);
+                var indexJ = findIndexForGeoDimension(categoriesUri);
+                doubleArray[indexI][indexJ] = value;
+
+        });
+
+        $('body').css('cursor', 'default');
+        var chartSubtitle = 'Area: ' + hashCodeToNames[rsgeoSelected];
+
+        createChartBarMultiple(chartSubtitle, doubleArray, categoriesArray, seriesArray);
+    } else {
+        var seriesIndex = javaFreeDimensions[0];
+        var doubleArray = new Array(javaPossibleValues[seriesIndex].length);
+        var seriesArray = new Array(); // series 
+        var categoriesArray = new Array(); // categories
+        var categoriesIndex = javaFreeDimensions[1];
+        for (var i=0; i<javaPossibleValues[seriesIndex].length; i++) {
+            var size = javaPossibleValues[categoriesIndex].length;
+            doubleArray[i] = new Array(size);
+            var seriesName = uriLastPart(javaPossibleValues[seriesIndex][i]);
+            seriesArray.push(seriesName);
+            for (var j=0; j<size; j++){
+                doubleArray[i][j] = 0;
+            }
+        }
+        for (var i=0; i<javaPossibleValues[categoriesIndex].length; i++){
+            var categoryName = uriLastPart(javaPossibleValues[categoriesIndex][i]);
+            categoriesArray.push(categoryName);
+        }
+
+        $(data.results.bindings).each(function(key, val){
+                var seriesUri = val.dim1.value;
+                var categoriesUri = val.dim2.value;
+                var value = val.observation.value;
+
+                var indexI = findIndexForDimension(seriesIndex, seriesUri);
+                var indexJ = findIndexForDimension(categoriesIndex, categoriesUri);
+                doubleArray[indexI][indexJ] = value;
+
+        });
+
+        $('body').css('cursor', 'default');
+        var chartSubtitle = 'Area: ' + hashCodeToNames[rsgeoSelected];
+
+        createChartBarMultiple(chartSubtitle, doubleArray, categoriesArray, seriesArray);
     }
-    for (var i=0; i<javaPossibleValues[categoriesIndex].length; i++){
-        var categoryName = uriLastPart(javaPossibleValues[categoriesIndex][i]);
-        categoriesArray.push(categoryName);
-    }
-
-    $(data.results.bindings).each(function(key, val){
-            var seriesUri = val.dim1.value;
-            var categoriesUri = val.dim2.value;
-            var value = val.observation.value;
-
-            var indexI = findIndexForDimension(0, seriesUri);
-            var indexJ = findIndexForDimension(1, categoriesUri);
-            doubleArray[indexI][indexJ] = value;
-
-    });
-    
-    $('body').css('cursor', 'default');
-    var chartSubtitle = 'Area: ' + hashCodeToNames[rsgeoSelected];
-    
-    createChartBarMultiple(chartSubtitle, doubleArray, categoriesArray, seriesArray);
 }
 
 cbfuncOneFreeVuk = function(data) {
-    var categoriesIndex = javaFreeDimensions[0];
-    var categoriesArray = new Array(javaPossibleValues[categoriesIndex].length);
-    for (var i=0; i<categoriesArray.length; i++)
-        categoriesArray[i] = uriLastPart(javaPossibleValues[categoriesIndex][i]);
-    var valuesArray = new Array(categoriesArray.length);
-    for (var i=0; i<valuesArray.length; i++)
-        valuesArray[i] = 0;
+    if (javaGeoValue != null && javaGeoValue != '' && javaGeoFree){
+        var categoriesArray = new Array(javaGeoPossibleValues.length);
+        for (var i=0; i<categoriesArray.length; i++)
+            categoriesArray[i] = uriLastPart(javaGeoPossibleValues[i]);
+        var valuesArray = new Array(categoriesArray.length);
+        for (var i=0; i<valuesArray.length; i++)
+            valuesArray[i] = 0;
+        
+        $(data.results.bindings).each(function(key, val){
+                var dim1Uri = val.dim1.value;
+                var code = uriLastPart(dim1Uri);
+                var value = val.observation.value;
+                var intValue = parseInt(value);
+                var indexI = findIndexForGeoDimension(dim1Uri);
+                valuesArray[indexI] = intValue;
+        });
+        $('body').css('cursor', 'default');
 
-    $(data.results.bindings).each(function(key, val){
-            var dim1Uri = val.dim1.value;
-            var code = uriLastPart(dim1Uri);
-            var value = val.observation.value;
-            var intValue = parseInt(value);
-            var indexI = findIndexForDimension(categoriesIndex,dim1Uri);
-            valuesArray[indexI] = intValue;
-    });
+        createChartBarSingle('', categoriesArray, valuesArray, 'Geo');
+    } else {
+        var categoriesIndex = javaFreeDimensions[0];
+        var categoriesArray = new Array(javaPossibleValues[categoriesIndex].length);
+        for (var i=0; i<categoriesArray.length; i++)
+            categoriesArray[i] = uriLastPart(javaPossibleValues[categoriesIndex][i]);
+        var valuesArray = new Array(categoriesArray.length);
+        for (var i=0; i<valuesArray.length; i++)
+            valuesArray[i] = 0;
 
-//    var displayYear = $('#year').val();//year displayed in the info and charts
-//    var displayRsgeo = hashCodeToNames[rsgeoSelected];//incentive aim displayed in the info and charts
-//    var geo = 'Area: ' + displayRsgeo;
-//
-//    var subtitle = 'Year: ' + displayYear + ', ' + geo;
+        $(data.results.bindings).each(function(key, val){
+                var dim1Uri = val.dim1.value;
+                var code = uriLastPart(dim1Uri);
+                var value = val.observation.value;
+                var intValue = parseInt(value);
+                var indexI = findIndexForDimension(categoriesIndex,dim1Uri);
+                valuesArray[indexI] = intValue;
+        });
 
-//    sortArrays(chartBarValues, chartBarCategories, false);
-//    $('body').css('cursor', 'default');
+    //    var displayYear = $('#year').val();//year displayed in the info and charts
+    //    var displayRsgeo = hashCodeToNames[rsgeoSelected];//incentive aim displayed in the info and charts
+    //    var geo = 'Area: ' + displayRsgeo;
+    //
+    //    var subtitle = 'Year: ' + displayYear + ', ' + geo;
 
-    createChartBarSingle('', categoriesArray, valuesArray, javaSelectedDimensions[javaFreeDimensions[0]]);
+    //    sortArrays(chartBarValues, chartBarCategories, false);
+        $('body').css('cursor', 'default');
+
+        createChartBarSingle('', categoriesArray, valuesArray, javaSelectedDimensions[javaFreeDimensions[0]]);
+    }
 }
 
 cbfuncIncentive = function(data) {

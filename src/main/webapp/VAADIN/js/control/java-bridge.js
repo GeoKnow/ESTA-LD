@@ -5,7 +5,10 @@ var javaFreeDimensions = [0];
 var javaGraph = '';
 var javaDataSet = '';
 
-var javaGeoValue;
+var javaGeoDimension = '';
+var javaGeoPossibleValues = [];
+var javaGeoValue = '';
+var javaGeoFree = false;
 
 function javaSetSelectedDimensions(dims){
     javaSelectedDimensions = dims;
@@ -20,11 +23,31 @@ function javaSetFreeDimensions(dims){
     runSparqlFreeDimensionsChangedVuk();
 }
 
+function javaSetGeoFree(isFree){
+    javaGeoFree = isFree;
+}
+
 function javaSetDimsVals(dims,vals){
     javaSelectedDimensions = dims;
     javaDimensionValues = vals;
 //    runSparqlForGeoMapVuk();
     runSparqlDimensionValueChangedVuk();
+}
+
+function javaSetGeoAll(geo,vals,selectedVal){
+    javaGeoDimension = geo;
+    javaGeoPossibleValues = vals;
+    javaGeoValue = selectedVal;
+}
+
+function javaSetGeoValue(val){
+    javaGeoValue = val;
+    // call chart printing
+    if (javaFreeDimensions.length > 2) {
+        alert('Number of free dimensions is greater than 2, namely ' + javaFreeDimensions.length);
+        return;
+    }
+    execSparqlDimensionValueChangedVuk(cbfuncOneFreeVuk,cbfuncTwoFreeVuk);
 }
 
 function javaSetAll(dims,vals,free){
@@ -77,6 +100,14 @@ function findIndexForDimension(dimNumber, uri){
             return i;
     }
     alert('Couldnt find index of ' + uri + ' in ' + javaSelectedDimensions[dimNumber]);
+}
+
+function findIndexForGeoDimension(uri){
+    for (var i=0; i<javaGeoPossibleValues.length; i++){
+        if (uri == javaGeoPossibleValues[i])
+            return i;
+    }
+    alert('Couldnt find index of ' + uri + ' in ' + javaGeoPossibleValues);
 }
 
 function uriLastPart(uri){
