@@ -15,10 +15,16 @@ and open the template in the editor.
 .v-button.v-button-dim-name.dim-name.v-button-selected.selected {
     background-color: lightblue;
     background-image: none;
+    border-radius: 50px;
+    border: 1px solid;
+    border-color: grey;
 }
 
 .v-button.v-button-dim-name.dim-name {
     background-image: none;
+    border-radius: 50px;
+    border: 1px solid;
+    border-color: grey;
 }
 
 .v-button.v-button-dim-name.dim-name .v-button-wrap {
@@ -28,10 +34,16 @@ and open the template in the editor.
 .v-button.v-button-geo-name.geo-name.v-button-selected.selected {
     background-color: lightblue;
     background-image: none;
+    border-radius: 50px;
+    border: 1px solid;
+    border-color: grey;
 }
 
 .v-button.v-button-geo-name.geo-name {
     background-image: none;
+    border-radius: 50px;
+    border: 1px solid;
+    border-color: grey;
 }
 
 .v-button.v-button-geo-name.geo-name .v-button-wrap {

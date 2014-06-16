@@ -222,7 +222,7 @@ public class EstaLdComponent extends CustomComponent {
         mapLayout = new VerticalLayout();
         mapLayout.setSizeUndefined();
         mapLayout.setWidth("100%");
-        mapLayout.setHeight("700px");
+        mapLayout.setHeight("620px");
         mapLayout.setDebugId("map");
         mapLayout.addStyleName("leaflet-container");
         mapLayout.addStyleName("leaflet-fade-anim");
