@@ -960,7 +960,7 @@ cbfuncOneFreeVuk = function(data) {
         });
         $('body').css('cursor', 'default');
 
-        createChartBarSingle('', categoriesArray, valuesArray, 'Geo');
+        createChartBarSingle('', categoriesArray, valuesArray, javaGeoDimension);
     } else {
         var categoriesIndex = javaFreeDimensions[0];
         var categoriesArray = new Array(javaPossibleValues[categoriesIndex].length);

@@ -256,7 +256,7 @@ function execSparqlDimensionValueChangedVuk(cbfuncOneFreeVuk,cbfuncTwoFreeVuk){
                                 '?y sdmx-measure:obsValue ?observation . ';
     if (javaGeoValue != null && javaGeoValue != ''){
         if (javaGeoFree){
-            if (javaSelectedDimensions.length == 0)
+            if (javaFreeDimensions.length == 0)
                 sparqlQuery += '?y rs:geo ?dim1 . ';
             else
                 sparqlQuery += '?y rs:geo ?dim2 . ';
