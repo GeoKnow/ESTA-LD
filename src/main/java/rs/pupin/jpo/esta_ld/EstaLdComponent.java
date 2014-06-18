@@ -244,7 +244,7 @@ public class EstaLdComponent extends CustomComponent {
         chartLayout = new VerticalLayout();
         chartLayout.setSizeFull();
         chartLayout.setWidth("100%");
-        chartLayout.setHeight("500px");
+        chartLayout.setHeight("600px");
         chartLayout.setDebugId("highchartsbarsingle");
 //        rightLayout.addComponent(chartLayout);
         VerticalLayout chartLayout2 = new VerticalLayout();
