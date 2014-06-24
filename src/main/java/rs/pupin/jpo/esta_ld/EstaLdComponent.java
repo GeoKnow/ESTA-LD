@@ -269,6 +269,7 @@ public class EstaLdComponent extends CustomComponent {
         VerticalLayout lLayout = new VerticalLayout();
         lLayout.setSizeUndefined();
         lLayout.setSpacing(true);
+        lLayout.setDebugId("dim-btn-layout");
         dimLayout.addComponent(lLayout);
         VerticalLayout rLayout = new VerticalLayout();
         rLayout.setSizeUndefined();
