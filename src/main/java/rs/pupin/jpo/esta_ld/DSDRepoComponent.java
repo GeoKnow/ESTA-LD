@@ -12,10 +12,18 @@ import com.vaadin.ui.ComboBox;
 import com.vaadin.ui.CustomComponent;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
+import com.vaadin.ui.Tree;
 import com.vaadin.ui.VerticalLayout;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.openrdf.query.BindingSet;
+import org.openrdf.query.MalformedQueryException;
+import org.openrdf.query.QueryEvaluationException;
+import org.openrdf.query.QueryLanguage;
+import org.openrdf.query.TupleQuery;
+import org.openrdf.query.TupleQueryResult;
 import org.openrdf.repository.Repository;
+import org.openrdf.repository.RepositoryConnection;
 import org.openrdf.repository.RepositoryException;
 import org.openrdf.repository.sparql.SPARQLRepository;
 import rs.pupin.jpo.datacube.DataCubeGraph;
@@ -23,6 +31,7 @@ import rs.pupin.jpo.datacube.DataSet;
 import rs.pupin.jpo.datacube.Structure;
 import rs.pupin.jpo.datacube.sparql_impl.SparqlDCRepository;
 import rs.pupin.jpo.dsdrepo.DSDRepo;
+import rs.pupin.jpo.dsdrepo.DSDRepoUtils;
 
 /**
  *
@@ -38,6 +47,12 @@ public class DSDRepoComponent extends CustomComponent {
     private ComboBox selectDataSet;
     private DataCubeGraph graph;
     private DSDRepo dsdRepo;
+    private Tree dataTree;
+    private Tree repoTree;
+    
+    private String dataGraph;
+    private String dataset;
+    private String repoGraph;
     
     public DSDRepoComponent(Repository repository){
         this.repository = repository;
@@ -96,8 +111,55 @@ public class DSDRepoComponent extends CustomComponent {
         });
     }
     
+    private void populateDataTree(){
+        try {
+            RepositoryConnection con = repository.getConnection();
+            TupleQuery q = con.prepareTupleQuery(QueryLanguage.SPARQL, DSDRepoUtils.qPossibleComponents(dataGraph, dataset));
+            TupleQueryResult res = q.evaluate();
+            while (res.hasNext()){
+                BindingSet set = res.next();
+                String component = set.getValue("comp").stringValue();
+                dataTree.addItem(component);
+            }
+        } catch (RepositoryException ex) {
+            Logger.getLogger(DSDRepoComponent.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (MalformedQueryException ex) {
+            Logger.getLogger(DSDRepoComponent.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (QueryEvaluationException ex) {
+            Logger.getLogger(DSDRepoComponent.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+    
+    private void populateRepoTree(){
+        try {
+            RepositoryConnection con = repository.getConnection();
+            TupleQuery q = con.prepareTupleQuery(QueryLanguage.SPARQL, DSDRepoUtils.qMatchingStructures(dataGraph, dataset, repoGraph));
+            TupleQueryResult res = q.evaluate();
+            while (res.hasNext()){
+                BindingSet set = res.next();
+                String dsd = set.getValue("dsd").stringValue();
+                repoTree.addItem(dsd);
+            }
+        } catch (RepositoryException ex) {
+            Logger.getLogger(DSDRepoComponent.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (MalformedQueryException ex) {
+            Logger.getLogger(DSDRepoComponent.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (QueryEvaluationException ex) {
+            Logger.getLogger(DSDRepoComponent.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+    
     private void refreshContent(DataSet ds){
         Structure struct = ds.getStructure();
+        
+        contentLayout.removeAllComponents();;
+        dataTree = new Tree("Dataset");
+        populateDataTree();
+        contentLayout.addComponent(dataTree);
+        repoTree = new Tree("Structures");
+        populateRepoTree();
+        contentLayout.addComponent(repoTree);
+        
         if (struct != null) {
             if (dsdRepo.containsDSD(struct.getUri()))
                 if (dsdRepo.isIdenticalDSD(graph.getUri(), struct.getUri())) {
