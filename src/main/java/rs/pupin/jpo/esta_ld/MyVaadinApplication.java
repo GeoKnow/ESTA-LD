@@ -47,7 +47,8 @@ public class MyVaadinApplication extends Application
         setMainWindow(window);
         setTheme("esta-ld");
         
-        String query = "SELECT DISTINCT isiri(?val) as ?i datatype(?val) as ?t \n"
+        String query = "PREFIX qb: <http://purl.org/linked-data/cube#> \n"
+                + "SELECT DISTINCT isiri(?val) as ?i datatype(?val) as ?t \n"
                 + "FROM <@gSource> \n"
                 + "WHERE { \n"
                 + "  ?obs a qb:Observation . \n"
