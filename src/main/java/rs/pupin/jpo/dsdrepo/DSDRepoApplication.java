@@ -13,7 +13,7 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-package rs.pupin.jpo.esta_ld;
+package rs.pupin.jpo.dsdrepo;
 
 import com.vaadin.Application;
 import com.vaadin.ui.Button;
@@ -31,19 +31,20 @@ import org.openrdf.query.TupleQueryResult;
 import org.openrdf.repository.RepositoryConnection;
 import org.openrdf.repository.RepositoryException;
 import org.openrdf.repository.sparql.SPARQLRepository;
+import rs.pupin.jpo.esta_ld.DSDRepoComponent;
 
 /**
  * The Application's "main" class
  */
 @SuppressWarnings("serial")
-public class MyVaadinApplication extends Application
+public class DSDRepoApplication extends Application
 {
     private Window window;
 
     @Override
     public void init()
     {
-        window = new Window("ESTA-LD");
+        window = new Window("DSD Repo");
         setMainWindow(window);
         setTheme("esta-ld");
         
@@ -56,7 +57,7 @@ public class MyVaadinApplication extends Application
 //                + "}";
 //        query = query.replace("@prop", "http://purl.org/linked-data/sdmx/2009/measure#obsValue").replace("@gSource", "http://elpo.stat.gov.rs/test/cvmod/noDataSet/");
 //        final StringBuilder output = new StringBuilder();
-//        SPARQLRepository repo = new SPARQLRepository("http://fraunhofer2.imp.bg.ac.rs/sparql");
+//        SPARQLRepository repo = new SPARQLRepository("http://localhost:8890/sparql");
 //        try {
 //            repo.initialize();
 //            RepositoryConnection con = repo.getConnection();
@@ -75,11 +76,11 @@ public class MyVaadinApplication extends Application
 //                output.append("\n");
 //            }
 //        } catch (RepositoryException ex) {
-//            Logger.getLogger(MyVaadinApplication.class.getName()).log(Level.SEVERE, null, ex);
+//            Logger.getLogger(DSDRepoApplication.class.getName()).log(Level.SEVERE, null, ex);
 //        } catch (MalformedQueryException ex) {
-//            Logger.getLogger(MyVaadinApplication.class.getName()).log(Level.SEVERE, null, ex);
+//            Logger.getLogger(DSDRepoApplication.class.getName()).log(Level.SEVERE, null, ex);
 //        } catch (QueryEvaluationException ex) {
-//            Logger.getLogger(MyVaadinApplication.class.getName()).log(Level.SEVERE, null, ex);
+//            Logger.getLogger(DSDRepoApplication.class.getName()).log(Level.SEVERE, null, ex);
 //        }
 //        
 //        Button btn = new Button("Click me nigga");
@@ -89,15 +90,9 @@ public class MyVaadinApplication extends Application
 //            }
 //        });
         
-        EstaLdComponent component = new EstaLdComponent();
+        DSDRepoComponent component = new DSDRepoComponent();
         
         window.addComponent(component);
-        window.executeJavaScript("estamainInitVuk()");
-        window.executeJavaScript("sparqlqueryInitVuk()");
-        window.executeJavaScript("rammapInitVuk()");
-        window.executeJavaScript("chartsInitVuk()");
-        window.executeJavaScript("timechartInitVuk()");
-        component.refreshJS();
     }
     
 }

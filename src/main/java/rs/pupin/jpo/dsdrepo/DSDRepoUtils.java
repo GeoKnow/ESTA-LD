@@ -40,7 +40,7 @@ public class DSDRepoUtils {
         StringBuilder builder = createBuilderWithPrefixes();
         builder.append("SELECT DISTINCT ?dsd \n");
         builder.append("WHERE { \n");
-        builder.append("  GRAPH <@repoGraph/> { ?dsd a qb:DataStructureDefinition . } \n");
+        builder.append("  GRAPH <@repoGraph> { ?dsd a qb:DataStructureDefinition . } \n");
         builder.append("  FILTER NOT EXISTS { \n");
         builder.append("    GRAPH <@dataGraph> {  \n");
         builder.append("      ?obs qb:dataSet <@ds> . \n");
@@ -69,6 +69,21 @@ public class DSDRepoUtils {
         builder.append("} \n");
         return builder.toString().replace("@dataGraph", dataGraph)
                 .replace("@ds", ds).replace("@repoGraph", repoGraph);
+    }
+    
+    public static String qPossibleValues(String compUri, String ds, String graph) {
+        StringBuilder builder = createBuilderWithPrefixes();
+        builder.append("SELECT DISTINCT ?val \n");
+        builder.append("FROM <@g> \n");
+        builder.append("WHERE { \n");
+        builder.append("  ?obs qb:dataSet td:dataset1 . \n");
+        builder.append("  ?obs ts:refArea ?val . \n");
+        builder.append("  FILTER NOT EXISTS { \n");
+        builder.append("    ?obs ts:refArea ?v2 . \n");
+        builder.append("    FILTER(NOT(isIRI(?v2))) \n");
+        builder.append("  } \n");
+        builder.append("} \n");
+        return builder.toString().replace("@g", graph).replace("@comp", compUri).replace("@ds", ds);
     }
     
 }

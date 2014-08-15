@@ -7,7 +7,9 @@
 package rs.pupin.jpo.esta_ld;
 
 import com.vaadin.data.Property;
-import com.vaadin.data.util.PropertyFormatter;
+import com.vaadin.event.Action;
+import com.vaadin.event.ItemClickEvent;
+import com.vaadin.event.MouseEvents;
 import com.vaadin.ui.ComboBox;
 import com.vaadin.ui.CustomComponent;
 import com.vaadin.ui.HorizontalLayout;
@@ -26,10 +28,15 @@ import org.openrdf.repository.Repository;
 import org.openrdf.repository.RepositoryConnection;
 import org.openrdf.repository.RepositoryException;
 import org.openrdf.repository.sparql.SPARQLRepository;
+import rs.pupin.jpo.datacube.Attribute;
 import rs.pupin.jpo.datacube.DataCubeGraph;
 import rs.pupin.jpo.datacube.DataSet;
+import rs.pupin.jpo.datacube.Dimension;
+import rs.pupin.jpo.datacube.Measure;
 import rs.pupin.jpo.datacube.Structure;
+import rs.pupin.jpo.datacube.sparql_impl.SparqlDCGraph;
 import rs.pupin.jpo.datacube.sparql_impl.SparqlDCRepository;
+import rs.pupin.jpo.datacube.sparql_impl.SparqlStructure;
 import rs.pupin.jpo.dsdrepo.DSDRepo;
 import rs.pupin.jpo.dsdrepo.DSDRepoUtils;
 
@@ -54,6 +61,10 @@ public class DSDRepoComponent extends CustomComponent {
     private String dataset;
     private String repoGraph;
     
+    private static Action ACTION1 = new Action("Action 1");
+    private static Action ACTION2 = new Action("Action 2");
+    private static Action [] ACTIONS = new Action[] { ACTION1,ACTION2 };
+    
     public DSDRepoComponent(Repository repository){
         this.repository = repository;
         
@@ -62,6 +73,8 @@ public class DSDRepoComponent extends CustomComponent {
     }
     
     public DSDRepoComponent(){
+        endpoint = "http://localhost:8890/sparql";
+        
         repository = new SPARQLRepository(endpoint);
         try {
             repository.initialize();
@@ -69,6 +82,9 @@ public class DSDRepoComponent extends CustomComponent {
             Logger.getLogger(EstaLdComponent.class.getName()).log(Level.SEVERE, null, ex);
         }
         dcRepo = new SparqlDCRepository(repository);
+        graph = new SparqlDCGraph(repository, "http://validation-test/regular-all/");
+        dataGraph = graph.getUri();
+        repoGraph = graph.getUri();
         
         mainLayout = new VerticalLayout();
         mainLayout.setWidth("100%");
@@ -112,6 +128,7 @@ public class DSDRepoComponent extends CustomComponent {
     }
     
     private void populateDataTree(){
+        dataTree.removeAllItems();
         try {
             RepositoryConnection con = repository.getConnection();
             TupleQuery q = con.prepareTupleQuery(QueryLanguage.SPARQL, DSDRepoUtils.qPossibleComponents(dataGraph, dataset));
@@ -121,6 +138,25 @@ public class DSDRepoComponent extends CustomComponent {
                 String component = set.getValue("comp").stringValue();
                 dataTree.addItem(component);
             }
+            dataTree.addListener(new ItemClickEvent.ItemClickListener() {
+                public void itemClick(ItemClickEvent event) {
+                    if (event.getButton() != MouseEvents.ClickEvent.BUTTON_RIGHT) return;
+                    // TODO: add code for the context menu here
+                }
+            });
+            dataTree.addActionHandler(new Action.Handler() {
+
+                public Action[] getActions(Object target, Object sender) {
+                    return ACTIONS;
+                }
+
+                public void handleAction(Action action, Object sender, Object target) {
+                    if (action == ACTION1)
+                        getWindow().showNotification("Chose Action 1");
+                    else if (action == ACTION2)
+                        getWindow().showNotification("Clicked Action 2");
+                }
+            });
         } catch (RepositoryException ex) {
             Logger.getLogger(DSDRepoComponent.class.getName()).log(Level.SEVERE, null, ex);
         } catch (MalformedQueryException ex) {
@@ -131,14 +167,42 @@ public class DSDRepoComponent extends CustomComponent {
     }
     
     private void populateRepoTree(){
+        repoTree.removeAllItems();
         try {
             RepositoryConnection con = repository.getConnection();
             TupleQuery q = con.prepareTupleQuery(QueryLanguage.SPARQL, DSDRepoUtils.qMatchingStructures(dataGraph, dataset, repoGraph));
             TupleQueryResult res = q.evaluate();
+            getWindow().showNotification("Has next: " + res.hasNext());
             while (res.hasNext()){
                 BindingSet set = res.next();
                 String dsd = set.getValue("dsd").stringValue();
-                repoTree.addItem(dsd);
+                Structure structure = new SparqlStructure(repository, dsd, graph.getUri());
+                
+                repoTree.addItem(structure);
+                int sizeDimensions = structure.getDimensions().size();
+                String dimString = "Dimensions (" + sizeDimensions + ")";
+                repoTree.addItem(dimString);
+                repoTree.setParent(dimString, structure);
+                for (Dimension dim: structure.getDimensions()){
+                    repoTree.addItem(dim);
+                    repoTree.setParent(dim, dimString);
+                }
+                int sizeAttributes = structure.getAttributes().size();
+                String attrString = "Attributes (" + sizeAttributes + ")";
+                repoTree.addItem(attrString);
+                repoTree.setParent(attrString, structure);
+                for (Attribute attr: structure.getAttributes()){
+                    repoTree.addItem(attr);
+                    repoTree.setParent(attr, attrString);
+                }
+                int sizeMeasures = structure.getMeasures().size();
+                String measString = "Measures (" + sizeMeasures + ")";
+                repoTree.addItem(measString);
+                repoTree.setParent(measString, structure);
+                for (Measure meas: structure.getMeasures()){
+                    repoTree.addItem(meas);
+                    repoTree.setParent(meas, measString);
+                }
             }
         } catch (RepositoryException ex) {
             Logger.getLogger(DSDRepoComponent.class.getName()).log(Level.SEVERE, null, ex);
@@ -152,25 +216,30 @@ public class DSDRepoComponent extends CustomComponent {
     private void refreshContent(DataSet ds){
         Structure struct = ds.getStructure();
         
+        dataset = ds.getUri();
         contentLayout.removeAllComponents();;
         dataTree = new Tree("Dataset");
+        dataTree.setNullSelectionAllowed(true);
+        dataTree.setImmediate(true);
         populateDataTree();
         contentLayout.addComponent(dataTree);
-        repoTree = new Tree("Structures");
+        repoTree = new Tree("Matching Structures");
+        repoTree.setNullSelectionAllowed(true);
+        repoTree.setImmediate(true);
         populateRepoTree();
         contentLayout.addComponent(repoTree);
         
         if (struct != null) {
-            if (dsdRepo.containsDSD(struct.getUri()))
-                if (dsdRepo.isIdenticalDSD(graph.getUri(), struct.getUri())) {
-                    everythingFine(ds);
-                }
-                else { 
-                    changeUriAndPut(ds);
-                }
-            else {
-                putInRepo(ds);
-            }
+//            if (dsdRepo.containsDSD(struct.getUri()))
+//                if (dsdRepo.isIdenticalDSD(graph.getUri(), struct.getUri())) {
+//                    everythingFine(ds);
+//                }
+//                else { 
+//                    changeUriAndPut(ds);
+//                }
+//            else {
+//                putInRepo(ds);
+//            }
         }
         else {
             // Find potential components
