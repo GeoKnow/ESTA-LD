@@ -86,4 +86,15 @@ public class DSDRepoUtils {
         return builder.toString().replace("@g", graph).replace("@comp", compUri).replace("@ds", ds);
     }
     
+    public static String qCodesTypes(String compUri, String ds, String graph){
+        StringBuilder builder = createBuilderWithPrefixes();
+        builder.append("SELECT DISTINCT ?val isiri(?val) as ?iri datatype(?val) as ?datatype \n");
+        builder.append("FROM <@g> \n");
+        builder.append("WHERE { \n");
+        builder.append("  ?obs qb:dataSet <@ds> . \n");
+        builder.append("  ?obs <@comp> ?val . \n");
+        builder.append("}");
+        return builder.toString().replace("@g", graph).replace("@comp", compUri).replace("@ds", ds);
+    }
+    
 }

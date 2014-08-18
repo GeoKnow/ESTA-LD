@@ -10,14 +10,19 @@ import com.vaadin.data.Property;
 import com.vaadin.event.Action;
 import com.vaadin.event.ItemClickEvent;
 import com.vaadin.event.MouseEvents;
+import com.vaadin.ui.AbstractSelect;
 import com.vaadin.ui.ComboBox;
 import com.vaadin.ui.CustomComponent;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.Tree;
 import com.vaadin.ui.VerticalLayout;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.openrdf.model.Value;
 import org.openrdf.query.BindingSet;
 import org.openrdf.query.MalformedQueryException;
 import org.openrdf.query.QueryEvaluationException;
@@ -29,6 +34,8 @@ import org.openrdf.repository.RepositoryConnection;
 import org.openrdf.repository.RepositoryException;
 import org.openrdf.repository.sparql.SPARQLRepository;
 import rs.pupin.jpo.datacube.Attribute;
+import rs.pupin.jpo.datacube.CodeList;
+import rs.pupin.jpo.datacube.ComponentProperty;
 import rs.pupin.jpo.datacube.DataCubeGraph;
 import rs.pupin.jpo.datacube.DataSet;
 import rs.pupin.jpo.datacube.Dimension;
@@ -37,8 +44,10 @@ import rs.pupin.jpo.datacube.Structure;
 import rs.pupin.jpo.datacube.sparql_impl.SparqlDCGraph;
 import rs.pupin.jpo.datacube.sparql_impl.SparqlDCRepository;
 import rs.pupin.jpo.datacube.sparql_impl.SparqlStructure;
+import rs.pupin.jpo.dsdrepo.CodeDatatypeTreeElement;
 import rs.pupin.jpo.dsdrepo.DSDRepo;
 import rs.pupin.jpo.dsdrepo.DSDRepoUtils;
+import rs.pupin.jpo.dsdrepo.CountingTreeHeader;
 
 /**
  *
@@ -61,9 +70,12 @@ public class DSDRepoComponent extends CustomComponent {
     private String dataset;
     private String repoGraph;
     
-    private static Action ACTION1 = new Action("Action 1");
-    private static Action ACTION2 = new Action("Action 2");
-    private static Action [] ACTIONS = new Action[] { ACTION1,ACTION2 };
+    private static Action ACTION_1 = new Action("Set as Dimension");
+    private static Action ACTION_2 = new Action("Set as Measure");
+    private static Action ACTION_3 = new Action("Set as Attribute");
+    private static Action ACTION_4 = new Action("Set as Undefined");
+
+    private static Action [] ACTIONS = new Action[] { ACTION_1, ACTION_2, ACTION_3, ACTION_4 };
     
     public DSDRepoComponent(Repository repository){
         this.repository = repository;
@@ -127,17 +139,32 @@ public class DSDRepoComponent extends CustomComponent {
         });
     }
     
+    private CountingTreeHeader createCountingTreeHeader(Tree t, String header){
+        CountingTreeHeader h = new CountingTreeHeader(t, header);
+        t.addItem(h);
+        return h;
+    }
+    
     private void populateDataTree(){
         dataTree.removeAllItems();
         try {
             RepositoryConnection con = repository.getConnection();
             TupleQuery q = con.prepareTupleQuery(QueryLanguage.SPARQL, DSDRepoUtils.qPossibleComponents(dataGraph, dataset));
             TupleQueryResult res = q.evaluate();
+            
+            final CountingTreeHeader dim = createCountingTreeHeader(dataTree, "Dimensions");
+            final CountingTreeHeader meas = createCountingTreeHeader(dataTree, "Measures");
+            final CountingTreeHeader attr = createCountingTreeHeader(dataTree, "Attributes");
+            final CountingTreeHeader undef = createCountingTreeHeader(dataTree, "Undefined");
+            
             while (res.hasNext()){
                 BindingSet set = res.next();
                 String component = set.getValue("comp").stringValue();
+//                undef.addElement(component);
                 dataTree.addItem(component);
+                dataTree.setParent(component, undef);
             }
+            
             dataTree.addListener(new ItemClickEvent.ItemClickListener() {
                 public void itemClick(ItemClickEvent event) {
                     if (event.getButton() != MouseEvents.ClickEvent.BUTTON_RIGHT) return;
@@ -151,10 +178,84 @@ public class DSDRepoComponent extends CustomComponent {
                 }
 
                 public void handleAction(Action action, Object sender, Object target) {
-                    if (action == ACTION1)
-                        getWindow().showNotification("Chose Action 1");
-                    else if (action == ACTION2)
-                        getWindow().showNotification("Clicked Action 2");
+                    if (!(target instanceof String)) return;
+                    String e = (String) target;
+                    if (action == ACTION_1) {
+                        dataTree.setParent(e, dim);
+                    }
+                    else if (action == ACTION_2){
+                        dataTree.setParent(e, meas);
+                    } else if (action == ACTION_3){
+                        dataTree.setParent(e, attr);
+                    } else if (action == ACTION_4){
+                        dataTree.setParent(e, undef);
+                    }
+                }
+            });
+            dataTree.addListener(new Tree.ExpandListener() {
+                public void nodeExpand(Tree.ExpandEvent event) {
+                    Object obj = event.getItemId();
+                    if (!(obj instanceof String)) return;
+                    if (dataTree.hasChildren(obj)) return;
+                    String component = (String)obj;
+                    
+                    try {
+                        RepositoryConnection con = repository.getConnection();
+                        TupleQuery q = con.prepareTupleQuery(QueryLanguage.SPARQL, DSDRepoUtils.qCodesTypes(component, dataset, dataGraph));
+                        TupleQueryResult res = q.evaluate();
+                        Collection<String> values = new LinkedList<String>();
+                        Collection<String> datatypes = new HashSet<String>();
+                        int count = 0;
+                        
+                        while (res.hasNext()){
+                            BindingSet set = res.next();
+                            String val = set.getValue("val").stringValue();
+                            values.add(val);
+                            String iri = set.getValue("iri").stringValue();
+                            Value datatypeObj = set.getValue("datatype");
+                            if (datatypeObj != null) datatypes.add(datatypeObj.stringValue());
+                            count += Integer.valueOf(iri).intValue();
+                        }
+                        
+                        CodeDatatypeTreeElement elem = null;
+                        if (count > 0 && count < values.size()) {
+                            elem = new CodeDatatypeTreeElement("", false, 1);
+                            dataTree.addItem(elem);
+                            dataTree.setParent(elem, obj);
+                        }
+                        else if (count==0 && datatypes.size()!=1) {
+                            elem = new CodeDatatypeTreeElement("", false, 1);
+                            dataTree.addItem(elem);
+                            dataTree.setParent(elem, obj);
+                        }
+                        else if (count==0){
+                            CountingTreeHeader countTypes = createCountingTreeHeader(dataTree, "Datatypes");
+                            dataTree.setParent(countTypes, obj);
+                            String e = datatypes.iterator().next();
+                            elem = new CodeDatatypeTreeElement(e, false, 0);
+                            dataTree.addItem(elem);
+                            dataTree.setParent(elem, countTypes);
+                        }
+                        else if (count == values.size()){
+                            CountingTreeHeader countValues = createCountingTreeHeader(dataTree, "Codes");
+                            dataTree.setParent(countValues, obj);
+                            for (String element: values){
+                                CodeDatatypeTreeElement e = new CodeDatatypeTreeElement(element, true, 0);
+                                dataTree.addItem(e);
+                                dataTree.setParent(e, countValues);
+                            }
+                        } else {
+                            elem = new CodeDatatypeTreeElement("", false, 3);
+                            dataTree.addItem(elem);
+                            dataTree.setParent(elem, obj);
+                        }
+                    } catch (RepositoryException ex) {
+                        Logger.getLogger(DSDRepoComponent.class.getName()).log(Level.SEVERE, null, ex);
+                    } catch (MalformedQueryException ex) {
+                        Logger.getLogger(DSDRepoComponent.class.getName()).log(Level.SEVERE, null, ex);
+                    } catch (QueryEvaluationException ex) {
+                        Logger.getLogger(DSDRepoComponent.class.getName()).log(Level.SEVERE, null, ex);
+                    }
                 }
             });
         } catch (RepositoryException ex) {
@@ -172,36 +273,31 @@ public class DSDRepoComponent extends CustomComponent {
             RepositoryConnection con = repository.getConnection();
             TupleQuery q = con.prepareTupleQuery(QueryLanguage.SPARQL, DSDRepoUtils.qMatchingStructures(dataGraph, dataset, repoGraph));
             TupleQueryResult res = q.evaluate();
-            getWindow().showNotification("Has next: " + res.hasNext());
+            
             while (res.hasNext()){
                 BindingSet set = res.next();
                 String dsd = set.getValue("dsd").stringValue();
-                Structure structure = new SparqlStructure(repository, dsd, graph.getUri());
-                
+                final Structure structure = new SparqlStructure(repository, dsd, graph.getUri());
+                           
                 repoTree.addItem(structure);
-                int sizeDimensions = structure.getDimensions().size();
-                String dimString = "Dimensions (" + sizeDimensions + ")";
-                repoTree.addItem(dimString);
-                repoTree.setParent(dimString, structure);
+                CountingTreeHeader dimCountHeader = createCountingTreeHeader(repoTree, "Dimensions");
+                repoTree.setParent(dimCountHeader, structure);
+                CountingTreeHeader measCountHeader = createCountingTreeHeader(repoTree, "Measures");
+                repoTree.setParent(measCountHeader, structure);
+                CountingTreeHeader attrCountHeader = createCountingTreeHeader(repoTree, "Attributes");
+                repoTree.setParent(attrCountHeader, structure);
+                
                 for (Dimension dim: structure.getDimensions()){
                     repoTree.addItem(dim);
-                    repoTree.setParent(dim, dimString);
+                    repoTree.setParent(dim, dimCountHeader);
                 }
-                int sizeAttributes = structure.getAttributes().size();
-                String attrString = "Attributes (" + sizeAttributes + ")";
-                repoTree.addItem(attrString);
-                repoTree.setParent(attrString, structure);
                 for (Attribute attr: structure.getAttributes()){
                     repoTree.addItem(attr);
-                    repoTree.setParent(attr, attrString);
+                    repoTree.setParent(attr, attrCountHeader);
                 }
-                int sizeMeasures = structure.getMeasures().size();
-                String measString = "Measures (" + sizeMeasures + ")";
-                repoTree.addItem(measString);
-                repoTree.setParent(measString, structure);
                 for (Measure meas: structure.getMeasures()){
                     repoTree.addItem(meas);
-                    repoTree.setParent(meas, measString);
+                    repoTree.setParent(meas, measCountHeader);
                 }
             }
         } catch (RepositoryException ex) {
@@ -211,6 +307,31 @@ public class DSDRepoComponent extends CustomComponent {
         } catch (QueryEvaluationException ex) {
             Logger.getLogger(DSDRepoComponent.class.getName()).log(Level.SEVERE, null, ex);
         }
+        
+        repoTree.addListener(new Tree.ExpandListener() {
+            public void nodeExpand(Tree.ExpandEvent event) {
+                Object id = event.getItemId();
+                if (id instanceof ComponentProperty && !repoTree.hasChildren(id)) {
+                    ComponentProperty prop = (ComponentProperty) id;
+                    CodeList codeList = prop.getCodeList();
+                    if (codeList != null) {
+                        CountingTreeHeader codeCountingHeader = createCountingTreeHeader(repoTree, "Codes");
+                        repoTree.setParent(codeCountingHeader, id);
+                        for (String code: codeList.getAllCodes()){
+                            CodeDatatypeTreeElement elem = new CodeDatatypeTreeElement(code, true, 0);
+                            repoTree.addItem(elem);
+                            repoTree.setParent(elem, codeCountingHeader);
+                        }
+                    } else {
+                        CountingTreeHeader datatypes = createCountingTreeHeader(repoTree, "Datatypes");
+                        repoTree.setParent(datatypes, id);
+                        CodeDatatypeTreeElement elem = new CodeDatatypeTreeElement(prop.getRange(), false, 0);
+                        repoTree.addItem(elem);
+                        repoTree.setParent(elem, datatypes);
+                    }
+                }
+            }
+        });
     }
     
     private void refreshContent(DataSet ds){
