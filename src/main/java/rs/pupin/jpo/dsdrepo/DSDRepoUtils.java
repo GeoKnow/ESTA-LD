@@ -6,6 +6,9 @@
 
 package rs.pupin.jpo.dsdrepo;
 
+import java.util.Collection;
+import java.util.LinkedList;
+
 /**
  *
  * @author vukm
@@ -95,6 +98,75 @@ public class DSDRepoUtils {
         builder.append("  ?obs <@comp> ?val . \n");
         builder.append("}");
         return builder.toString().replace("@g", graph).replace("@comp", compUri).replace("@ds", ds);
+    }
+    
+    public static String qResourcePorperties(String resource, String graph){
+        StringBuilder builder = new StringBuilder();
+        builder.append("SELECT ?p ?o \n");
+        builder.append("FROM <@g> \n");
+        builder.append("WHERE { \n");
+        builder.append("  <@r> ?p ?o . \n");
+        builder.append("} ");
+        return builder.toString().replace("@g", graph).replace("@r", resource);
+    }
+    
+    public static Collection<String> qCopyDSD(String dsd, String sourceGraph, String targetGraph){
+        LinkedList<String> list = new LinkedList<String>();
+        // insert dsd info
+        StringBuilder builder = createBuilderWithPrefixes();
+        builder.append("INSERT INTO GRAPH <@target> { \n");
+        builder.append("  <@dsd> ?p ?o . \n");
+        builder.append("} \n");
+        builder.append("WHERE { \n");
+        builder.append("  GRAPH <@source> { <@dsd> ?p ?o . } \n");
+        builder.append("}");
+        list.add(builder.toString().replace("@dsd", dsd).replace("@target", targetGraph).replace("@source", sourceGraph));
+        // insert component specification info
+        builder = createBuilderWithPrefixes();
+        builder.append("INSERT INTO GRAPH <@target> { \n");
+        builder.append("  ?cs ?p ?o . \n");
+        builder.append("} \n");
+        builder.append("WHERE { \n");
+        builder.append("  GRAPH <@source> { \n");
+        builder.append("    <@dsd> qb:component ?cs . \n");
+        builder.append("    ?cs ?p ?o . \n");
+        builder.append("  } \n");
+        builder.append("}");
+        list.add(builder.toString().replace("@dsd", dsd).replace("@target", targetGraph).replace("@source", sourceGraph));
+        // insert component property and code/code list info
+        builder = createBuilderWithPrefixes();
+        builder.append("INSERT INTO GRAPH <@target> { \n");
+        builder.append("  ?cp ?p ?o . \n");
+        builder.append("  ?list ?list_p ?list_o . \n");
+        builder.append("  ?list_ls ?list_lp ?list . \n");
+        builder.append("  ?code ?code_p ?code_o . \n");
+        builder.append("  ?code_t ?code_t_p ?code_t_o . \n");
+        builder.append("} \n");
+        builder.append("WHERE { \n");
+        builder.append("  GRAPH <@source> { \n");
+        builder.append("    <@dsd> qb:component ?cs . \n");
+        builder.append("    { \n");
+        builder.append("      { ?cs qb:componentProperty ?cp . } \n");
+        builder.append("      UNION { ?cs qb:dimension ?cp . } \n");
+        builder.append("      UNION { ?cs qb:measure ?cp . } \n");
+        builder.append("      UNION { ?cs qb:attribute ?cp . } \n");
+        builder.append("    } \n");
+        builder.append("    ?cp ?p ?o . \n");
+        builder.append("    OPTIONAL { \n");
+        builder.append("      ?cp qb:codeList ?list . \n");
+        builder.append("      ?list ?list_p ?list_o . \n");
+        builder.append("      ?list_ls ?list_lp ?list . \n");
+        builder.append("      ?code skos:inScheme ?list . \n");
+        builder.append("      ?code ?code_p ?code_o . \n");
+        builder.append("      OPTIONAL { \n");
+        builder.append("        ?code a ?code_t . \n");
+        builder.append("        ?code_t ?code_t_p ?code_t_o . \n");
+        builder.append("      } \n");
+        builder.append("    } \n");
+        builder.append("  } \n");
+        builder.append("} ");
+        list.add(builder.toString().replace("@dsd", dsd).replace("@target", targetGraph).replace("@source", sourceGraph));
+        return list;
     }
     
 }

@@ -12,6 +12,7 @@ import com.vaadin.event.ItemClickEvent;
 import com.vaadin.event.MouseEvents;
 import com.vaadin.ui.AbstractSelect;
 import com.vaadin.ui.ComboBox;
+import com.vaadin.ui.Component;
 import com.vaadin.ui.CustomComponent;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
@@ -24,6 +25,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.openrdf.model.Value;
 import org.openrdf.query.BindingSet;
+import org.openrdf.query.GraphQuery;
 import org.openrdf.query.MalformedQueryException;
 import org.openrdf.query.QueryEvaluationException;
 import org.openrdf.query.QueryLanguage;
@@ -70,12 +72,13 @@ public class DSDRepoComponent extends CustomComponent {
     private String dataset;
     private String repoGraph;
     
-    private static Action ACTION_1 = new Action("Set as Dimension");
-    private static Action ACTION_2 = new Action("Set as Measure");
-    private static Action ACTION_3 = new Action("Set as Attribute");
-    private static Action ACTION_4 = new Action("Set as Undefined");
+    private static Action ACTION_SET_AS_DIM = new Action("Set as Dimension");
+    private static Action ACTION_SET_AS_MEAS = new Action("Set as Measure");
+    private static Action ACTION_SET_AS_ATTR = new Action("Set as Attribute");
+    private static Action ACTION_SET_AS_UNDEF = new Action("Set as Undefined");
+    private static Action ACTION_SET_AS_DSD = new Action("Set as qb:DataStructureDefinition");
 
-    private static Action [] ACTIONS = new Action[] { ACTION_1, ACTION_2, ACTION_3, ACTION_4 };
+    private static Action [] ACTIONS = new Action[] { ACTION_SET_AS_DIM, ACTION_SET_AS_MEAS, ACTION_SET_AS_ATTR, ACTION_SET_AS_UNDEF };
     
     public DSDRepoComponent(Repository repository){
         this.repository = repository;
@@ -94,9 +97,10 @@ public class DSDRepoComponent extends CustomComponent {
             Logger.getLogger(EstaLdComponent.class.getName()).log(Level.SEVERE, null, ex);
         }
         dcRepo = new SparqlDCRepository(repository);
-        graph = new SparqlDCGraph(repository, "http://validation-test/regular-all/");
+//        graph = new SparqlDCGraph(repository, "http://validation-test/regular-all/");
+        graph = new SparqlDCGraph(repository, "http://regular-data-replica/");
         dataGraph = graph.getUri();
-        repoGraph = graph.getUri();
+        repoGraph = "http://validation-test/regular-dsd/";
         
         mainLayout = new VerticalLayout();
         mainLayout.setWidth("100%");
@@ -145,6 +149,32 @@ public class DSDRepoComponent extends CustomComponent {
         return h;
     }
     
+    private String generatePropertiesTable(String uri, String graph){
+        StringBuilder builder = new StringBuilder();
+        try {
+            RepositoryConnection conn = repository.getConnection();
+            TupleQuery query = conn.prepareTupleQuery(QueryLanguage.SPARQL, DSDRepoUtils.qResourcePorperties(uri, graph));
+            TupleQueryResult res = query.evaluate();
+            builder.append("<table style=\"border-spacing:7px\">");
+            while (res.hasNext()) {
+                BindingSet set = res.next();
+                builder.append("<tr><td>");
+                builder.append(set.getValue("p").stringValue());
+                builder.append("</td><td>");
+                builder.append(set.getValue("o").stringValue());
+                builder.append("</td></tr>");
+            }
+            builder.append("</table>");
+        } catch (RepositoryException ex) {
+            Logger.getLogger(DSDRepoComponent.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (MalformedQueryException ex) {
+            Logger.getLogger(DSDRepoComponent.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (QueryEvaluationException ex) {
+            Logger.getLogger(DSDRepoComponent.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return builder.toString();
+    }
+    
     private void populateDataTree(){
         dataTree.removeAllItems();
         try {
@@ -165,29 +195,24 @@ public class DSDRepoComponent extends CustomComponent {
                 dataTree.setParent(component, undef);
             }
             
-            dataTree.addListener(new ItemClickEvent.ItemClickListener() {
-                public void itemClick(ItemClickEvent event) {
-                    if (event.getButton() != MouseEvents.ClickEvent.BUTTON_RIGHT) return;
-                    // TODO: add code for the context menu here
-                }
-            });
             dataTree.addActionHandler(new Action.Handler() {
 
                 public Action[] getActions(Object target, Object sender) {
+                    if (!(target instanceof String)) return null;
                     return ACTIONS;
                 }
 
                 public void handleAction(Action action, Object sender, Object target) {
                     if (!(target instanceof String)) return;
                     String e = (String) target;
-                    if (action == ACTION_1) {
+                    if (action == ACTION_SET_AS_DIM) {
                         dataTree.setParent(e, dim);
                     }
-                    else if (action == ACTION_2){
+                    else if (action == ACTION_SET_AS_MEAS){
                         dataTree.setParent(e, meas);
-                    } else if (action == ACTION_3){
+                    } else if (action == ACTION_SET_AS_ATTR){
                         dataTree.setParent(e, attr);
-                    } else if (action == ACTION_4){
+                    } else if (action == ACTION_SET_AS_UNDEF){
                         dataTree.setParent(e, undef);
                     }
                 }
@@ -222,11 +247,13 @@ public class DSDRepoComponent extends CustomComponent {
                             elem = new CodeDatatypeTreeElement("", false, 1);
                             dataTree.addItem(elem);
                             dataTree.setParent(elem, obj);
+                            dataTree.setChildrenAllowed(elem, false);
                         }
                         else if (count==0 && datatypes.size()!=1) {
                             elem = new CodeDatatypeTreeElement("", false, 1);
                             dataTree.addItem(elem);
                             dataTree.setParent(elem, obj);
+                            dataTree.setChildrenAllowed(elem, false);
                         }
                         else if (count==0){
                             CountingTreeHeader countTypes = createCountingTreeHeader(dataTree, "Datatypes");
@@ -235,6 +262,7 @@ public class DSDRepoComponent extends CustomComponent {
                             elem = new CodeDatatypeTreeElement(e, false, 0);
                             dataTree.addItem(elem);
                             dataTree.setParent(elem, countTypes);
+                            dataTree.setChildrenAllowed(elem, false);
                         }
                         else if (count == values.size()){
                             CountingTreeHeader countValues = createCountingTreeHeader(dataTree, "Codes");
@@ -243,11 +271,13 @@ public class DSDRepoComponent extends CustomComponent {
                                 CodeDatatypeTreeElement e = new CodeDatatypeTreeElement(element, true, 0);
                                 dataTree.addItem(e);
                                 dataTree.setParent(e, countValues);
+                                dataTree.setChildrenAllowed(e, false);
                             }
                         } else {
                             elem = new CodeDatatypeTreeElement("", false, 3);
                             dataTree.addItem(elem);
                             dataTree.setParent(elem, obj);
+                            dataTree.setChildrenAllowed(elem, false);
                         }
                     } catch (RepositoryException ex) {
                         Logger.getLogger(DSDRepoComponent.class.getName()).log(Level.SEVERE, null, ex);
@@ -256,6 +286,20 @@ public class DSDRepoComponent extends CustomComponent {
                     } catch (QueryEvaluationException ex) {
                         Logger.getLogger(DSDRepoComponent.class.getName()).log(Level.SEVERE, null, ex);
                     }
+                }
+            });
+            dataTree.setItemDescriptionGenerator(new AbstractSelect.ItemDescriptionGenerator() {
+                public String generateDescription(Component source, Object itemId, Object propertyId) {
+                    // no description for Counting elements
+                    if (itemId instanceof CountingTreeHeader) return null;
+                    // URI is 
+                    String uri = itemId.toString();
+                    StringBuilder builder = new StringBuilder();
+                    builder.append("<h2>Properties of ");
+                    builder.append(itemId);
+                    builder.append("</h2><br>");
+                    builder.append(generatePropertiesTable(uri, dataGraph));
+                    return builder.toString();
                 }
             });
         } catch (RepositoryException ex) {
@@ -277,7 +321,7 @@ public class DSDRepoComponent extends CustomComponent {
             while (res.hasNext()){
                 BindingSet set = res.next();
                 String dsd = set.getValue("dsd").stringValue();
-                final Structure structure = new SparqlStructure(repository, dsd, graph.getUri());
+                final Structure structure = new SparqlStructure(repository, dsd, repoGraph);
                            
                 repoTree.addItem(structure);
                 CountingTreeHeader dimCountHeader = createCountingTreeHeader(repoTree, "Dimensions");
@@ -321,6 +365,7 @@ public class DSDRepoComponent extends CustomComponent {
                             CodeDatatypeTreeElement elem = new CodeDatatypeTreeElement(code, true, 0);
                             repoTree.addItem(elem);
                             repoTree.setParent(elem, codeCountingHeader);
+                            repoTree.setChildrenAllowed(elem, false);
                         }
                     } else {
                         CountingTreeHeader datatypes = createCountingTreeHeader(repoTree, "Datatypes");
@@ -328,8 +373,57 @@ public class DSDRepoComponent extends CustomComponent {
                         CodeDatatypeTreeElement elem = new CodeDatatypeTreeElement(prop.getRange(), false, 0);
                         repoTree.addItem(elem);
                         repoTree.setParent(elem, datatypes);
+                        repoTree.setChildrenAllowed(elem, false);
                     }
                 }
+            }
+        });
+        
+        repoTree.setItemDescriptionGenerator(new AbstractSelect.ItemDescriptionGenerator() {
+            public String generateDescription(Component source, Object itemId, Object propertyId) {
+                // description only for Counting elements ComponentProperties and Codes/TYpes
+                String uri = null;
+                if (itemId instanceof ComponentProperty)
+                    uri = ((ComponentProperty)itemId).getUri();
+                else if (itemId instanceof CodeDatatypeTreeElement)
+                    uri = ((CodeDatatypeTreeElement)itemId).getValue();
+                else return null;
+                
+                // URI is 
+                StringBuilder builder = new StringBuilder();
+                builder.append("<h2>Properties of ");
+                builder.append(uri);
+                builder.append("</h2><br>");
+                builder.append(generatePropertiesTable(uri, repoGraph));
+                return builder.toString();
+            }
+        });
+        
+        repoTree.addActionHandler(new Action.Handler() {
+            public Action[] getActions(Object target, Object sender) {
+                if (target instanceof Structure) 
+                    return new Action [] { ACTION_SET_AS_DSD };
+                else
+                    return null;
+            }
+
+            public void handleAction(Action action, Object sender, Object target) {
+                if (action != ACTION_SET_AS_DSD) return;
+                String dsd = ((Structure)target).getUri();
+                try {
+                    RepositoryConnection conn = repository.getConnection();
+                    for (String q: DSDRepoUtils.qCopyDSD(dsd, repoGraph, dataGraph)){
+                        GraphQuery query = conn.prepareGraphQuery(QueryLanguage.SPARQL, q);
+                        query.evaluate();
+                    }
+                } catch (RepositoryException ex) {
+                    Logger.getLogger(DSDRepoComponent.class.getName()).log(Level.SEVERE, null, ex);
+                } catch (MalformedQueryException ex) {
+                    Logger.getLogger(DSDRepoComponent.class.getName()).log(Level.SEVERE, null, ex);
+                } catch (QueryEvaluationException ex) {
+                    Logger.getLogger(DSDRepoComponent.class.getName()).log(Level.SEVERE, null, ex);
+                }
+                getWindow().showNotification("Set " + dsd + " as qb:DataStructureDefinition");
             }
         });
     }
