@@ -70,18 +70,48 @@
                 <version>6.1.19</version>
                 <configuration>
                     <stopPort>9966</stopPort>
-                    <stopKey>esta-ld</stopKey>
+                    <stopKey>ESTA-LD</stopKey>
                     <!-- Redeploy every x seconds if changes are detected, 0 for no automatic redeployment -->
                     <scanIntervalSeconds>0</scanIntervalSeconds>
                     <!-- make sure Jetty also finds the widgetset -->
                     <webAppConfig>
-                        <contextPath>/esta-ld</contextPath>
+                        <contextPath>/ESTA-LD</contextPath>
                         <baseResource implementation="org.mortbay.resource.ResourceCollection">
                         	<!-- Workaround for Maven/Jetty issue http://jira.codehaus.org/browse/JETTY-680 -->
                             <!-- <resources>src/main/webapp,${project.build.directory}/${project.build.finalName}</resources> -->
                             <resourcesAsCSV>src/main/webapp,${project.build.directory}/${project.build.finalName}</resourcesAsCSV>
                         </baseResource>
                     </webAppConfig>
+                </configuration>
+            </plugin>
+            
+            <plugin>
+                <groupId>org.codehaus.cargo</groupId>
+                <artifactId>cargo-maven2-plugin</artifactId>
+                <version>1.1.1</version>
+                <configuration>
+                    <container>
+                        <containerId>tomcat7x</containerId>
+                        <type>remote</type>
+                    </container>
+                    <configuration>
+                        <type>runtime</type>
+                        <properties>
+                            <cargo.remote.username>test</cargo.remote.username>
+                            <cargo.remote.password>tst4144</cargo.remote.password>
+                            <cargo.tomcat.manager.url>http://147.91.50.167/t7man/text</cargo.tomcat.manager.url>
+                        </properties>
+                    </configuration>
+                    <deployer>
+                        <type>remote</type>
+                        <deployables>
+                            <deployable>
+                                <groupId>rs.pupin.jpo</groupId>
+                                <artifactId>esta-ld</artifactId>
+                                <type>war</type>
+                            </deployable>
+                        </deployables>
+                    </deployer>
                 </configuration>
             </plugin>
         </plugins>

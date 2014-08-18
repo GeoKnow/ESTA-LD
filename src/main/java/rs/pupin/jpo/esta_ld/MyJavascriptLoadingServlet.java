@@ -21,28 +21,28 @@ import javax.servlet.http.HttpServletRequest;
 public class MyJavascriptLoadingServlet extends ApplicationServlet {
     
     private void writeStuff(BufferedWriter page) throws IOException{
-        page.write("<link rel=\"stylesheet\" href=\"/esta-ld/VAADIN/resources/css/leaflet.css\" />\n");
-        page.write("<link rel=\"stylesheet\" href=\"/esta-ld/VAADIN/resources/css/geoknow.css\" />\n");
-        page.write("<script src=\"/esta-ld/VAADIN/resources/libs/jquery/1.9.1/jquery.js\"></script>\n");
-        page.write("<script src=\"/esta-ld/VAADIN/resources/libs/highstock/2.0.1/highstock.js\"></script>\n");
-        page.write("<script src=\"/esta-ld/VAADIN/resources/libs/highstock/2.0.1/exporting.js\"></script>\n");
-        page.write("<script src=\"/esta-ld/VAADIN/resources/libs/leaflet/0.7.2/leaflet.js\"></script>\n");
-        page.write("<script src=\"/esta-ld/VAADIN/resources/libs/urlEncode.js\"></script>\n");
-        page.write("<script src=\"/esta-ld/VAADIN/js/geojson/geojson-data.js\" ></script>\n");
-        page.write("<script src=\"/esta-ld/VAADIN/js/geojson/geojson-area.js\" ></script>\n");
-        page.write("<script src=\"/esta-ld/VAADIN/js/geojson/geojson-region.js\" ></script>\n");
-        page.write("<script src=\"/esta-ld/VAADIN/js/geojson/geojson-municipality.js\" ></script>\n");
-        page.write("<script src=\"/esta-ld/VAADIN/js/geojson/geojson-country.js\" ></script>\n");
+        page.write("<link rel=\"stylesheet\" href=\"/ESTA-LD/VAADIN/resources/css/leaflet.css\" />\n");
+        page.write("<link rel=\"stylesheet\" href=\"/ESTA-LD/VAADIN/resources/css/geoknow.css\" />\n");
+        page.write("<script src=\"/ESTA-LD/VAADIN/resources/libs/jquery/1.9.1/jquery.js\"></script>\n");
+        page.write("<script src=\"/ESTA-LD/VAADIN/resources/libs/highstock/2.0.1/highstock.js\"></script>\n");
+        page.write("<script src=\"/ESTA-LD/VAADIN/resources/libs/highstock/2.0.1/exporting.js\"></script>\n");
+        page.write("<script src=\"/ESTA-LD/VAADIN/resources/libs/leaflet/0.7.2/leaflet.js\"></script>\n");
+        page.write("<script src=\"/ESTA-LD/VAADIN/resources/libs/urlEncode.js\"></script>\n");
+        page.write("<script src=\"/ESTA-LD/VAADIN/js/geojson/geojson-data.js\" ></script>\n");
+        page.write("<script src=\"/ESTA-LD/VAADIN/js/geojson/geojson-area.js\" ></script>\n");
+        page.write("<script src=\"/ESTA-LD/VAADIN/js/geojson/geojson-region.js\" ></script>\n");
+        page.write("<script src=\"/ESTA-LD/VAADIN/js/geojson/geojson-municipality.js\" ></script>\n");
+        page.write("<script src=\"/ESTA-LD/VAADIN/js/geojson/geojson-country.js\" ></script>\n");
     }
     
     private void writeOtherStuff(BufferedWriter page) throws IOException {
-        page.write("<script src=\"/esta-ld/VAADIN/js/control/java-bridge.js\" ></script>\n");
-        page.write("<script src=\"/esta-ld/VAADIN/js/control/selectionmain.js\" ></script>\n");
-        page.write("<script src=\"/esta-ld/VAADIN/js/control/estamain-vuk.js\" ></script>\n");
-        page.write("<script src=\"/esta-ld/VAADIN/js/sparql/sparqlquery-vuk.js\" ></script>\n");
-        page.write("<script src=\"/esta-ld/VAADIN/js/map/rammap-vuk.js\" ></script>\n");
-        page.write("<script src=\"/esta-ld/VAADIN/js/highcharts/charts-vuk.js\" ></script>\n");
-        page.write("<script src=\"/esta-ld/VAADIN/js/highcharts/timechart-vuk.js\" ></script>\n");
+        page.write("<script src=\"/ESTA-LD/VAADIN/js/control/java-bridge.js\" ></script>\n");
+        page.write("<script src=\"/ESTA-LD/VAADIN/js/control/selectionmain.js\" ></script>\n");
+        page.write("<script src=\"/ESTA-LD/VAADIN/js/control/estamain-vuk.js\" ></script>\n");
+        page.write("<script src=\"/ESTA-LD/VAADIN/js/sparql/sparqlquery-vuk.js\" ></script>\n");
+        page.write("<script src=\"/ESTA-LD/VAADIN/js/map/rammap-vuk.js\" ></script>\n");
+        page.write("<script src=\"/ESTA-LD/VAADIN/js/highcharts/charts-vuk.js\" ></script>\n");
+        page.write("<script src=\"/ESTA-LD/VAADIN/js/highcharts/timechart-vuk.js\" ></script>\n");
     }
 
     @Override
