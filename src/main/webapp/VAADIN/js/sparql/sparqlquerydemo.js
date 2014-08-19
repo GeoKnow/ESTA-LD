@@ -43,10 +43,10 @@ var incentiveUrlString = '<http://stat.apr.gov.rs/lod2/RS-DIC/IncentivePurpose/T
 //var yearUrlString = '2009';
 //var incentiveUrlString = 'PT01';
 //
-//var query1 = 'http://fraunhofer2.imp.bg.ac.rs/sparql?query=PREFIX+rs%3A+%3Chttp%3A%2F%2Felpo.stat.gov.rs%2Flod2%2FRS%2DDIC%2Frs%2F%3E+PREFIX+geo%3A+%3Chttp%3A%2F%2Felpo.stat.gov.rs%2Flod2%2FRS%2DDIC%2Fgeo%2F%3E+PREFIX+apr%3A+%3Chttp%3A%2F%2Fstat.apr.gov.rs%2Flod2%2F%3E+PREFIX+sdmx%2Dmeasure%3A+%3Chttp%3A%2F%2Fpurl.org%2Flinked%2Ddata%2Fsdmx%2F' + yearUrlString + '%2Fmeasure%23%3E+SELECT+DISTINCT+%3Ftime+%3Fincentive+%3Frsgeo+%3Fobservation+WHERE+%7B+%3Fy+rs%3Ageo+%3Frsgeo.+%3Fy+rs%3Atime+%3Ftime.+%3Fy+apr%3AincentiveAim+%3Fincentive.+%3Fy+rs%3Atime+%3Chttp%3A%2F%2Felpo.stat.gov.rs%2Flod2%2FRS%2DDIC%2Ftime%2FY' + yearUrlString + '%3E.+%3Fy+apr%3AincentiveAim+%3Chttp%3A%2F%2Fstat.apr.gov.rs%2Flod2%2FRS%2DDIC%2FIncentivePurpose%2F' + incentiveUrlString + '%3E.+%3Fy+sdmx%2Dmeasure%3AobsValue+%3Fobservation.}';
+//var query1 = 'http://147.91.50.167/sparql?query=PREFIX+rs%3A+%3Chttp%3A%2F%2Felpo.stat.gov.rs%2Flod2%2FRS%2DDIC%2Frs%2F%3E+PREFIX+geo%3A+%3Chttp%3A%2F%2Felpo.stat.gov.rs%2Flod2%2FRS%2DDIC%2Fgeo%2F%3E+PREFIX+apr%3A+%3Chttp%3A%2F%2Fstat.apr.gov.rs%2Flod2%2F%3E+PREFIX+sdmx%2Dmeasure%3A+%3Chttp%3A%2F%2Fpurl.org%2Flinked%2Ddata%2Fsdmx%2F' + yearUrlString + '%2Fmeasure%23%3E+SELECT+DISTINCT+%3Ftime+%3Fincentive+%3Frsgeo+%3Fobservation+WHERE+%7B+%3Fy+rs%3Ageo+%3Frsgeo.+%3Fy+rs%3Atime+%3Ftime.+%3Fy+apr%3AincentiveAim+%3Fincentive.+%3Fy+rs%3Atime+%3Chttp%3A%2F%2Felpo.stat.gov.rs%2Flod2%2FRS%2DDIC%2Ftime%2FY' + yearUrlString + '%3E.+%3Fy+apr%3AincentiveAim+%3Chttp%3A%2F%2Fstat.apr.gov.rs%2Flod2%2FRS%2DDIC%2FIncentivePurpose%2F' + incentiveUrlString + '%3E.+%3Fy+sdmx%2Dmeasure%3AobsValue+%3Fobservation.}';
 //
 //var rsgeostring = 'RS111';
-//var query2 = 'http://fraunhofer2.imp.bg.ac.rs/sparql?query=PREFIX+rs%3A+%3Chttp%3A%2F%2Felpo.stat.gov.rs%2Flod2%2FRS%2DDIC%2Frs%2F%3E+PREFIX+geo%3A+%3Chttp%3A%2F%2Felpo.stat.gov.rs%2Flod2%2FRS%2DDIC%2Fgeo%2F%3E+PREFIX+apr%3A+%3Chttp%3A%2F%2Fstat.apr.gov.rs%2Flod2%2F%3E+PREFIX+sdmx%2Dmeasure%3A+%3Chttp%3A%2F%2Fpurl.org%2Flinked%2Ddata%2Fsdmx%2F2009%2Fmeasure%23%3E+SELECT+DISTINCT+%3Ftime+%3Fincentive+%3Frsgeo+%3Fobservation+WHERE+%7B+%3Fy+rs%3Ageo+%3Frsgeo.+%3Fy+rs%3Atime+%3Ftime.+%3Fy+apr%3AincentiveAim+%3Fincentive.+%3Fy+rs%3Ageo+%3Chttp%3A%2F%2Felpo.stat.gov.rs%2Flod2%2FRS%2DDIC%2Fgeo%2F' + rsgeostring + '%3E.+%3Fy+sdmx%2Dmeasure%3AobsValue+%3Fobservation.}';
+//var query2 = 'http://147.91.50.167/sparql?query=PREFIX+rs%3A+%3Chttp%3A%2F%2Felpo.stat.gov.rs%2Flod2%2FRS%2DDIC%2Frs%2F%3E+PREFIX+geo%3A+%3Chttp%3A%2F%2Felpo.stat.gov.rs%2Flod2%2FRS%2DDIC%2Fgeo%2F%3E+PREFIX+apr%3A+%3Chttp%3A%2F%2Fstat.apr.gov.rs%2Flod2%2F%3E+PREFIX+sdmx%2Dmeasure%3A+%3Chttp%3A%2F%2Fpurl.org%2Flinked%2Ddata%2Fsdmx%2F2009%2Fmeasure%23%3E+SELECT+DISTINCT+%3Ftime+%3Fincentive+%3Frsgeo+%3Fobservation+WHERE+%7B+%3Fy+rs%3Ageo+%3Frsgeo.+%3Fy+rs%3Atime+%3Ftime.+%3Fy+apr%3AincentiveAim+%3Fincentive.+%3Fy+rs%3Ageo+%3Chttp%3A%2F%2Felpo.stat.gov.rs%2Flod2%2FRS%2DDIC%2Fgeo%2F' + rsgeostring + '%3E.+%3Fy+sdmx%2Dmeasure%3AobsValue+%3Fobservation.}';
                       
 
 
@@ -63,7 +63,7 @@ var incentiveUrlString = '<http://stat.apr.gov.rs/lod2/RS-DIC/IncentivePurpose/T
 //	'}';
 
 
-var endpoint = 'http://fraunhofer2.imp.bg.ac.rs/sparql';
+var endpoint = 'http://147.91.50.167/sparql';
 var sparqlQuery = 'prefix rs: <http://elpo.stat.gov.rs/lod2/RS-DIC/rs/> ' +
 'prefix geo: <http://elpo.stat.gov.rs/lod2/RS-DIC/geo/> ' +
 'prefix apr: <http://stat.apr.gov.rs/lod2/> ' +
@@ -81,7 +81,7 @@ var queryUrlEncoded = endpoint + '?query=' + $.URLEncode(sparqlQuery);
 
       $(document).ready(function() {
           $("#run_sparql").click(function(e) {
-//        	  $.sparql("http://fraunhofer2.imp.bg.ac.rs/sparql")
+//        	  $.sparql("http://147.91.50.167/sparql")
 //        	  .prefix("rs","http://elpo.stat.gov.rs/lod2/RS-DIC/rs/")
 //        	  .prefix("geo","http://elpo.stat.gov.rs/lod2/RS-DIC/geo/")
 //        	  .prefix("apr","http://stat.apr.gov.rs/lod2/")

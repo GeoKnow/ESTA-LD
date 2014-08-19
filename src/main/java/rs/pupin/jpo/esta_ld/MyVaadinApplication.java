@@ -56,7 +56,7 @@ public class MyVaadinApplication extends Application
 //                + "}";
 //        query = query.replace("@prop", "http://purl.org/linked-data/sdmx/2009/measure#obsValue").replace("@gSource", "http://elpo.stat.gov.rs/test/cvmod/noDataSet/");
 //        final StringBuilder output = new StringBuilder();
-//        SPARQLRepository repo = new SPARQLRepository("http://fraunhofer2.imp.bg.ac.rs/sparql");
+//        SPARQLRepository repo = new SPARQLRepository("http://147.91.50.167/sparql");
 //        try {
 //            repo.initialize();
 //            RepositoryConnection con = repo.getConnection();

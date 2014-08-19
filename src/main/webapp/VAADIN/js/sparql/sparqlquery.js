@@ -1,11 +1,11 @@
-var endpoint = 'http://fraunhofer2.imp.bg.ac.rs/sparql';
+var endpoint = 'http://147.91.50.167/sparql';
 //var endpoint = 'http://localhost:8890/sparql';
 var sessionEndpoint = sessionStorage.getItem("endpoint");
 if (sessionEndpoint != null) {
 	endpoint = sessionEndpoint;
 }
 
-var server = 'http://fraunhofer2.imp.bg.ac.rs/';
+var server = 'http://147.91.50.167/';
 //var server = 'http://localhost:8890/';
 var index = endpoint.indexOf('sparql');
 if (index > -1) {
@@ -248,4 +248,4 @@ function execSparqlGraphs() {
 function exploreWithCubeViz() {
 	window.open(server + 'ontowiki/cubeviz/?m=' + $.URLEncode(graph));
 }
-// http://fraunhofer2.imp.bg.ac.rs/ontowiki/cubeviz/?m=http%3A%2F%2Fstat.apr.gov.rs%2Flod2%2FRegister%2FRegional_Development
+// http://147.91.50.167/ontowiki/cubeviz/?m=http%3A%2F%2Fstat.apr.gov.rs%2Flod2%2FRegister%2FRegional_Development
