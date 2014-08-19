@@ -16,21 +16,7 @@
 package rs.pupin.jpo.dsdrepo;
 
 import com.vaadin.Application;
-import com.vaadin.ui.Button;
-import com.vaadin.ui.Label;
 import com.vaadin.ui.Window;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import org.openrdf.model.Value;
-import org.openrdf.query.BindingSet;
-import org.openrdf.query.MalformedQueryException;
-import org.openrdf.query.QueryEvaluationException;
-import org.openrdf.query.QueryLanguage;
-import org.openrdf.query.TupleQuery;
-import org.openrdf.query.TupleQueryResult;
-import org.openrdf.repository.RepositoryConnection;
-import org.openrdf.repository.RepositoryException;
-import org.openrdf.repository.sparql.SPARQLRepository;
 import rs.pupin.jpo.esta_ld.DSDRepoComponent;
 
 /**
@@ -47,48 +33,6 @@ public class DSDRepoApplication extends Application
         window = new Window("DSD Repo");
         setMainWindow(window);
         setTheme("esta-ld");
-        
-//        String query = "PREFIX qb: <http://purl.org/linked-data/cube#> \n"
-//                + "SELECT DISTINCT isiri(?val) as ?i datatype(?val) as ?t \n"
-//                + "FROM <@gSource> \n"
-//                + "WHERE { \n"
-//                + "  ?obs a qb:Observation . \n"
-//                + "  ?obs <@prop> ?val . \n"
-//                + "}";
-//        query = query.replace("@prop", "http://purl.org/linked-data/sdmx/2009/measure#obsValue").replace("@gSource", "http://elpo.stat.gov.rs/test/cvmod/noDataSet/");
-//        final StringBuilder output = new StringBuilder();
-//        SPARQLRepository repo = new SPARQLRepository("http://localhost:8890/sparql");
-//        try {
-//            repo.initialize();
-//            RepositoryConnection con = repo.getConnection();
-//            TupleQuery q = con.prepareTupleQuery(QueryLanguage.SPARQL, query);
-//            TupleQueryResult result = q.evaluate();
-//            while (result.hasNext()){
-//                BindingSet set = result.next();
-//                Value iVal = set.getValue("i");
-//                Value tVal = set.getValue("t");
-//                output.append("isIRI: ");
-//                if (iVal != null)
-//                    output.append(iVal.stringValue());
-//                output.append("\nType: ");
-//                if (tVal != null)
-//                    output.append(tVal.stringValue());
-//                output.append("\n");
-//            }
-//        } catch (RepositoryException ex) {
-//            Logger.getLogger(DSDRepoApplication.class.getName()).log(Level.SEVERE, null, ex);
-//        } catch (MalformedQueryException ex) {
-//            Logger.getLogger(DSDRepoApplication.class.getName()).log(Level.SEVERE, null, ex);
-//        } catch (QueryEvaluationException ex) {
-//            Logger.getLogger(DSDRepoApplication.class.getName()).log(Level.SEVERE, null, ex);
-//        }
-//        
-//        Button btn = new Button("Click me nigga");
-//        btn.addListener(new Button.ClickListener() {
-//            public void buttonClick(Button.ClickEvent event) {
-//                getMainWindow().showNotification(output.toString());
-//            }
-//        });
         
         DSDRepoComponent component = new DSDRepoComponent();
         

@@ -90,6 +90,15 @@ public class DSDRepoComponent extends CustomComponent {
         ACTION_SET_AS_DIM, ACTION_SET_AS_MEAS, ACTION_SET_AS_ATTR, 
         ACTION_SET_AS_UNDEF, ACTION_HIGHLIGHT_MATCHING };
     
+    private static Action [] ACTIONS_NAVI_PLUS = new Action [] {
+        ACTION_SET_AS_DIM, ACTION_SET_AS_MEAS, ACTION_SET_AS_ATTR, 
+        ACTION_SET_AS_UNDEF, ACTION_HIGHLIGHT_MATCHING,
+        ACTION_EXPAND_ALL, ACTION_COLLAPSE_ALL
+    };
+    private static Action [] ACTIONS_DSD_NAVI = new Action [] {
+        ACTION_SET_AS_DSD, ACTION_EXPAND_ALL, ACTION_COLLAPSE_ALL
+    };
+    
     public DSDRepoComponent(Repository repository){
         this.repository = repository;
         
@@ -208,8 +217,20 @@ public class DSDRepoComponent extends CustomComponent {
             dataTree.addActionHandler(new Action.Handler() {
 
                 public Action[] getActions(Object target, Object sender) {
-                    if (!(target instanceof String)) return null;
-                    return ACTIONS;
+                    if (target == null) return null;
+                    if (dataTree.hasChildren(target))
+                        if (target instanceof String) {
+                            return ACTIONS_NAVI_PLUS;
+                        } else {
+                            return ACTIONS_NAVI;
+                        }
+                    else {
+                        if (target instanceof String) {
+                            return ACTIONS;
+                        } else {
+                            return null;
+                        }
+                    }
                 }
 
                 public void handleAction(Action action, Object sender, Object target) {
@@ -229,7 +250,10 @@ public class DSDRepoComponent extends CustomComponent {
 //                        highlighted = e;
                         // update repo tree
 //                        repoTree.containerItemSetChange(null);
-                    }
+                    } else if (action == ACTION_EXPAND_ALL)
+                        dataTree.expandItemsRecursively(target);
+                    else if (action == ACTION_COLLAPSE_ALL)
+                        dataTree.collapseItemsRecursively(target);
                 }
             });
             dataTree.addListener(new Tree.ExpandListener() {
@@ -346,21 +370,6 @@ public class DSDRepoComponent extends CustomComponent {
                 }
             }
         });
-        
-        dataTree.addActionHandler(new Action.Handler() {
-            public Action[] getActions(Object target, Object sender) {
-                if (target == null) return null;
-                if (dataTree.hasChildren(target)) return ACTIONS_NAVI;
-                else return null;
-            }
-
-            public void handleAction(Action action, Object sender, Object target) {
-                if (action == ACTION_EXPAND_ALL)
-                    dataTree.expandItemsRecursively(target);
-                else if (action == ACTION_COLLAPSE_ALL)
-                    dataTree.collapseItemsRecursively(target);
-            }
-        });
     }
     
     private void addItemStructure(Tree t, Structure s){
@@ -467,30 +476,39 @@ public class DSDRepoComponent extends CustomComponent {
         
         repoTree.addActionHandler(new Action.Handler() {
             public Action[] getActions(Object target, Object sender) {
-                if (target instanceof Structure) 
-                    return new Action [] { ACTION_SET_AS_DSD };
-                else
-                    return null;
+                if (target == null) return null;
+                if (repoTree.hasChildren(target)) 
+                    if (target instanceof Structure) {
+                        return ACTIONS_DSD_NAVI; 
+                    } else { 
+                        return ACTIONS_NAVI;
+                    }
+                else return null;
             }
 
             public void handleAction(Action action, Object sender, Object target) {
-                if (action != ACTION_SET_AS_DSD) return;
-                String dsd = ((Structure)target).getUri();
-                try {
-                    RepositoryConnection conn = repository.getConnection();
-                    for (String q: DSDRepoUtils.qCopyDSD(dsd, repoGraph, dataGraph)){
-                        GraphQuery query = conn.prepareGraphQuery(QueryLanguage.SPARQL, q);
-                        query.evaluate();
+                if (action == ACTION_EXPAND_ALL)
+                    repoTree.expandItemsRecursively(target);
+                else if (action == ACTION_COLLAPSE_ALL)
+                    repoTree.collapseItemsRecursively(target);
+                else if (action == ACTION_SET_AS_DSD) {
+                    String dsd = ((Structure)target).getUri();
+                    try {
+                        RepositoryConnection conn = repository.getConnection();
+                        for (String q: DSDRepoUtils.qCopyDSD(dsd, repoGraph, dataGraph)){
+                            GraphQuery query = conn.prepareGraphQuery(QueryLanguage.SPARQL, q);
+                            query.evaluate();
+                        }
+                    } catch (RepositoryException ex) {
+                        Logger.getLogger(DSDRepoComponent.class.getName()).log(Level.SEVERE, null, ex);
+                    } catch (MalformedQueryException ex) {
+                        Logger.getLogger(DSDRepoComponent.class.getName()).log(Level.SEVERE, null, ex);
+                    } catch (QueryEvaluationException ex) {
+                        Logger.getLogger(DSDRepoComponent.class.getName()).log(Level.SEVERE, null, ex);
                     }
-                } catch (RepositoryException ex) {
-                    Logger.getLogger(DSDRepoComponent.class.getName()).log(Level.SEVERE, null, ex);
-                } catch (MalformedQueryException ex) {
-                    Logger.getLogger(DSDRepoComponent.class.getName()).log(Level.SEVERE, null, ex);
-                } catch (QueryEvaluationException ex) {
-                    Logger.getLogger(DSDRepoComponent.class.getName()).log(Level.SEVERE, null, ex);
+                    getWindow().showNotification("Set " + dsd + " as qb:DataStructureDefinition");
+                    dataTree.containerItemSetChange(null);
                 }
-                getWindow().showNotification("Set " + dsd + " as qb:DataStructureDefinition");
-                dataTree.containerItemSetChange(null);
             }
         });
         
@@ -503,21 +521,6 @@ public class DSDRepoComponent extends CustomComponent {
 //                        return "highlight";
 //                }
                 return null;
-            }
-        });
-        
-        repoTree.addActionHandler(new Action.Handler() {
-            public Action[] getActions(Object target, Object sender) {
-                if (target == null) return null;
-                if (repoTree.hasChildren(target)) return ACTIONS_NAVI;
-                else return null;
-            }
-
-            public void handleAction(Action action, Object sender, Object target) {
-                if (action == ACTION_EXPAND_ALL)
-                    repoTree.expandItemsRecursively(target);
-                else if (action == ACTION_COLLAPSE_ALL)
-                    repoTree.collapseItemsRecursively(target);
             }
         });
     }
