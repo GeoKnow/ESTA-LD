@@ -8,6 +8,7 @@ package rs.pupin.jpo.esta_ld;
 
 import com.vaadin.data.Property;
 import com.vaadin.event.Action;
+import com.vaadin.terminal.ThemeResource;
 import com.vaadin.ui.AbstractSelect;
 import com.vaadin.ui.ComboBox;
 import com.vaadin.ui.Component;
@@ -70,6 +71,9 @@ public class DSDRepoComponent extends CustomComponent {
     private String dataset;
     private String repoGraph;
     private String highlighted;
+    
+    private ThemeResource icon_structure = new ThemeResource("icons/icon_structure.png");
+    private ThemeResource icon_property = new ThemeResource("icons/icon_property.png");
     
     private static Action ACTION_SET_AS_DIM = new Action("Set as Dimension");
     private static Action ACTION_SET_AS_MEAS = new Action("Set as Measure");
@@ -197,7 +201,7 @@ public class DSDRepoComponent extends CustomComponent {
                 BindingSet set = res.next();
                 String component = set.getValue("comp").stringValue();
 //                undef.addElement(component);
-                dataTree.addItem(component);
+                addItemProperty(dataTree, component);
                 dataTree.setParent(component, undef);
             }
             
@@ -359,6 +363,21 @@ public class DSDRepoComponent extends CustomComponent {
         });
     }
     
+    private void addItemStructure(Tree t, Structure s){
+        t.addItem(s);
+        t.setItemIcon(s, icon_structure);
+    }
+    
+    private void addItemProperty(Tree t, ComponentProperty p){
+        t.addItem(p);
+        t.setItemIcon(p, icon_property);
+    }
+    
+    private void addItemProperty(Tree t, String p){
+        t.addItem(p);
+        t.setItemIcon(p, icon_property);
+    }
+    
     private void populateRepoTree(){
         repoTree.removeAllItems();
         try {
@@ -370,8 +389,7 @@ public class DSDRepoComponent extends CustomComponent {
                 BindingSet set = res.next();
                 String dsd = set.getValue("dsd").stringValue();
                 final Structure structure = new SparqlStructure(repository, dsd, repoGraph);
-                           
-                repoTree.addItem(structure);
+                addItemStructure(repoTree, structure);
                 CountingTreeHeader dimCountHeader = createCountingTreeHeader(repoTree, "Dimensions");
                 repoTree.setParent(dimCountHeader, structure);
                 CountingTreeHeader measCountHeader = createCountingTreeHeader(repoTree, "Measures");
@@ -380,15 +398,15 @@ public class DSDRepoComponent extends CustomComponent {
                 repoTree.setParent(attrCountHeader, structure);
                 
                 for (Dimension dim: structure.getDimensions()){
-                    repoTree.addItem(dim);
+                    addItemProperty(repoTree, dim);
                     repoTree.setParent(dim, dimCountHeader);
                 }
                 for (Attribute attr: structure.getAttributes()){
-                    repoTree.addItem(attr);
+                    addItemProperty(repoTree, attr);
                     repoTree.setParent(attr, attrCountHeader);
                 }
                 for (Measure meas: structure.getMeasures()){
-                    repoTree.addItem(meas);
+                    addItemProperty(repoTree, meas);
                     repoTree.setParent(meas, measCountHeader);
                 }
             }
