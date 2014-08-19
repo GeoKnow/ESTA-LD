@@ -8,8 +8,6 @@ package rs.pupin.jpo.esta_ld;
 
 import com.vaadin.data.Property;
 import com.vaadin.event.Action;
-import com.vaadin.event.ItemClickEvent;
-import com.vaadin.event.MouseEvents;
 import com.vaadin.ui.AbstractSelect;
 import com.vaadin.ui.ComboBox;
 import com.vaadin.ui.Component;
@@ -71,14 +69,22 @@ public class DSDRepoComponent extends CustomComponent {
     private String dataGraph;
     private String dataset;
     private String repoGraph;
+    private String highlighted;
     
     private static Action ACTION_SET_AS_DIM = new Action("Set as Dimension");
     private static Action ACTION_SET_AS_MEAS = new Action("Set as Measure");
     private static Action ACTION_SET_AS_ATTR = new Action("Set as Attribute");
     private static Action ACTION_SET_AS_UNDEF = new Action("Set as Undefined");
+    private static Action ACTION_HIGHLIGHT_MATCHING = new Action("Highlight Matching");
     private static Action ACTION_SET_AS_DSD = new Action("Set as qb:DataStructureDefinition");
+    
+    private static Action ACTION_EXPAND_ALL = new Action("Expand All");
+    private static Action ACTION_COLLAPSE_ALL = new Action("Collapse All");
+    private static Action [] ACTIONS_NAVI = new Action [] { ACTION_EXPAND_ALL, ACTION_COLLAPSE_ALL };
 
-    private static Action [] ACTIONS = new Action[] { ACTION_SET_AS_DIM, ACTION_SET_AS_MEAS, ACTION_SET_AS_ATTR, ACTION_SET_AS_UNDEF };
+    private static Action [] ACTIONS = new Action[] { 
+        ACTION_SET_AS_DIM, ACTION_SET_AS_MEAS, ACTION_SET_AS_ATTR, 
+        ACTION_SET_AS_UNDEF, ACTION_HIGHLIGHT_MATCHING };
     
     public DSDRepoComponent(Repository repository){
         this.repository = repository;
@@ -214,6 +220,11 @@ public class DSDRepoComponent extends CustomComponent {
                         dataTree.setParent(e, attr);
                     } else if (action == ACTION_SET_AS_UNDEF){
                         dataTree.setParent(e, undef);
+                    } else if (action == ACTION_HIGHLIGHT_MATCHING){
+                        // notify repo tree about the change
+//                        highlighted = e;
+                        // update repo tree
+//                        repoTree.containerItemSetChange(null);
                     }
                 }
             });
@@ -309,6 +320,43 @@ public class DSDRepoComponent extends CustomComponent {
         } catch (QueryEvaluationException ex) {
             Logger.getLogger(DSDRepoComponent.class.getName()).log(Level.SEVERE, null, ex);
         }
+        
+        dataTree.addListener(new Property.ValueChangeListener() {
+            public void valueChange(Property.ValueChangeEvent event) {
+                Object selected = dataTree.getValue();
+                if (selected instanceof String){
+                    for (Object item: repoTree.getItemIds()){
+                        if (item instanceof ComponentProperty){
+                            ComponentProperty cp = (ComponentProperty) item;
+                            if (cp.getUri().equalsIgnoreCase(selected.toString())){
+                                repoTree.select(item);
+                                Object parent = repoTree.getParent(item);
+                                while (parent != null){
+                                    repoTree.expandItem(parent);
+                                    parent = repoTree.getParent(parent);
+                                }
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        
+        dataTree.addActionHandler(new Action.Handler() {
+            public Action[] getActions(Object target, Object sender) {
+                if (target == null) return null;
+                if (dataTree.hasChildren(target)) return ACTIONS_NAVI;
+                else return null;
+            }
+
+            public void handleAction(Action action, Object sender, Object target) {
+                if (action == ACTION_EXPAND_ALL)
+                    dataTree.expandItemsRecursively(target);
+                else if (action == ACTION_COLLAPSE_ALL)
+                    dataTree.collapseItemsRecursively(target);
+            }
+        });
     }
     
     private void populateRepoTree(){
@@ -424,6 +472,34 @@ public class DSDRepoComponent extends CustomComponent {
                     Logger.getLogger(DSDRepoComponent.class.getName()).log(Level.SEVERE, null, ex);
                 }
                 getWindow().showNotification("Set " + dsd + " as qb:DataStructureDefinition");
+                dataTree.containerItemSetChange(null);
+            }
+        });
+        
+        repoTree.setItemStyleGenerator(new Tree.ItemStyleGenerator() {
+            public String getStyle(Object itemId) {
+//                getWindow().showNotification("In the style");
+//                if ((itemId instanceof ComponentProperty)){
+//                    getWindow().showNotification("In the style 2");
+//                    if (((ComponentProperty)itemId).getUri().equalsIgnoreCase(highlighted))
+//                        return "highlight";
+//                }
+                return null;
+            }
+        });
+        
+        repoTree.addActionHandler(new Action.Handler() {
+            public Action[] getActions(Object target, Object sender) {
+                if (target == null) return null;
+                if (repoTree.hasChildren(target)) return ACTIONS_NAVI;
+                else return null;
+            }
+
+            public void handleAction(Action action, Object sender, Object target) {
+                if (action == ACTION_EXPAND_ALL)
+                    repoTree.expandItemsRecursively(target);
+                else if (action == ACTION_COLLAPSE_ALL)
+                    repoTree.collapseItemsRecursively(target);
             }
         });
     }

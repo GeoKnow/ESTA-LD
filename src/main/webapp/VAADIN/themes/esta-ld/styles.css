@@ -53,3 +53,7 @@ and open the template in the editor.
 .v-button.v-button-geo-name.geo-name .v-button-wrap {
     background-image: none;
 }
+
+.v-tree-node-caption .v-tree-node-caption-highlight {
+    background-color: #BCD3DE;
+}
