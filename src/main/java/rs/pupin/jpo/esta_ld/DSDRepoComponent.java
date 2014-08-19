@@ -72,8 +72,8 @@ public class DSDRepoComponent extends CustomComponent {
     private String repoGraph;
     private String highlighted;
     
-    private ThemeResource icon_structure = new ThemeResource("icons/icon_structure.png");
-    private ThemeResource icon_property = new ThemeResource("icons/icon_property.png");
+    private ThemeResource icon_structure = new ThemeResource("icons/thumbs_up_color.png");
+    private ThemeResource icon_property = new ThemeResource("icons/thumbs_down_color.png");
     
     private static Action ACTION_SET_AS_DIM = new Action("Set as Dimension");
     private static Action ACTION_SET_AS_MEAS = new Action("Set as Measure");
