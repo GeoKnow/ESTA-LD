@@ -10,11 +10,14 @@ import com.vaadin.data.Property;
 import com.vaadin.event.Action;
 import com.vaadin.terminal.ThemeResource;
 import com.vaadin.ui.AbstractSelect;
+import com.vaadin.ui.Button;
 import com.vaadin.ui.ComboBox;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.CustomComponent;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
+import com.vaadin.ui.MenuBar;
+import com.vaadin.ui.TextField;
 import com.vaadin.ui.Tree;
 import com.vaadin.ui.VerticalLayout;
 import java.util.Collection;
@@ -98,6 +101,15 @@ public class DSDRepoComponent extends CustomComponent {
     private static Action [] ACTIONS_DSD_NAVI = new Action [] {
         ACTION_SET_AS_DSD, ACTION_EXPAND_ALL, ACTION_COLLAPSE_ALL
     };
+    private VerticalLayout statusLayout;
+    
+    private MenuBar.Command cmdFindDSD;
+    private MenuBar.Command cmdCreateDSD;
+    private CountingTreeHeader dim;
+    private CountingTreeHeader meas;
+    private CountingTreeHeader attr;
+    private CountingTreeHeader undef;
+    private Tree compatibleCodeLists;
     
     public DSDRepoComponent(Repository repository){
         this.repository = repository;
@@ -121,23 +133,92 @@ public class DSDRepoComponent extends CustomComponent {
         dataGraph = graph.getUri();
         repoGraph = "http://validation-test/regular-dsd/";
         
+        VerticalLayout rootLayout = new VerticalLayout();
+        rootLayout.setWidth("100%");
+        rootLayout.setSpacing(true);
+        
         mainLayout = new VerticalLayout();
         mainLayout.setWidth("100%");
         mainLayout.setSpacing(true);
+        
+        MenuBar menu = new MenuBar();
+        cmdFindDSD = new MenuBar.Command() {
+            public void menuSelected(MenuBar.MenuItem selectedItem) {
+                findDSDs();
+            }
+        };
+        menu.addItem("Find Suitable DSDs", cmdFindDSD);
+        cmdCreateDSD = new MenuBar.Command() {
+            public void menuSelected(MenuBar.MenuItem selectedItem) {
+                createDSD();
+            }
+        };
+        menu.addItem("Create DSD", cmdCreateDSD);
+        
+        rootLayout.addComponent(menu);
+        rootLayout.addComponent(mainLayout);
+        
+        setCompositionRoot(rootLayout);
+    }
+    
+    private void findDSDs(){
+        mainLayout.removeAllComponents();
+        
         datasetLayout = new HorizontalLayout();
         datasetLayout.setSpacing(true);
         datasetLayout.setWidth("100%");
         createDataSetLayout();
+        selectDataSet.addListener(new Property.ValueChangeListener(){
+            public void valueChange(Property.ValueChangeEvent event) {
+                DataSet ds = (DataSet) event.getProperty().getValue();
+                refreshContentFindDSDs(ds);
+            }
+        });
         mainLayout.addComponent(datasetLayout);
         
         mainLayout.addComponent(new Label("<hr/>", Label.CONTENT_XHTML));
+        
+        statusLayout = new VerticalLayout();
+        statusLayout.setWidth("100%");
+        statusLayout.setSpacing(true);
+        mainLayout.addComponent(statusLayout);
+        createStatusLayout();
         
         contentLayout = new HorizontalLayout();
         contentLayout.setSizeFull();
         contentLayout.setWidth("100%");
         contentLayout.setSpacing(true);
         mainLayout.addComponent(contentLayout);
-        setCompositionRoot(mainLayout);
+    }
+    
+    private void createDSD(){
+        mainLayout.removeAllComponents();
+        
+        datasetLayout = new HorizontalLayout();
+        datasetLayout.setSpacing(true);
+        datasetLayout.setWidth("100%");
+        createDataSetLayout();
+        selectDataSet.addListener(new Property.ValueChangeListener(){
+            public void valueChange(Property.ValueChangeEvent event) {
+                DataSet ds = (DataSet) event.getProperty().getValue();
+                refreshContentCreateDSD(ds);
+            }
+        });
+        mainLayout.addComponent(datasetLayout);
+        
+        mainLayout.addComponent(new Label("<hr/>", Label.CONTENT_XHTML));
+        
+        statusLayout = new VerticalLayout();
+        statusLayout.setWidth("100%");
+        statusLayout.setSpacing(true);
+        mainLayout.addComponent(statusLayout);
+        createStatusLayout();
+        
+        contentLayout = new HorizontalLayout();
+        contentLayout.setSizeFull();
+        contentLayout.setWidth("100%");
+        contentLayout.setSpacing(true);
+        mainLayout.addComponent(contentLayout);
     }
 
     private void createDataSetLayout() {
@@ -153,13 +234,10 @@ public class DSDRepoComponent extends CustomComponent {
         selectDataSet.setWidth("100%");
         datasetLayout.addComponent(selectDataSet);
         datasetLayout.setExpandRatio(selectDataSet, 2.0f);
+    }
+    
+    private void createStatusLayout(){
         
-        selectDataSet.addListener(new Property.ValueChangeListener(){
-            public void valueChange(Property.ValueChangeEvent event) {
-                DataSet ds = (DataSet) event.getProperty().getValue();
-                refreshContent(ds);
-            }
-        });
     }
     
     private CountingTreeHeader createCountingTreeHeader(Tree t, String header){
@@ -201,10 +279,10 @@ public class DSDRepoComponent extends CustomComponent {
             TupleQuery q = con.prepareTupleQuery(QueryLanguage.SPARQL, DSDRepoUtils.qPossibleComponents(dataGraph, dataset));
             TupleQueryResult res = q.evaluate();
             
-            final CountingTreeHeader dim = createCountingTreeHeader(dataTree, "Dimensions");
-            final CountingTreeHeader meas = createCountingTreeHeader(dataTree, "Measures");
-            final CountingTreeHeader attr = createCountingTreeHeader(dataTree, "Attributes");
-            final CountingTreeHeader undef = createCountingTreeHeader(dataTree, "Undefined");
+            dim = createCountingTreeHeader(dataTree, "Dimensions");
+            meas = createCountingTreeHeader(dataTree, "Measures");
+            attr = createCountingTreeHeader(dataTree, "Attributes");
+            undef = createCountingTreeHeader(dataTree, "Undefined");
             
             while (res.hasNext()){
                 BindingSet set = res.next();
@@ -214,48 +292,6 @@ public class DSDRepoComponent extends CustomComponent {
                 dataTree.setParent(component, undef);
             }
             
-            dataTree.addActionHandler(new Action.Handler() {
-
-                public Action[] getActions(Object target, Object sender) {
-                    if (target == null) return null;
-                    if (dataTree.hasChildren(target))
-                        if (target instanceof String) {
-                            return ACTIONS_NAVI_PLUS;
-                        } else {
-                            return ACTIONS_NAVI;
-                        }
-                    else {
-                        if (target instanceof String) {
-                            return ACTIONS;
-                        } else {
-                            return null;
-                        }
-                    }
-                }
-
-                public void handleAction(Action action, Object sender, Object target) {
-                    if (!(target instanceof String)) return;
-                    String e = (String) target;
-                    if (action == ACTION_SET_AS_DIM) {
-                        dataTree.setParent(e, dim);
-                    }
-                    else if (action == ACTION_SET_AS_MEAS){
-                        dataTree.setParent(e, meas);
-                    } else if (action == ACTION_SET_AS_ATTR){
-                        dataTree.setParent(e, attr);
-                    } else if (action == ACTION_SET_AS_UNDEF){
-                        dataTree.setParent(e, undef);
-                    } else if (action == ACTION_HIGHLIGHT_MATCHING){
-                        // notify repo tree about the change
-//                        highlighted = e;
-                        // update repo tree
-//                        repoTree.containerItemSetChange(null);
-                    } else if (action == ACTION_EXPAND_ALL)
-                        dataTree.expandItemsRecursively(target);
-                    else if (action == ACTION_COLLAPSE_ALL)
-                        dataTree.collapseItemsRecursively(target);
-                }
-            });
             dataTree.addListener(new Tree.ExpandListener() {
                 public void nodeExpand(Tree.ExpandEvent event) {
                     Object obj = event.getItemId();
@@ -348,6 +384,51 @@ public class DSDRepoComponent extends CustomComponent {
         } catch (QueryEvaluationException ex) {
             Logger.getLogger(DSDRepoComponent.class.getName()).log(Level.SEVERE, null, ex);
         }
+    }
+    
+    private void addDataTreeListenersFind(){
+        dataTree.addActionHandler(new Action.Handler() {
+
+            public Action[] getActions(Object target, Object sender) {
+                if (target == null) return null;
+                if (dataTree.hasChildren(target))
+                    if (target instanceof String) {
+                        return ACTIONS_NAVI_PLUS;
+                    } else {
+                        return ACTIONS_NAVI;
+                    }
+                else {
+                    if (target instanceof String) {
+                        return ACTIONS;
+                    } else {
+                        return null;
+                    }
+                }
+            }
+
+            public void handleAction(Action action, Object sender, Object target) {
+                if (!(target instanceof String)) return;
+                String e = (String) target;
+                if (action == ACTION_SET_AS_DIM) {
+                    dataTree.setParent(e, dim);
+                }
+                else if (action == ACTION_SET_AS_MEAS){
+                    dataTree.setParent(e, meas);
+                } else if (action == ACTION_SET_AS_ATTR){
+                    dataTree.setParent(e, attr);
+                } else if (action == ACTION_SET_AS_UNDEF){
+                    dataTree.setParent(e, undef);
+                } else if (action == ACTION_HIGHLIGHT_MATCHING){
+                    // notify repo tree about the change
+//                        highlighted = e;
+                    // update repo tree
+//                        repoTree.containerItemSetChange(null);
+                } else if (action == ACTION_EXPAND_ALL)
+                    dataTree.expandItemsRecursively(target);
+                else if (action == ACTION_COLLAPSE_ALL)
+                    dataTree.collapseItemsRecursively(target);
+            }
+        });
         
         dataTree.addListener(new Property.ValueChangeListener() {
             public void valueChange(Property.ValueChangeEvent event) {
@@ -372,17 +453,92 @@ public class DSDRepoComponent extends CustomComponent {
         });
     }
     
+    private void addDataTreeListenersCreate(){
+        // ovde treba raditi na update-u statusnih labela
+        dataTree.addActionHandler(new Action.Handler() {
+
+            public Action[] getActions(Object target, Object sender) {
+                if (target == null) return null;
+                if (dataTree.hasChildren(target))
+                    if (target instanceof String) {
+                        return ACTIONS_NAVI_PLUS;
+                    } else {
+                        return ACTIONS_NAVI;
+                    }
+                else {
+                    if (target instanceof String) {
+                        return ACTIONS;
+                    } else {
+                        return null;
+                    }
+                }
+            }
+
+            public void handleAction(Action action, Object sender, Object target) {
+                if (!(target instanceof String)) return;
+                String e = (String) target;
+                if (action == ACTION_SET_AS_DIM) {
+                    dataTree.setParent(e, dim);
+                }
+                else if (action == ACTION_SET_AS_MEAS){
+                    dataTree.setParent(e, meas);
+                } else if (action == ACTION_SET_AS_ATTR){
+                    dataTree.setParent(e, attr);
+                } else if (action == ACTION_SET_AS_UNDEF){
+                    dataTree.setParent(e, undef);
+                } else if (action == ACTION_HIGHLIGHT_MATCHING){
+                    // notify repo tree about the change
+//                        highlighted = e;
+                    // update repo tree
+//                        repoTree.containerItemSetChange(null);
+                } else if (action == ACTION_EXPAND_ALL)
+                    dataTree.expandItemsRecursively(target);
+                else if (action == ACTION_COLLAPSE_ALL)
+                    dataTree.collapseItemsRecursively(target);
+            }
+        });
+        
+        // show compatible code lists when a user selects a dim with code lists
+        dataTree.addListener(new Property.ValueChangeListener() {
+            public void valueChange(Property.ValueChangeEvent event) {
+                Object selected = dataTree.getValue();
+                if (selected instanceof String){
+                    Object child = dataTree.getChildren(selected).iterator().next();
+                    Object infant = dataTree.getChildren(child).iterator().next();
+                    CodeDatatypeTreeElement elem = (CodeDatatypeTreeElement)infant;
+                    if (!elem.isCode()) return;
+                    
+                    try {
+                        // get compatible code lists and show in compatibleCodeLists tree
+                        RepositoryConnection conn = repository.getConnection();
+                        TupleQuery query = conn.prepareTupleQuery(QueryLanguage.SPARQL, 
+                                DSDRepoUtils.qCompatibleCodeLists(selected.toString(), dataGraph, repoGraph));
+                        TupleQueryResult res = query.evaluate();
+                        Collection<String> codeLists = new LinkedList<String>();
+                        while (res.hasNext()){
+                            BindingSet set = res.next();
+                            String cl = set.getValue("cl").stringValue();
+                            codeLists.add(cl);
+                        }
+                        populateCodeListTree(codeLists);
+                    } catch (RepositoryException ex) {
+                        Logger.getLogger(DSDRepoComponent.class.getName()).log(Level.SEVERE, null, ex);
+                    } catch (MalformedQueryException ex) {
+                        Logger.getLogger(DSDRepoComponent.class.getName()).log(Level.SEVERE, null, ex);
+                    } catch (QueryEvaluationException ex) {
+                        Logger.getLogger(DSDRepoComponent.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }
+            }
+        });
+    }
+    
     private void addItemStructure(Tree t, Structure s){
         t.addItem(s);
         t.setItemIcon(s, icon_structure);
     }
     
-    private void addItemProperty(Tree t, ComponentProperty p){
-        t.addItem(p);
-        t.setItemIcon(p, icon_property);
-    }
-    
-    private void addItemProperty(Tree t, String p){
+    private void addItemProperty(Tree t, Object p){
         t.addItem(p);
         t.setItemIcon(p, icon_property);
     }
@@ -525,7 +681,32 @@ public class DSDRepoComponent extends CustomComponent {
         });
     }
     
-    private void refreshContent(DataSet ds){
+    private void populateCodeListTree (Collection<String> codeLists){
+        compatibleCodeLists.removeAllItems();
+        for (String cl: codeLists){
+            compatibleCodeLists.addItem(cl);
+            try {
+                RepositoryConnection conn = repository.getConnection();
+                TupleQuery query = conn.prepareTupleQuery(QueryLanguage.SPARQL, DSDRepoUtils.qCodeListMemebers(cl, repoGraph));
+                TupleQueryResult res = query.evaluate();
+                while (res.hasNext()){
+                    BindingSet set = res.next();
+                    String code = set.getValue("code").stringValue();
+                    compatibleCodeLists.addItem(code);
+                    compatibleCodeLists.setParent(code, cl);
+                    compatibleCodeLists.setChildrenAllowed(code, false);
+                }
+            } catch (RepositoryException ex) {
+                Logger.getLogger(DSDRepoComponent.class.getName()).log(Level.SEVERE, null, ex);
+            } catch (MalformedQueryException ex) {
+                Logger.getLogger(DSDRepoComponent.class.getName()).log(Level.SEVERE, null, ex);
+            } catch (QueryEvaluationException ex) {
+                Logger.getLogger(DSDRepoComponent.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+    }
+    
+    private void refreshContentFindDSDs(DataSet ds){
         Structure struct = ds.getStructure();
         
         dataset = ds.getUri();
@@ -534,6 +715,7 @@ public class DSDRepoComponent extends CustomComponent {
         dataTree.setNullSelectionAllowed(true);
         dataTree.setImmediate(true);
         populateDataTree();
+        addDataTreeListenersFind();
         contentLayout.addComponent(dataTree);
         repoTree = new Tree("Matching Structures");
         repoTree.setNullSelectionAllowed(true);
@@ -567,6 +749,34 @@ public class DSDRepoComponent extends CustomComponent {
             // dims, attrs and meas
             // on click show used values
         }
+    }
+    
+    private void refreshContentCreateDSD(DataSet ds){
+        Structure struct = ds.getStructure();
+        
+        dataset = ds.getUri();
+        contentLayout.removeAllComponents();;
+        dataTree = new Tree("Dataset");
+        dataTree.setNullSelectionAllowed(true);
+        dataTree.setImmediate(true);
+        populateDataTree();
+        addDataTreeListenersCreate();
+        contentLayout.addComponent(dataTree);
+        
+        final VerticalLayout right = new VerticalLayout();
+        right.setSpacing(true);
+        contentLayout.addComponent(right);
+        final TextField dsdUri = new TextField("Enter DSD URI");
+        dsdUri.setWidth("300px");
+        right.addComponent(dsdUri);
+        final Label lblUndefined = new Label("There are still x undefined components", Label.CONTENT_XHTML);
+        right.addComponent(lblUndefined);
+        final Label lblMissingCodeLists = new Label("There are still y missing code lists", Label.CONTENT_XHTML);
+        right.addComponent(lblMissingCodeLists);
+        final Button btnCreate = new Button("Create DSD");
+        right.addComponent(btnCreate);
+        compatibleCodeLists = new Tree("Compatible code lists");
+        right.addComponent(compatibleCodeLists);
     }
     
     private void everythingFine(DataSet ds){

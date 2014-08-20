@@ -170,6 +170,7 @@ public class DSDRepoUtils {
     }
     
     public static String qCompatibleCodeLists(String property, String sourceGraph, String targetGraph){
+        StringBuilder builder = createBuilderWithPrefixes();
         String query = "SELECT DISTINCT ?cl \n"
                 + "WHERE { \n"
                 + "  graph <@gTarget> { \n"
@@ -177,7 +178,7 @@ public class DSDRepoUtils {
                 + "  } \n"
                 + "  FILTER NOT EXISTS { \n"
                 + "    graph <@gSource> { \n"
-                + "      ?obs a qb:Observation . \n"
+                + "      ?obs qb:dataSet ?ds . \n"
                 + "      ?obs <@prop> ?item . \n"
                 + "    } \n"
                 + "    FILTER NOT EXISTS { \n"
@@ -187,7 +188,43 @@ public class DSDRepoUtils {
                 + "    } \n"
                 + "  } \n"
                 + "}";
-        return query.replace("@prop", property).replace("@gSource", sourceGraph).replace("@gTarget", targetGraph);
+        builder.append(query);
+        return builder.toString().replace("@prop", property).replace("@gSource", sourceGraph).replace("@gTarget", targetGraph);
+    }
+    
+    public static String qCodeListMemebers(String codeList, String graph){
+        StringBuilder builder = createBuilderWithPrefixes();
+        builder.append("SELECT DISTINCT ?code \n");
+        builder.append("FROM <@g> \n");
+        builder.append("WHERE { \n");
+        builder.append("  ?code skos:inScheme <@cl> . \n");
+        builder.append("}");
+        return builder.toString().replace("@cl", codeList).replace("@g", graph);
+    }
+    
+    public static String qCreateDSD(String dsd, Collection<String> dimList,
+            Collection<String> measList, Collection<String> attrList,
+            String graph){
+        StringBuilder builder = createBuilderWithPrefixes();
+        builder.append("INSERT INTO GRAPH <@graph> { \n");
+        builder.append("  <@dsd> a qb:DataStructureDefinition . \n");
+        int count = 0;
+        for (String dim:dimList){
+            String dc = ":dc" + count;
+            StringBuilder b = new StringBuilder();
+            b.append("  <@dsd> qb:component <@dc> . \n");
+            b.append("  <@dc> qb:componentProperty <@dim> . \n");
+            b.append("  <@dim> a qb:DimensionProperty . \n");
+            b.append("  <@dim> rdfs:range ??? \n");
+            //TODO
+            builder.append(b.toString().replace("@dc", dc).replace("@dim", dim));
+            count++;
+        }
+        builder.append(" \n");
+        builder.append(" \n");
+        builder.append(" \n");
+        
+        return builder.toString().replace("@graph", graph);
     }
     
 }
