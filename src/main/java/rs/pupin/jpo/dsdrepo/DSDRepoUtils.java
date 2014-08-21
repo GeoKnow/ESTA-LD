@@ -8,6 +8,8 @@ package rs.pupin.jpo.dsdrepo;
 
 import java.util.Collection;
 import java.util.LinkedList;
+import java.util.List;
+import java.util.Random;
 
 /**
  *
@@ -202,29 +204,83 @@ public class DSDRepoUtils {
         return builder.toString().replace("@cl", codeList).replace("@g", graph);
     }
     
-    public static String qCreateDSD(String dsd, Collection<String> dimList,
-            Collection<String> measList, Collection<String> attrList,
+    public static String qCreateDSD(String ds, String dsd, Collection<String> dimList,
+            Collection<String> measList, Collection<String> attrList, 
+            List<String> propList, List<String> rangeList, 
             String graph){
         StringBuilder builder = createBuilderWithPrefixes();
         builder.append("INSERT INTO GRAPH <@graph> { \n");
         builder.append("  <@dsd> a qb:DataStructureDefinition . \n");
+        builder.append("  <").append(ds).append("> qb:structure <@dsd> . \n");
+        for (int i=0; i<propList.size(); i++){
+            builder.append("  <").append(propList.get(i)).append("> rdfs:range <");
+            builder.append(rangeList.get(i)).append("> . \n");
+        }
         int count = 0;
+        int random = new Random().nextInt();
         for (String dim:dimList){
-            String dc = ":dc" + count;
+            String dc = "http://random_cs/dc/" + count + "/" + random + "/";
             StringBuilder b = new StringBuilder();
             b.append("  <@dsd> qb:component <@dc> . \n");
             b.append("  <@dc> qb:componentProperty <@dim> . \n");
             b.append("  <@dim> a qb:DimensionProperty . \n");
-            b.append("  <@dim> rdfs:range ??? \n");
-            //TODO
             builder.append(b.toString().replace("@dc", dc).replace("@dim", dim));
             count++;
         }
-        builder.append(" \n");
-        builder.append(" \n");
-        builder.append(" \n");
-        
-        return builder.toString().replace("@graph", graph);
+        count = 0;
+        for (String meas:measList){
+            String mc = "http://random_cs/mc/" + count + "/" + random + "/";
+            StringBuilder b = new StringBuilder();
+            b.append("  <@dsd> qb:component <@mc> . \n");
+            b.append("  <@mc> qb:componentProperty <@meas> . \n");
+            b.append("  <@meas> a qb:MeasureProperty . \n");
+            builder.append(b.toString().replace("@mc", mc).replace("@meas", meas));
+            count++;
+        }
+        count = 0;
+        for (String attr:attrList){
+            String ac = "http://random_cs/ac/" + count + "/" + random + "/";
+            StringBuilder b = new StringBuilder();
+            b.append("  <@dsd> qb:component <@ac> . \n");
+            b.append("  <@ac> qb:componentProperty <@attr> . \n");
+            b.append("  <@attr> a qb:AttributeProperty . \n");
+            builder.append(b.toString().replace("@ac", ac).replace("@attr", attr));
+            count++;
+        }
+        builder.append("} \n");
+        return builder.toString().replace("@graph", graph).replace("@dsd", dsd);
+    }
+    
+    public static String qCreateCodeList(String graph, String prop, String uri, 
+            Collection<String> codes){
+        StringBuilder builder = createBuilderWithPrefixes();
+        builder.append("INSERT INTO GRAPH <").append(graph).append("> { \n");
+        builder.append("  <@uri> a skos:ConceptScheme . \n");
+        builder.append("  <@prop> qb:codeList <@uri> . \n");
+        builder.append("  <@prop> rdfs:range skos:Concept . \n");
+        for (String code: codes){
+            builder.append("  <").append(code).append("> skos:inScheme <@uri> . \n");
+            builder.append("  <").append(code).append("> a skos:Concept . \n");
+        }
+        builder.append("}");
+        return builder.toString().replace("@prop", prop).replace("@uri", uri);
+    }
+    
+    public static String qPullCodeList(String cl, String prop,
+            String sGraph, String tGraph){
+        StringBuilder builder = createBuilderWithPrefixes();
+        builder.append("INSERT INTO GRAPH <").append(tGraph).append("> { \n");
+        builder.append("  <").append(prop).append("> qb:codeList <@cl> . \n");
+        builder.append("  <@cl> ?p ?o . \n");
+//        builder.append("  ?code skos:inScheme <@cl> . \n");
+        builder.append("  ?code ?code_p ?code_o . \n");
+        builder.append("} \n");
+        builder.append("WHERE { GRAPH <").append(sGraph).append("> { \n");
+        builder.append("  <@cl> ?p ?o . \n");
+        builder.append("  ?code skos:inScheme <@cl> . \n");
+        builder.append("  ?code ?code_p ?code_o . \n");
+        builder.append("} }");
+        return builder.toString().replace("@cl", cl);
     }
     
 }

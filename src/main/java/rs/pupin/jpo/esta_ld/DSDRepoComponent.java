@@ -20,6 +20,7 @@ import com.vaadin.ui.MenuBar;
 import com.vaadin.ui.TextField;
 import com.vaadin.ui.Tree;
 import com.vaadin.ui.VerticalLayout;
+import com.vaadin.ui.Window;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -59,6 +60,7 @@ import rs.pupin.jpo.dsdrepo.CountingTreeHeader;
  */
 public class DSDRepoComponent extends CustomComponent {
     private Repository repository;
+    private DataSet ds;
     private VerticalLayout mainLayout;
     private HorizontalLayout datasetLayout;
     private String endpoint;
@@ -78,29 +80,35 @@ public class DSDRepoComponent extends CustomComponent {
     private ThemeResource icon_structure = new ThemeResource("icons/rising_22.png");
     private ThemeResource icon_property = new ThemeResource("icons/volume_22.png");
     
-    private static Action ACTION_SET_AS_DIM = new Action("Set as Dimension");
-    private static Action ACTION_SET_AS_MEAS = new Action("Set as Measure");
-    private static Action ACTION_SET_AS_ATTR = new Action("Set as Attribute");
-    private static Action ACTION_SET_AS_UNDEF = new Action("Set as Undefined");
-    private static Action ACTION_HIGHLIGHT_MATCHING = new Action("Highlight Matching");
-    private static Action ACTION_SET_AS_DSD = new Action("Set as qb:DataStructureDefinition");
+    private static final Action ACTION_SET_AS_DIM = new Action("Set as Dimension");
+    private static final Action ACTION_SET_AS_MEAS = new Action("Set as Measure");
+    private static final Action ACTION_SET_AS_ATTR = new Action("Set as Attribute");
+    private static final Action ACTION_SET_AS_UNDEF = new Action("Set as Undefined");
+    private static final Action ACTION_HIGHLIGHT_MATCHING = new Action("Highlight Matching");
+    private static final Action ACTION_SET_AS_DSD = new Action("Set as qb:DataStructureDefinition");
     
-    private static Action ACTION_EXPAND_ALL = new Action("Expand All");
-    private static Action ACTION_COLLAPSE_ALL = new Action("Collapse All");
-    private static Action [] ACTIONS_NAVI = new Action [] { ACTION_EXPAND_ALL, ACTION_COLLAPSE_ALL };
+    private static final Action ACTION_EXPAND_ALL = new Action("Expand All");
+    private static final Action ACTION_COLLAPSE_ALL = new Action("Collapse All");
+    private static final Action [] ACTIONS_NAVI = new Action [] { ACTION_EXPAND_ALL, ACTION_COLLAPSE_ALL };
+    
+    private static final Action ACTION_CREATE_CL = new Action("Create Code List");
+    private static final Action ACTION_SET_AS_CL = new Action("Set as Code List");
+    
+    private static final Action ACTION_STORE = new Action("Store DSD in repository");
 
-    private static Action [] ACTIONS = new Action[] { 
+    private static final Action [] ACTIONS = new Action[] { 
         ACTION_SET_AS_DIM, ACTION_SET_AS_MEAS, ACTION_SET_AS_ATTR, 
         ACTION_SET_AS_UNDEF, ACTION_HIGHLIGHT_MATCHING };
     
-    private static Action [] ACTIONS_NAVI_PLUS = new Action [] {
+    private static final Action [] ACTIONS_NAVI_PLUS = new Action [] {
         ACTION_SET_AS_DIM, ACTION_SET_AS_MEAS, ACTION_SET_AS_ATTR, 
         ACTION_SET_AS_UNDEF, ACTION_HIGHLIGHT_MATCHING,
         ACTION_EXPAND_ALL, ACTION_COLLAPSE_ALL
     };
-    private static Action [] ACTIONS_DSD_NAVI = new Action [] {
+    private static final Action [] ACTIONS_DSD_NAVI = new Action [] {
         ACTION_SET_AS_DSD, ACTION_EXPAND_ALL, ACTION_COLLAPSE_ALL
     };
+    
     private VerticalLayout statusLayout;
     
     private MenuBar.Command cmdFindDSD;
@@ -110,6 +118,7 @@ public class DSDRepoComponent extends CustomComponent {
     private CountingTreeHeader attr;
     private CountingTreeHeader undef;
     private Tree compatibleCodeLists;
+    private MenuBar.Command cmdStoreDSD;
     
     public DSDRepoComponent(Repository repository){
         this.repository = repository;
@@ -141,6 +150,11 @@ public class DSDRepoComponent extends CustomComponent {
         mainLayout.setWidth("100%");
         mainLayout.setSpacing(true);
         
+        HorizontalLayout menuLayout = new HorizontalLayout();
+        menuLayout.setSpacing(true);
+        menuLayout.setWidth("100%");
+        rootLayout.addComponent(menuLayout);
+        
         MenuBar menu = new MenuBar();
         cmdFindDSD = new MenuBar.Command() {
             public void menuSelected(MenuBar.MenuItem selectedItem) {
@@ -154,8 +168,34 @@ public class DSDRepoComponent extends CustomComponent {
             }
         };
         menu.addItem("Create DSD", cmdCreateDSD);
+        cmdStoreDSD = new MenuBar.Command() {
+            public void menuSelected(MenuBar.MenuItem selectedItem) {
+                storeDSD();
+            }
+        };
+        menu.addItem("Store DSD", cmdStoreDSD);
         
-        rootLayout.addComponent(menu);
+        menuLayout.addComponent(menu);
+        Label spaceLbl = new Label("");
+        menuLayout.addComponent(spaceLbl);
+        menuLayout.setExpandRatio(spaceLbl, 2.0f);
+        Label lbl = new Label("Choose dataset: ");
+        lbl.setSizeUndefined();
+        menuLayout.addComponent(lbl);
+        
+        selectDataSet = new ComboBox(null, graph.getDataSets());
+        selectDataSet.setImmediate(true);
+        selectDataSet.setNewItemsAllowed(false);
+        selectDataSet.setNullSelectionAllowed(false);
+        selectDataSet.setWidth("300px");
+        selectDataSet.addListener(new Property.ValueChangeListener() {
+            public void valueChange(Property.ValueChangeEvent event) {
+                ds = (DataSet) event.getProperty().getValue();
+            }
+        });
+        menuLayout.addComponent(selectDataSet);
+        
+        rootLayout.addComponent(new Label("<hr/>", Label.CONTENT_XHTML));
         rootLayout.addComponent(mainLayout);
         
         setCompositionRoot(rootLayout);
@@ -164,76 +204,34 @@ public class DSDRepoComponent extends CustomComponent {
     private void findDSDs(){
         mainLayout.removeAllComponents();
         
-        datasetLayout = new HorizontalLayout();
-        datasetLayout.setSpacing(true);
-        datasetLayout.setWidth("100%");
-        createDataSetLayout();
-        selectDataSet.addListener(new Property.ValueChangeListener(){
-            public void valueChange(Property.ValueChangeEvent event) {
-                DataSet ds = (DataSet) event.getProperty().getValue();
-                refreshContentFindDSDs(ds);
-            }
-        });
-        mainLayout.addComponent(datasetLayout);
-        
-        mainLayout.addComponent(new Label("<hr/>", Label.CONTENT_XHTML));
-        
-        statusLayout = new VerticalLayout();
-        statusLayout.setWidth("100%");
-        statusLayout.setSpacing(true);
-        mainLayout.addComponent(statusLayout);
-        createStatusLayout();
-        
         contentLayout = new HorizontalLayout();
         contentLayout.setSizeFull();
         contentLayout.setWidth("100%");
         contentLayout.setSpacing(true);
         mainLayout.addComponent(contentLayout);
+        refreshContentFindDSDs(ds);
     }
     
     private void createDSD(){
         mainLayout.removeAllComponents();
         
-        datasetLayout = new HorizontalLayout();
-        datasetLayout.setSpacing(true);
-        datasetLayout.setWidth("100%");
-        createDataSetLayout();
-        selectDataSet.addListener(new Property.ValueChangeListener(){
-            public void valueChange(Property.ValueChangeEvent event) {
-                DataSet ds = (DataSet) event.getProperty().getValue();
-                refreshContentCreateDSD(ds);
-            }
-        });
-        mainLayout.addComponent(datasetLayout);
-        
-        mainLayout.addComponent(new Label("<hr/>", Label.CONTENT_XHTML));
-        
-        statusLayout = new VerticalLayout();
-        statusLayout.setWidth("100%");
-        statusLayout.setSpacing(true);
-        mainLayout.addComponent(statusLayout);
-        createStatusLayout();
+        contentLayout = new HorizontalLayout();
+        contentLayout.setSizeFull();
+        contentLayout.setWidth("100%");
+        contentLayout.setSpacing(true);
+        mainLayout.addComponent(contentLayout);
+        refreshContentCreateDSD(ds);
+    }
+    
+    private void storeDSD(){
+        mainLayout.removeAllComponents();
         
         contentLayout = new HorizontalLayout();
         contentLayout.setSizeFull();
         contentLayout.setWidth("100%");
         contentLayout.setSpacing(true);
         mainLayout.addComponent(contentLayout);
-    }
-
-    private void createDataSetLayout() {
-        Label lbl = new Label("Choose dataset: ");
-        lbl.setSizeUndefined();
-        datasetLayout.addComponent(lbl);
-        datasetLayout.setExpandRatio(lbl, 0.0f);
-        selectDataSet = new ComboBox(null, graph.getDataSets());
-        selectDataSet.setImmediate(true);
-        selectDataSet.setNewItemsAllowed(false);
-        selectDataSet.setNullSelectionAllowed(false);
-        selectDataSet.setSizeUndefined();
-        selectDataSet.setWidth("100%");
-        datasetLayout.addComponent(selectDataSet);
-        datasetLayout.setExpandRatio(selectDataSet, 2.0f);
+        refreshContentStoreDSD(ds);
     }
     
     private void createStatusLayout(){
@@ -384,6 +382,40 @@ public class DSDRepoComponent extends CustomComponent {
         } catch (QueryEvaluationException ex) {
             Logger.getLogger(DSDRepoComponent.class.getName()).log(Level.SEVERE, null, ex);
         }
+        dataTree.expandItemsRecursively(undef);
+        dataTree.collapseItemsRecursively(undef);
+    }
+    
+    private void addDataTreeListenersStore(){
+        dataTree.addActionHandler(new Action.Handler() {
+            public Action[] getActions(Object target, Object sender) {
+                if (target instanceof Structure)
+                    return new Action [] { ACTION_STORE };
+                else 
+                    return null;
+            }
+            public void handleAction(Action action, Object sender, Object target) {
+                if (action == null) return;
+                if (action == ACTION_STORE) {
+                    try {
+                        String dsd = ds.getStructure().getUri();
+                        RepositoryConnection conn = repository.getConnection();
+                        for (String qString: DSDRepoUtils.qCopyDSD(dsd, dataGraph, repoGraph)){
+                            GraphQuery query = conn.prepareGraphQuery(QueryLanguage.SPARQL, qString);
+                            query.evaluate();
+                            getWindow().showNotification("DSD stored");
+                        }
+                    } catch (RepositoryException ex) {
+                        Logger.getLogger(DSDRepoComponent.class.getName()).log(Level.SEVERE, null, ex);
+                    } catch (MalformedQueryException ex) {
+                        Logger.getLogger(DSDRepoComponent.class.getName()).log(Level.SEVERE, null, ex);
+                    } catch (QueryEvaluationException ex) {
+                        Logger.getLogger(DSDRepoComponent.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                    
+                }
+            }
+        });
     }
     
     private void addDataTreeListenersFind(){
@@ -506,7 +538,10 @@ public class DSDRepoComponent extends CustomComponent {
                     Object child = dataTree.getChildren(selected).iterator().next();
                     Object infant = dataTree.getChildren(child).iterator().next();
                     CodeDatatypeTreeElement elem = (CodeDatatypeTreeElement)infant;
-                    if (!elem.isCode()) return;
+                    if (!elem.isCode()) {
+                        compatibleCodeLists.removeAllItems();
+                        return;
+                    }
                     
                     try {
                         // get compatible code lists and show in compatibleCodeLists tree
@@ -541,6 +576,80 @@ public class DSDRepoComponent extends CustomComponent {
     private void addItemProperty(Tree t, Object p){
         t.addItem(p);
         t.setItemIcon(p, icon_property);
+    }
+    
+    private void populateStoreTree(){
+        dataTree.removeAllItems();
+        String dsd = ds.getStructure().getUri();
+        Structure structure = ds.getStructure();
+        addItemStructure(dataTree, structure);
+        
+        CountingTreeHeader dimCountHeader = createCountingTreeHeader(dataTree, "Dimensions");
+        dataTree.setParent(dimCountHeader, structure);
+        CountingTreeHeader measCountHeader = createCountingTreeHeader(dataTree, "Measures");
+        dataTree.setParent(measCountHeader, structure);
+        CountingTreeHeader attrCountHeader = createCountingTreeHeader(dataTree, "Attributes");
+        dataTree.setParent(attrCountHeader, structure);
+        
+        for (Dimension dim: structure.getDimensions()){
+            addItemProperty(dataTree, dim);
+            dataTree.setParent(dim, dimCountHeader);
+        }
+        for (Attribute attr: structure.getAttributes()){
+            addItemProperty(dataTree, attr);
+            dataTree.setParent(attr, attrCountHeader);
+        }
+        for (Measure meas: structure.getMeasures()){
+            addItemProperty(dataTree, meas);
+            dataTree.setParent(meas, measCountHeader);
+        }
+        
+        dataTree.addListener(new Tree.ExpandListener() {
+            public void nodeExpand(Tree.ExpandEvent event) {
+                Object id = event.getItemId();
+                if (id instanceof ComponentProperty && !dataTree.hasChildren(id)) {
+                    ComponentProperty prop = (ComponentProperty) id;
+                    CodeList codeList = prop.getCodeList();
+                    if (codeList != null) {
+                        CountingTreeHeader codeCountingHeader = createCountingTreeHeader(dataTree, "Codes");
+                        dataTree.setParent(codeCountingHeader, id);
+                        for (String code: codeList.getAllCodes()){
+                            CodeDatatypeTreeElement elem = new CodeDatatypeTreeElement(code, true, 0);
+                            dataTree.addItem(elem);
+                            dataTree.setParent(elem, codeCountingHeader);
+                            dataTree.setChildrenAllowed(elem, false);
+                        }
+                    } else {
+                        CountingTreeHeader datatypes = createCountingTreeHeader(repoTree, "Datatypes");
+                        dataTree.setParent(datatypes, id);
+                        CodeDatatypeTreeElement elem = new CodeDatatypeTreeElement(prop.getRange(), false, 0);
+                        dataTree.addItem(elem);
+                        dataTree.setParent(elem, datatypes);
+                        dataTree.setChildrenAllowed(elem, false);
+                    }
+                }
+            }
+        });
+        
+        dataTree.setItemDescriptionGenerator(new AbstractSelect.ItemDescriptionGenerator() {
+            public String generateDescription(Component source, Object itemId, Object propertyId) {
+                // description only for Counting elements ComponentProperties and Codes/TYpes
+                String uri = null;
+                if (itemId instanceof ComponentProperty)
+                    uri = ((ComponentProperty)itemId).getUri();
+                else if (itemId instanceof CodeDatatypeTreeElement)
+                    uri = ((CodeDatatypeTreeElement)itemId).getValue();
+                else return null;
+                
+                // URI is 
+                StringBuilder builder = new StringBuilder();
+                builder.append("<h2>Properties of ");
+                builder.append(uri);
+                builder.append("</h2><br>");
+                builder.append(generatePropertiesTable(uri, repoGraph));
+                return builder.toString();
+            }
+        });
     }
     
     private void populateRepoTree(){
@@ -707,88 +816,155 @@ public class DSDRepoComponent extends CustomComponent {
     }
     
     private void refreshContentFindDSDs(DataSet ds){
+        if (ds ==null) return;
         Structure struct = ds.getStructure();
         
         dataset = ds.getUri();
         contentLayout.removeAllComponents();;
         dataTree = new Tree("Dataset");
+        dataTree.setWidth("500px");
         dataTree.setNullSelectionAllowed(true);
         dataTree.setImmediate(true);
         populateDataTree();
         addDataTreeListenersFind();
         contentLayout.addComponent(dataTree);
+        contentLayout.setExpandRatio(dataTree, 0.0f);
         repoTree = new Tree("Matching Structures");
         repoTree.setNullSelectionAllowed(true);
         repoTree.setImmediate(true);
         populateRepoTree();
-        contentLayout.addComponent(repoTree);
-        
-        if (struct != null) {
-//            if (dsdRepo.containsDSD(struct.getUri()))
-//                if (dsdRepo.isIdenticalDSD(graph.getUri(), struct.getUri())) {
-//                    everythingFine(ds);
-//                }
-//                else { 
-//                    changeUriAndPut(ds);
-//                }
-//            else {
-//                putInRepo(ds);
-//            }
-        }
-        else {
-            // Find potential components
-            // Find DSDs of those components
-            // Find common DSDs for above
-            // Check if the filtered DSDs have other required attributes
-            
-            // on the right DSDs from the repo
-            // dims, attrs and meas in a tree in different colors
-            // on click show their code lists
-            
-            // on the left current dataset
-            // dims, attrs and meas
-            // on click show used values
-        }
+        VerticalLayout v = new VerticalLayout();
+        contentLayout.addComponent(v);
+        contentLayout.setExpandRatio(v, 2.0f);
+        v.addComponent(repoTree);
+        v.setExpandRatio(repoTree, 2.0f);
     }
     
-    private void refreshContentCreateDSD(DataSet ds){
-        Structure struct = ds.getStructure();
+    private void refreshContentStoreDSD(DataSet ds){
+        if (ds ==null) return;
         
         dataset = ds.getUri();
         contentLayout.removeAllComponents();;
         dataTree = new Tree("Dataset");
+        dataTree.setWidth("500px");
         dataTree.setNullSelectionAllowed(true);
         dataTree.setImmediate(true);
+        populateStoreTree();
+        addDataTreeListenersStore();
+        contentLayout.addComponent(dataTree);
+        contentLayout.setExpandRatio(dataTree, 0.0f);
+        repoTree = new Tree("Matching Structures");
+        repoTree.setNullSelectionAllowed(true);
+        repoTree.setImmediate(true);
+    }
+    
+    private void refreshContentCreateDSD(DataSet ds){
+        if (ds == null) return;
+        
+        dataset = ds.getUri();
+        contentLayout.removeAllComponents();
+        dataTree = new Tree("Dataset");
+        dataTree.setNullSelectionAllowed(true);
+        dataTree.setImmediate(true);
+        dataTree.setWidth("500px");
         populateDataTree();
         addDataTreeListenersCreate();
         contentLayout.addComponent(dataTree);
+        contentLayout.setExpandRatio(dataTree, 0.0f);
         
         final VerticalLayout right = new VerticalLayout();
         right.setSpacing(true);
         contentLayout.addComponent(right);
-        final TextField dsdUri = new TextField("Enter DSD URI");
-        dsdUri.setWidth("300px");
-        right.addComponent(dsdUri);
+        contentLayout.setExpandRatio(right, 2.0f);
         final Label lblUndefined = new Label("There are still x undefined components", Label.CONTENT_XHTML);
         right.addComponent(lblUndefined);
         final Label lblMissingCodeLists = new Label("There are still y missing code lists", Label.CONTENT_XHTML);
         right.addComponent(lblMissingCodeLists);
+        final TextField dsdUri = new TextField("Enter DSD URI");
+        dsdUri.setWidth("300px");
+        right.addComponent(dsdUri);
         final Button btnCreate = new Button("Create DSD");
         right.addComponent(btnCreate);
+        right.addComponent(new Label("<hr/>", Label.CONTENT_XHTML));
         compatibleCodeLists = new Tree("Compatible code lists");
         right.addComponent(compatibleCodeLists);
-    }
-    
-    private void everythingFine(DataSet ds){
-        // TODO: implement
-    }
-    
-    private void changeUriAndPut(DataSet ds){
-        // TODO: implement
-    }
-    
-    private void putInRepo(DataSet ds){
-        // TODO: implement
+        
+        compatibleCodeLists.addActionHandler(new Action.Handler() {
+            public Action[] getActions(Object target, Object sender) {
+                if (target == null) return null;
+                if (compatibleCodeLists.getParent(target) != null) return null;
+                return new Action [] { ACTION_SET_AS_CL };
+            }
+            public void handleAction(Action action, Object sender, Object target) {
+                if (action == ACTION_SET_AS_CL){
+                    try {
+                        RepositoryConnection conn = repository.getConnection();
+                        String cl = (String) target;
+                        String prop = (String) dataTree.getValue();
+                        GraphQuery query = conn.prepareGraphQuery(QueryLanguage.SPARQL, 
+                                DSDRepoUtils.qPullCodeList(cl, prop, repoGraph, dataGraph));
+                        query.evaluate();
+                        getWindow().showNotification("Code List set");
+                    } catch (RepositoryException ex) {
+                        Logger.getLogger(DSDRepoComponent.class.getName()).log(Level.SEVERE, null, ex);
+                    } catch (MalformedQueryException ex) {
+                        Logger.getLogger(DSDRepoComponent.class.getName()).log(Level.SEVERE, null, ex);
+                    } catch (QueryEvaluationException ex) {
+                        Logger.getLogger(DSDRepoComponent.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }
+            }
+        });
+        btnCreate.addListener(new Button.ClickListener() {
+            public void buttonClick(Button.ClickEvent event) {
+                try {
+                    RepositoryConnection conn = repository.getConnection();
+                    String dsd = dsdUri.getValue().toString();
+                    LinkedList<String> dList = new LinkedList<String>();
+                    LinkedList<String> mList = new LinkedList<String>();
+                    LinkedList<String> aList = new LinkedList<String>();
+                    LinkedList<String> uList = new LinkedList<String>();
+                    LinkedList<String> propList = new LinkedList<String>();
+                    LinkedList<String> rangeList = new LinkedList<String>();
+                    
+                    for (Object id: dataTree.rootItemIds()){
+                        Collection<?> children = dataTree.getChildren(id);
+                        if (children == null) continue;
+                        
+                        Collection<String> list = null;
+                        if (id.toString().startsWith("D")) list = dList;
+                        else if (id.toString().startsWith("M")) list = mList;
+                        else if (id.toString().startsWith("A")) list = aList;
+                        else if (id.toString().startsWith("U")) list = uList;
+                        
+                        for (Object prop: dataTree.getChildren(id)){
+                            CountingTreeHeader h = (CountingTreeHeader)dataTree.getChildren(prop).iterator().next();
+                            propList.add(prop.toString());
+                            if (h.toString().startsWith("C")) {
+                                list.add(prop.toString());
+                                rangeList.add("http://www.w3.org/2004/02/skos/core#Concept");
+                            } else {
+                                rangeList.add(dataTree.getChildren(h).iterator().next().toString());
+                            }
+                        }
+                    }
+                    if (uList.size() > 0){
+                        getWindow().showNotification("There are undefined properties!", Window.Notification.TYPE_WARNING_MESSAGE);
+                        return;
+                    }
+                    GraphQuery query = conn.prepareGraphQuery(QueryLanguage.SPARQL, 
+                            DSDRepoUtils.qCreateDSD(dataset, dsd, dList, mList, aList, propList, rangeList, dataGraph));
+                    query.evaluate();
+                    getWindow().showNotification("DSD created!");
+                } catch (RepositoryException ex) {
+                    Logger.getLogger(DSDRepoComponent.class.getName()).log(Level.SEVERE, null, ex);
+                } catch (MalformedQueryException ex) {
+                    Logger.getLogger(DSDRepoComponent.class.getName()).log(Level.SEVERE, null, ex);
+                } catch (QueryEvaluationException ex) {
+                    Logger.getLogger(DSDRepoComponent.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+        });
     }
     
 }
