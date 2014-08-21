@@ -136,6 +136,22 @@ public class DSDRepoComponent extends CustomComponent {
         } catch (RepositoryException ex) {
             Logger.getLogger(EstaLdComponent.class.getName()).log(Level.SEVERE, null, ex);
         }
+        
+        try {
+            RepositoryConnection conn = repository.getConnection();
+            conn.prepareGraphQuery(QueryLanguage.SPARQL, "DROP GRAPH <http://regular-data-replica/>").evaluate();
+            conn.prepareGraphQuery(QueryLanguage.SPARQL, "CREATE GRAPH <http://regular-data-replica/>").evaluate();
+            String query = "INSERT INTO GRAPH <http://regular-data-replica/> {?s ?p ?o } "
+                    + "WHERE { GRAPH <http://validation-test/regular-data/> { ?s ?p ?o } }";
+            conn.prepareGraphQuery(QueryLanguage.SPARQL, query).evaluate();
+        } catch (RepositoryException ex) {
+            Logger.getLogger(DSDRepoComponent.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (MalformedQueryException ex) {
+            Logger.getLogger(DSDRepoComponent.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (QueryEvaluationException ex) {
+            Logger.getLogger(DSDRepoComponent.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
         dcRepo = new SparqlDCRepository(repository);
 //        graph = new SparqlDCGraph(repository, "http://validation-test/regular-all/");
         graph = new SparqlDCGraph(repository, "http://regular-data-replica/");
@@ -155,25 +171,47 @@ public class DSDRepoComponent extends CustomComponent {
         menuLayout.setWidth("100%");
         rootLayout.addComponent(menuLayout);
         
-        MenuBar menu = new MenuBar();
+        final MenuBar menu = new MenuBar();
+        menu.addStyleName("dsd");
         cmdFindDSD = new MenuBar.Command() {
             public void menuSelected(MenuBar.MenuItem selectedItem) {
-                findDSDs();
+                for (MenuBar.MenuItem item: menu.getItems()){
+                    if (item == selectedItem){
+                        if (!item.getStyleName().contains("selected")) {
+                            item.setStyleName("selected");
+                            findDSDs();
+                        }
+                    } else item.setStyleName("bleja");
+                }
             }
         };
-        menu.addItem("Find Suitable DSDs", cmdFindDSD);
+        menu.addItem("Find Suitable DSDs", cmdFindDSD).setStyleName("bleja");
         cmdCreateDSD = new MenuBar.Command() {
             public void menuSelected(MenuBar.MenuItem selectedItem) {
-                createDSD();
+                for (MenuBar.MenuItem item: menu.getItems()){
+                    if (item == selectedItem){
+                        if (!item.getStyleName().contains("selected")) {
+                            item.setStyleName("selected");
+                            createDSD();
+                        }
+                    } else item.setStyleName("bleja");
+                }
             }
         };
-        menu.addItem("Create DSD", cmdCreateDSD);
+        menu.addItem("Create DSD", cmdCreateDSD).setStyleName("bleja");
         cmdStoreDSD = new MenuBar.Command() {
             public void menuSelected(MenuBar.MenuItem selectedItem) {
-                storeDSD();
+                for (MenuBar.MenuItem item: menu.getItems()){
+                    if (item == selectedItem){
+                        if (!item.getStyleName().contains("selected")) {
+                            item.setStyleName("selected");
+                            storeDSD();
+                        }
+                    } else item.setStyleName("bleja");
+                }
             }
         };
-        menu.addItem("Store DSD", cmdStoreDSD);
+        menu.addItem("Store DSD", cmdStoreDSD).setStyleName("bleja");
         
         menuLayout.addComponent(menu);
         Label spaceLbl = new Label("");

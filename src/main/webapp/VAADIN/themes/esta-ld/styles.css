@@ -54,6 +54,15 @@ and open the template in the editor.
     background-image: none;
 }
 
-.v-tree-node-caption .v-tree-node-caption-highlight {
+.v-tree-node-caption.v-tree-node-caption-highlight {
     background-color: #BCD3DE;
+}
+
+.v-menubar.v-menubar-dsd.dsd {
+    background: #0099cc;
+    color: whitesmoke;
+}
+
+.menubar-menuitem.v-menubar-menuitem.selected.selected {
+    background: #6699ff;
 }
