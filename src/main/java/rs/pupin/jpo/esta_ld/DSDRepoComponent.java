@@ -142,7 +142,7 @@ public class DSDRepoComponent extends CustomComponent {
             conn.prepareGraphQuery(QueryLanguage.SPARQL, "DROP GRAPH <http://regular-data-replica/>").evaluate();
             conn.prepareGraphQuery(QueryLanguage.SPARQL, "CREATE GRAPH <http://regular-data-replica/>").evaluate();
             String query = "INSERT INTO GRAPH <http://regular-data-replica/> {?s ?p ?o } "
-                    + "WHERE { GRAPH <http://validation-test/regular-data/> { ?s ?p ?o } }";
+                    + "WHERE { GRAPH <http://validation-test/regular-data-nolabels/> { ?s ?p ?o } }";
             conn.prepareGraphQuery(QueryLanguage.SPARQL, query).evaluate();
         } catch (RepositoryException ex) {
             Logger.getLogger(DSDRepoComponent.class.getName()).log(Level.SEVERE, null, ex);
@@ -156,7 +156,7 @@ public class DSDRepoComponent extends CustomComponent {
 //        graph = new SparqlDCGraph(repository, "http://validation-test/regular-all/");
         graph = new SparqlDCGraph(repository, "http://regular-data-replica/");
         dataGraph = graph.getUri();
-        repoGraph = "http://validation-test/regular-dsd/";
+        repoGraph = "http://validation-test/regular-dsd-nolabels/";
         
         VerticalLayout rootLayout = new VerticalLayout();
         rootLayout.setWidth("100%");

@@ -59,10 +59,17 @@ and open the template in the editor.
 }
 
 .v-menubar.v-menubar-dsd.dsd {
-    background: #0099cc;
+    /*background: transparent;*/
     color: whitesmoke;
 }
 
-.menubar-menuitem.v-menubar-menuitem.selected.selected {
-    background: #6699ff;
+/*.v-menubar-menuitem.v-menubar-menuitem-bleja {
+    background: #197ad9;
+}*/
+
+.v-menubar-menuitem.v-menubar-menuitem-selected {
+    /*background: #2c96ff;*/
+    background: transparent;
+    color: white;
+    font-weight: bolder;
 }
