@@ -48,6 +48,7 @@ import rs.pupin.jpo.datacube.Measure;
 import rs.pupin.jpo.datacube.Structure;
 import rs.pupin.jpo.datacube.sparql_impl.SparqlDCGraph;
 import rs.pupin.jpo.datacube.sparql_impl.SparqlDCRepository;
+import rs.pupin.jpo.datacube.sparql_impl.SparqlDataSet;
 import rs.pupin.jpo.datacube.sparql_impl.SparqlStructure;
 import rs.pupin.jpo.dsdrepo.CodeDatatypeTreeElement;
 import rs.pupin.jpo.dsdrepo.DSDRepo;
@@ -802,6 +803,8 @@ public class DSDRepoComponent extends CustomComponent {
                             GraphQuery query = conn.prepareGraphQuery(QueryLanguage.SPARQL, q);
                             query.evaluate();
                         }
+                        String qStructureProperty = "INSERT INTO GRAPH <" + dataGraph + "> { <" + dataset + "> <http://purl.org/linked-data/cube#structure> <" + dsd + "> }";
+                        conn.prepareGraphQuery(QueryLanguage.SPARQL, qStructureProperty).evaluate();
                     } catch (RepositoryException ex) {
                         Logger.getLogger(DSDRepoComponent.class.getName()).log(Level.SEVERE, null, ex);
                     } catch (MalformedQueryException ex) {
@@ -811,6 +814,8 @@ public class DSDRepoComponent extends CustomComponent {
                     }
                     getWindow().showNotification("Set " + dsd + " as qb:DataStructureDefinition");
                     dataTree.containerItemSetChange(null);
+                    ds = new SparqlDataSet(repository, ds.getUri(), dataGraph);
+                    refreshContentFindDSDs(ds);
                 }
             }
         });
@@ -854,8 +859,12 @@ public class DSDRepoComponent extends CustomComponent {
     }
     
     private void refreshContentFindDSDs(DataSet ds){
-        if (ds ==null) return;
+        if (ds == null) return;
         Structure struct = ds.getStructure();
+        if (struct != null){
+            contentLayout.addComponent(new Label("The dataset already has a DSD!"));
+            return;
+        }
         
         dataset = ds.getUri();
         contentLayout.removeAllComponents();;
@@ -880,6 +889,11 @@ public class DSDRepoComponent extends CustomComponent {
     
     private void refreshContentStoreDSD(DataSet ds){
         if (ds ==null) return;
+        Structure struct = ds.getStructure();
+        if (struct == null){
+            contentLayout.addComponent(new Label("The dataset doesn't contain a DSD!"));
+            return;
+        }
         
         dataset = ds.getUri();
         contentLayout.removeAllComponents();;
@@ -898,6 +912,11 @@ public class DSDRepoComponent extends CustomComponent {
     
     private void refreshContentCreateDSD(DataSet ds){
         if (ds == null) return;
+        Structure struct = ds.getStructure();
+        if (struct != null){
+            contentLayout.addComponent(new Label("The dataset already has a DSD!"));
+            return;
+        }
         
         dataset = ds.getUri();
         contentLayout.removeAllComponents();
