@@ -266,6 +266,27 @@ public class DSDRepoUtils {
         return builder.toString().replace("@prop", prop).replace("@uri", uri);
     }
     
+    public static String qDeleteCodeList(String graph, String prop, String uri, 
+            Collection<String> codes){
+        StringBuilder builder = createBuilderWithPrefixes();
+        builder.append("DELETE FROM GRAPH <").append(graph).append("> { \n");
+        builder.append("  <@uri> [] [] . \n");
+        builder.append("  [] [] <@uri> . \n");
+//        builder.append("  <@prop> qb:codeList <@uri> . \n");
+        builder.append("  <@prop> rdfs:range skos:Concept . \n");
+        for (String code: codes){
+            builder.append("  <").append(code).append("> [] [] . \n");
+            builder.append("  [] [] <").append(code).append("> . \n");
+        }
+        builder.append("} \n");
+        builder.append("WHERE { \n");
+        builder.append("  FILTER NOT EXISTS { 'n");
+        builder.append("    ?compProp qb:codeList <@uri> . \n");
+        builder.append("    FILTER (?compProp != <@prop>) \n");
+        builder.append("} ");
+        return builder.toString().replace("@prop", prop).replace("@uri", uri);
+    }
+    
     public static String qPullCodeList(String cl, String prop,
             String sGraph, String tGraph){
         StringBuilder builder = createBuilderWithPrefixes();

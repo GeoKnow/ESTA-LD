@@ -21,11 +21,13 @@ import com.vaadin.ui.TextField;
 import com.vaadin.ui.Tree;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window;
+import java.net.URISyntaxException;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.openrdf.model.URI;
 import org.openrdf.model.Value;
 import org.openrdf.query.BindingSet;
 import org.openrdf.query.GraphQuery;
@@ -120,6 +122,39 @@ public class DSDRepoComponent extends CustomComponent {
     private CountingTreeHeader undef;
     private Tree compatibleCodeLists;
     private MenuBar.Command cmdStoreDSD;
+    
+    private int numUndefinedComponents = 0;
+    private int numMissingCodeLists = 0;
+    private Label lblMissingCodeLists;
+    private Label lblUndefined;
+    
+    private void updateUndefinedAndMissing(){
+        int num = 0;
+        for (Object obj: dataTree.rootItemIds()){
+            CountingTreeHeader h = (CountingTreeHeader) obj;
+            if (h.getHeader().toString().startsWith("U"))
+                numUndefinedComponents = h.getCount();
+            
+            num += countMissingCodeListsInHeader(dataTree, h);
+        }
+        numMissingCodeLists = num;
+        lblUndefined.setValue("There are still " + numUndefinedComponents + " undefined components");
+        lblMissingCodeLists.setValue("There are still " + numMissingCodeLists + " missing code lists");
+    }
+    
+    private int countMissingCodeListsInHeader(Tree tree, CountingTreeHeader h){
+        int c = 0;
+        Collection<?> children = tree.getChildren(h);
+        if (children != null) {
+            for (Object obj: children){
+                // obj is either dimension, measure or attribute
+                Collection<?> infants = tree.getChildren(obj);
+                if (infants.size() != 2 && infants.iterator().next().toString().startsWith("C"))
+                    c++;
+            }
+        }
+        return c;
+    }
     
     public DSDRepoComponent(Repository repository){
         this.repository = repository;
@@ -525,8 +560,8 @@ public class DSDRepoComponent extends CustomComponent {
     }
     
     private void addDataTreeListenersCreate(){
-        // ovde treba raditi na update-u statusnih labela
         dataTree.addActionHandler(new Action.Handler() {
+            // TODO: add options to create and delete code lists
 
             public Action[] getActions(Object target, Object sender) {
                 if (target == null) return null;
@@ -550,13 +585,17 @@ public class DSDRepoComponent extends CustomComponent {
                 String e = (String) target;
                 if (action == ACTION_SET_AS_DIM) {
                     dataTree.setParent(e, dim);
+                    updateUndefinedAndMissing();
                 }
                 else if (action == ACTION_SET_AS_MEAS){
                     dataTree.setParent(e, meas);
+                    updateUndefinedAndMissing();
                 } else if (action == ACTION_SET_AS_ATTR){
                     dataTree.setParent(e, attr);
+                    updateUndefinedAndMissing();
                 } else if (action == ACTION_SET_AS_UNDEF){
                     dataTree.setParent(e, undef);
+                    updateUndefinedAndMissing();
                 } else if (action == ACTION_HIGHLIGHT_MATCHING){
                     // notify repo tree about the change
 //                        highlighted = e;
@@ -594,7 +633,8 @@ public class DSDRepoComponent extends CustomComponent {
                             String cl = set.getValue("cl").stringValue();
                             codeLists.add(cl);
                         }
-                        populateCodeListTree(codeLists);
+                        compatibleCodeLists.setData(selected);
+                        populateCodeListTree(codeLists);                        
                     } catch (RepositoryException ex) {
                         Logger.getLogger(DSDRepoComponent.class.getName()).log(Level.SEVERE, null, ex);
                     } catch (MalformedQueryException ex) {
@@ -933,9 +973,9 @@ public class DSDRepoComponent extends CustomComponent {
         right.setSpacing(true);
         contentLayout.addComponent(right);
         contentLayout.setExpandRatio(right, 2.0f);
-        final Label lblUndefined = new Label("There are still x undefined components", Label.CONTENT_XHTML);
+        lblUndefined = new Label("There are still x undefined components", Label.CONTENT_XHTML);
         right.addComponent(lblUndefined);
-        final Label lblMissingCodeLists = new Label("There are still y missing code lists", Label.CONTENT_XHTML);
+        lblMissingCodeLists = new Label("There are still y missing code lists", Label.CONTENT_XHTML);
         right.addComponent(lblMissingCodeLists);
         final TextField dsdUri = new TextField("Enter DSD URI");
         dsdUri.setWidth("300px");
@@ -946,6 +986,8 @@ public class DSDRepoComponent extends CustomComponent {
         compatibleCodeLists = new Tree("Compatible code lists");
         right.addComponent(compatibleCodeLists);
         
+        updateUndefinedAndMissing();
+        
         compatibleCodeLists.addActionHandler(new Action.Handler() {
             public Action[] getActions(Object target, Object sender) {
                 if (target == null) return null;
@@ -954,6 +996,15 @@ public class DSDRepoComponent extends CustomComponent {
             }
             public void handleAction(Action action, Object sender, Object target) {
                 if (action == ACTION_SET_AS_CL){
+                    Object item = compatibleCodeLists.getData();
+                    if (item == null){
+                        getWindow().showNotification("Error, the component cannot determine where to put the code list", Window.Notification.TYPE_ERROR_MESSAGE);
+                        return;
+                    }
+                    if (dataTree.getChildren(item).size() == 2){
+                        getWindow().showNotification("The component property already has a code list", Window.Notification.TYPE_ERROR_MESSAGE);
+                        return;
+                    }
                     try {
                         RepositoryConnection conn = repository.getConnection();
                         String cl = (String) target;
@@ -962,6 +1013,8 @@ public class DSDRepoComponent extends CustomComponent {
                                 DSDRepoUtils.qPullCodeList(cl, prop, repoGraph, dataGraph));
                         query.evaluate();
                         getWindow().showNotification("Code List set");
+                        addCodeListToDataTree();
+                        updateUndefinedAndMissing();
                     } catch (RepositoryException ex) {
                         Logger.getLogger(DSDRepoComponent.class.getName()).log(Level.SEVERE, null, ex);
                     } catch (MalformedQueryException ex) {
@@ -974,9 +1027,21 @@ public class DSDRepoComponent extends CustomComponent {
         });
         btnCreate.addListener(new Button.ClickListener() {
             public void buttonClick(Button.ClickEvent event) {
+                if (numUndefinedComponents > 0){
+                    getWindow().showNotification("There can be no undefined components", Window.Notification.TYPE_ERROR_MESSAGE);
+                    return;
+                }
+                if (numMissingCodeLists > 0){
+                    getWindow().showNotification("All code lists must first be created or imported", Window.Notification.TYPE_ERROR_MESSAGE);
+                    return;
+                }
+                final String dsd = dsdUri.getValue().toString();
+                if (!isUri(dsd)){
+                    getWindow().showNotification("Enter a valid URI for the DSD", Window.Notification.TYPE_ERROR_MESSAGE);
+                }
+                
                 try {
                     RepositoryConnection conn = repository.getConnection();
-                    String dsd = dsdUri.getValue().toString();
                     LinkedList<String> dList = new LinkedList<String>();
                     LinkedList<String> mList = new LinkedList<String>();
                     LinkedList<String> aList = new LinkedList<String>();
@@ -1022,6 +1087,31 @@ public class DSDRepoComponent extends CustomComponent {
                 }
             }
         });
+    }
+    
+    private boolean isUri(String uri){
+        if (uri == null || uri.equals("")) return false;
+        try {
+            java.net.URI u = new java.net.URI(uri);
+        } catch (URISyntaxException ex) {
+            return false;
+        }
+        return true;
+    }
+    
+    private void addCodeListToDataTree(){
+        Object obj = compatibleCodeLists.rootItemIds().iterator().next();
+        if (obj == null) return;
+        Collection<?> children = compatibleCodeLists.getChildren(obj);
+        if (children == null) return;
+        Object dataTreeElement = compatibleCodeLists.getData();
+        CountingTreeHeader codeListHeader = new CountingTreeHeader(dataTree, "Code List");
+        dataTree.addItem(codeListHeader);
+        dataTree.setParent(codeListHeader, dataTreeElement);
+        for (Object child: children){
+            dataTree.addItem(child);
+            dataTree.setParent(child, codeListHeader);
+        }
     }
     
 }

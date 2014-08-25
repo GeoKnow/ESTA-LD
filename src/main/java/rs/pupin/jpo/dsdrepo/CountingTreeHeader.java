@@ -30,12 +30,15 @@ public class CountingTreeHeader {
     public Object getHeader() {
         return header;
     }
+    
+    public int getCount(){
+        Collection<?> children = tree.getChildren(this);
+        return (children == null)?0:children.size();
+    }
 
     @Override
     public String toString() {
-        Collection<?> children = tree.getChildren(this);
-        int num = (children == null)?0:children.size();
-        return header.toString() + " (" + num + ")";
+        return header.toString() + " (" + getCount() + ")";
     }
     
 }
