@@ -715,10 +715,14 @@ public class DSDRepoComponent extends CustomComponent {
                     String prop = target.toString();
                     Collection<?> children = dataTree.getChildren(target);
                     final Collection<String> codes = new LinkedList<String>();
+                    final Collection<Object> items = new LinkedList<Object>();
+                    Object itemsHeader = null;
                     for (Object child: children){
                         if (child.toString().startsWith("Code List")){
+                            itemsHeader = child;
                             for (Object obj: dataTree.getChildren(child)) {
                                 codes.add(obj.toString());
+                                items.add(obj);
                             }
                         }
                     }
@@ -726,15 +730,8 @@ public class DSDRepoComponent extends CustomComponent {
                         RepositoryConnection conn = repository.getConnection();
                         GraphQuery query = conn.prepareGraphQuery(QueryLanguage.SPARQL, DSDRepoUtils.qDeleteCodeList(dataset, prop, "uri", codes));
                         query.evaluate();
-                        for (Object child: children){
-                            if (child.toString().startsWith("Code List")){
-                                for (Object c: dataTree.getChildren(child)){
-                                    dataTree.removeItem(c);
-                                    getWindow().showNotification("removing " + c.toString(), Window.Notification.TYPE_ERROR_MESSAGE);
-                                }
-                                dataTree.removeItem(child);
-                            }
-                        }
+                        for (Object o: items) dataTree.removeItem(o);
+                        dataTree.removeItem(itemsHeader);
                         updateUndefinedAndMissing();
                     } catch (RepositoryException ex) {
                         Logger.getLogger(DSDRepoComponent.class.getName()).log(Level.SEVERE, null, ex);
