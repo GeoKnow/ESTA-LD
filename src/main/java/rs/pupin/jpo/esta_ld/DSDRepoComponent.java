@@ -181,12 +181,16 @@ public class DSDRepoComponent extends CustomComponent {
             setCaption("Enter URI");
             setModal(true);
             setClosable(false);
+            setWidth("450px");
             final TextField field = new TextField("Enter code list URI");
             addComponent(field);
+            field.setWidth("100%");
+            HorizontalLayout btnLayout = new HorizontalLayout();
+            addComponent(btnLayout);
             Button ok = new Button("OK");
-            addComponent(ok);
+            btnLayout.addComponent(ok);
             Button cancel = new Button("Cancel");
-            addComponent(cancel);
+            btnLayout.addComponent(cancel);
             ok.addListener(new Button.ClickListener() {
                 public void buttonClick(Button.ClickEvent event) {
                     uri = field.getValue().toString();
@@ -564,8 +568,8 @@ public class DSDRepoComponent extends CustomComponent {
             }
 
             public void handleAction(Action action, Object sender, Object target) {
-                if (!(target instanceof String)) return;
-                String e = (String) target;
+                if (!(target instanceof String || target instanceof CountingTreeHeader)) return;
+                String e = (target instanceof String)?(String)target:null;
                 if (action == ACTION_SET_AS_DIM) {
                     dataTree.setParent(e, dim);
                 }
@@ -637,8 +641,8 @@ public class DSDRepoComponent extends CustomComponent {
             }
 
             public void handleAction(Action action, Object sender, final Object target) {
-                if (!(target instanceof String)) return;
-                String e = (String) target;
+                if (!(target instanceof String || target instanceof CountingTreeHeader)) return;
+                String e = (target instanceof String)?(String)target:null;
                 if (action == ACTION_SET_AS_DIM) {
                     dataTree.setParent(e, dim);
                     updateUndefinedAndMissing();
@@ -770,7 +774,8 @@ public class DSDRepoComponent extends CustomComponent {
                             codeLists.add(cl);
                         }
                         compatibleCodeLists.setData(selected);
-                        populateCodeListTree(codeLists);                        
+                        populateCodeListTree(codeLists);
+                        compatibleCodeLists.setValue(codeLists.iterator().next());
                     } catch (RepositoryException ex) {
                         Logger.getLogger(DSDRepoComponent.class.getName()).log(Level.SEVERE, null, ex);
                     } catch (MalformedQueryException ex) {
