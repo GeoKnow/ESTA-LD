@@ -270,20 +270,23 @@ public class DSDRepoUtils {
             Collection<String> codes){
         StringBuilder builder = createBuilderWithPrefixes();
         builder.append("DELETE FROM GRAPH <").append(graph).append("> { \n");
-        builder.append("  <@uri> [] [] . \n");
-        builder.append("  [] [] <@uri> . \n");
+        builder.append("  ?list ?p1 ?o1 . \n");
+        builder.append("  ?s2 ?p2 ?list . \n");
 //        builder.append("  <@prop> qb:codeList <@uri> . \n");
         builder.append("  <@prop> rdfs:range skos:Concept . \n");
-        for (String code: codes){
-            builder.append("  <").append(code).append("> [] [] . \n");
-            builder.append("  [] [] <").append(code).append("> . \n");
-        }
+//        for (String code: codes){
+//            builder.append("  <").append(code).append("> [] [] . \n");
+//            builder.append("  [] [] <").append(code).append("> . \n");
+//        }
         builder.append("} \n");
         builder.append("WHERE { \n");
-        builder.append("  FILTER NOT EXISTS { 'n");
-        builder.append("    ?compProp qb:codeList <@uri> . \n");
+        builder.append("  <@prop> qb:codeList ?list . \n");
+        builder.append("  { { ?list ?p1 ?o1 } UNION { ?s2 ?p2 ?list } } \n");
+        builder.append("  FILTER NOT EXISTS { \n");
+        builder.append("    ?compProp qb:codeList ?list . \n");
         builder.append("    FILTER (?compProp != <@prop>) \n");
-        builder.append("} ");
+        builder.append("  } \n");
+        builder.append("}");
         return builder.toString().replace("@prop", prop).replace("@uri", uri);
     }
     

@@ -95,6 +95,7 @@ public class DSDRepoComponent extends CustomComponent {
     private static final Action [] ACTIONS_NAVI = new Action [] { ACTION_EXPAND_ALL, ACTION_COLLAPSE_ALL };
     
     private static final Action ACTION_CREATE_CL = new Action("Create Code List");
+    private static final Action ACTION_DELETE_CL = new Action("Delete Code List");
     private static final Action ACTION_SET_AS_CL = new Action("Set as Code List");
     
     private static final Action ACTION_STORE = new Action("Store DSD in repository");
@@ -154,6 +155,56 @@ public class DSDRepoComponent extends CustomComponent {
             }
         }
         return c;
+    }
+    
+    private class CodeItem {
+        private String code;
+        public CodeItem (String code){
+            this.code = code;
+        }
+        @Override
+        public String toString() {
+            return code;
+        }
+        
+    }
+    
+    private class CodeListUriWindow extends Window {
+        private String uri = null;
+        public String getUri() {
+            return uri;
+        }
+        public void show() {
+            DSDRepoComponent.this.getWindow().addWindow(CodeListUriWindow.this);
+        }
+        public CodeListUriWindow (){
+            setCaption("Enter URI");
+            setModal(true);
+            setClosable(false);
+            final TextField field = new TextField("Enter code list URI");
+            addComponent(field);
+            Button ok = new Button("OK");
+            addComponent(ok);
+            Button cancel = new Button("Cancel");
+            addComponent(cancel);
+            ok.addListener(new Button.ClickListener() {
+                public void buttonClick(Button.ClickEvent event) {
+                    uri = field.getValue().toString();
+                    if (!isUri(uri)) {
+                        DSDRepoComponent.this.getWindow().showNotification("Not a valid URI", Notification.TYPE_ERROR_MESSAGE);
+                        uri = null;
+                        return;
+                    }
+                    DSDRepoComponent.this.getWindow().removeWindow(CodeListUriWindow.this);
+                }
+            });
+            cancel.addListener(new Button.ClickListener() {
+                public void buttonClick(Button.ClickEvent event) {
+                    uri = null;
+                    DSDRepoComponent.this.getWindow().removeWindow(CodeListUriWindow.this);
+                }
+            });
+        }
     }
     
     public DSDRepoComponent(Repository repository){
@@ -565,22 +616,27 @@ public class DSDRepoComponent extends CustomComponent {
 
             public Action[] getActions(Object target, Object sender) {
                 if (target == null) return null;
+                LinkedList<Action> actions = new LinkedList<Action>();
                 if (dataTree.hasChildren(target))
                     if (target instanceof String) {
-                        return ACTIONS_NAVI_PLUS;
+                        for (Action a: ACTIONS_NAVI_PLUS) actions.add(a);
+                        Collection<?> children = dataTree.getChildren(target);
+                        if (children.size() == 2) 
+                            actions.add(ACTION_DELETE_CL);
+                        else if (children.iterator().next().toString().startsWith("C"))
+                            actions.add(ACTION_CREATE_CL);
                     } else {
-                        return ACTIONS_NAVI;
+                        for (Action a: ACTIONS_NAVI) actions.add(a);
                     }
                 else {
                     if (target instanceof String) {
-                        return ACTIONS;
-                    } else {
-                        return null;
+                        for (Action a: ACTIONS) actions.add(a);
                     }
                 }
+                return actions.toArray(new Action [] {});
             }
 
-            public void handleAction(Action action, Object sender, Object target) {
+            public void handleAction(Action action, Object sender, final Object target) {
                 if (!(target instanceof String)) return;
                 String e = (String) target;
                 if (action == ACTION_SET_AS_DIM) {
@@ -605,6 +661,89 @@ public class DSDRepoComponent extends CustomComponent {
                     dataTree.expandItemsRecursively(target);
                 else if (action == ACTION_COLLAPSE_ALL)
                     dataTree.collapseItemsRecursively(target);
+                else if (action == ACTION_CREATE_CL){
+                    final String prop = target.toString();
+                    Collection<?> children = dataTree.getChildren(target);
+                    final Collection<String> codes = new LinkedList<String>();
+                    for (Object child: children){
+                        if (child.toString().startsWith("Codes")){
+                            for (Object obj: dataTree.getChildren(child))
+                                codes.add(obj.toString());
+                        }
+                    }
+                    // get code list URI from user
+                    final CodeListUriWindow uriWindow = new CodeListUriWindow();
+                    uriWindow.addListener(new Window.CloseListener() {
+                        public void windowClose(Window.CloseEvent e) {
+                            String uri = uriWindow.getUri();
+                            if (uri == null) {
+                                getWindow().showNotification("Not a valid URI", Window.Notification.TYPE_ERROR_MESSAGE);
+                                return;
+                            }
+                            try {
+                                RepositoryConnection conn = repository.getConnection();
+                                // insert dataset link
+                                String insertQuery = "INSERT INTO GRAPH <" + dataGraph + 
+                                        "> { <" + prop + "> <http://purl.org/linked-data/cube#codeList> <" + uri + "> }";
+                                conn.prepareGraphQuery(QueryLanguage.SPARQL, insertQuery).evaluate();
+                                // insert the rest
+                                GraphQuery query = conn.prepareGraphQuery(QueryLanguage.SPARQL, DSDRepoUtils.qCreateCodeList(dataGraph, prop, uri, codes));
+                                query.evaluate();
+                                Object codesItem = dataTree.getChildren(target).iterator().next();
+                                Collection<?> codesForCodeList = dataTree.getChildren(codesItem);
+                                CountingTreeHeader headerCodeList = new CountingTreeHeader(dataTree, "Code List");
+                                dataTree.addItem(headerCodeList);
+                                dataTree.setParent(headerCodeList, target);
+                                for (Object elem: codesForCodeList){
+                                    CodeItem ci = new CodeItem(elem.toString());
+                                    dataTree.addItem(ci);
+                                    dataTree.setParent(ci, headerCodeList);
+                                }
+                                updateUndefinedAndMissing();
+                            } catch (RepositoryException ex) {
+                                Logger.getLogger(DSDRepoComponent.class.getName()).log(Level.SEVERE, null, ex);
+                            } catch (MalformedQueryException ex) {
+                                Logger.getLogger(DSDRepoComponent.class.getName()).log(Level.SEVERE, null, ex);
+                            } catch (QueryEvaluationException ex) {
+                                Logger.getLogger(DSDRepoComponent.class.getName()).log(Level.SEVERE, null, ex);
+                            }
+                        }
+                    });
+                    uriWindow.show();
+                    
+                } else if (action == ACTION_DELETE_CL){
+                    String prop = target.toString();
+                    Collection<?> children = dataTree.getChildren(target);
+                    final Collection<String> codes = new LinkedList<String>();
+                    for (Object child: children){
+                        if (child.toString().startsWith("Code List")){
+                            for (Object obj: dataTree.getChildren(child)) {
+                                codes.add(obj.toString());
+                            }
+                        }
+                    }
+                    try {
+                        RepositoryConnection conn = repository.getConnection();
+                        GraphQuery query = conn.prepareGraphQuery(QueryLanguage.SPARQL, DSDRepoUtils.qDeleteCodeList(dataset, prop, "uri", codes));
+                        query.evaluate();
+                        for (Object child: children){
+                            if (child.toString().startsWith("Code List")){
+                                for (Object c: dataTree.getChildren(child)){
+                                    dataTree.removeItem(c);
+                                    getWindow().showNotification("removing " + c.toString(), Window.Notification.TYPE_ERROR_MESSAGE);
+                                }
+                                dataTree.removeItem(child);
+                            }
+                        }
+                        updateUndefinedAndMissing();
+                    } catch (RepositoryException ex) {
+                        Logger.getLogger(DSDRepoComponent.class.getName()).log(Level.SEVERE, null, ex);
+                    } catch (MalformedQueryException ex) {
+                        Logger.getLogger(DSDRepoComponent.class.getName()).log(Level.SEVERE, null, ex);
+                    } catch (QueryEvaluationException ex) {
+                        Logger.getLogger(DSDRepoComponent.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }
             }
         });
         
@@ -1062,8 +1201,8 @@ public class DSDRepoComponent extends CustomComponent {
                         for (Object prop: dataTree.getChildren(id)){
                             CountingTreeHeader h = (CountingTreeHeader)dataTree.getChildren(prop).iterator().next();
                             propList.add(prop.toString());
+                            list.add(prop.toString());
                             if (h.toString().startsWith("C")) {
-                                list.add(prop.toString());
                                 rangeList.add("http://www.w3.org/2004/02/skos/core#Concept");
                             } else {
                                 rangeList.add(dataTree.getChildren(h).iterator().next().toString());
@@ -1109,8 +1248,9 @@ public class DSDRepoComponent extends CustomComponent {
         dataTree.addItem(codeListHeader);
         dataTree.setParent(codeListHeader, dataTreeElement);
         for (Object child: children){
-            dataTree.addItem(child);
-            dataTree.setParent(child, codeListHeader);
+            CodeItem ci = new CodeItem(child.toString());
+            dataTree.addItem(ci);
+            dataTree.setParent(ci, codeListHeader);
         }
     }
     
