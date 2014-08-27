@@ -17,7 +17,16 @@ package rs.pupin.jpo.dsdrepo;
 
 import com.vaadin.Application;
 import com.vaadin.ui.Window;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import org.openrdf.query.MalformedQueryException;
+import org.openrdf.query.QueryEvaluationException;
+import org.openrdf.query.QueryLanguage;
+import org.openrdf.repository.RepositoryConnection;
+import org.openrdf.repository.RepositoryException;
+import org.openrdf.repository.sparql.SPARQLRepository;
 import rs.pupin.jpo.esta_ld.DSDRepoComponent;
+import rs.pupin.jpo.esta_ld.EstaLdComponent;
 
 /**
  * The Application's "main" class
@@ -34,7 +43,33 @@ public class DSDRepoApplication extends Application
         setMainWindow(window);
         setTheme("esta-ld");
         
-        DSDRepoComponent component = new DSDRepoComponent();
+        String endpoint = "http://localhost:8890/sparql";
+        
+        SPARQLRepository repository = new SPARQLRepository(endpoint);
+        try {
+            repository.initialize();
+        } catch (RepositoryException ex) {
+            Logger.getLogger(EstaLdComponent.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+        try {
+            RepositoryConnection conn = repository.getConnection();
+            conn.prepareGraphQuery(QueryLanguage.SPARQL, "DROP GRAPH <http://regular-data-replica/>").evaluate();
+            conn.prepareGraphQuery(QueryLanguage.SPARQL, "CREATE GRAPH <http://regular-data-replica/>").evaluate();
+            String query = "INSERT INTO GRAPH <http://regular-data-replica/> {?s ?p ?o } "
+                    + "WHERE { GRAPH <http://validation-test/regular-data-nolabels/> { ?s ?p ?o } }";
+            conn.prepareGraphQuery(QueryLanguage.SPARQL, query).evaluate();
+        } catch (RepositoryException ex) {
+            Logger.getLogger(DSDRepoComponent.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (MalformedQueryException ex) {
+            Logger.getLogger(DSDRepoComponent.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (QueryEvaluationException ex) {
+            Logger.getLogger(DSDRepoComponent.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+        DSDRepoComponent component = new DSDRepoComponent(repository, 
+                "http://regular-data-replica/", 
+                "http://validation-test/regular-dsd-nolabels/");
         
         window.addComponent(component);
     }

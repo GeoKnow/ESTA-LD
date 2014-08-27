@@ -211,29 +211,14 @@ public class DSDRepoComponent extends CustomComponent {
         }
     }
     
-    public DSDRepoComponent(Repository repository){
-        this.repository = repository;
-        
-        mainLayout = new VerticalLayout();
-        setCompositionRoot(mainLayout);
+    public DSDRepoComponent(Repository repository, String dataGraph){
+        this(repository, dataGraph, "http://lod2statworkbench/dsd-repository");
     }
     
-    public DSDRepoComponent(){
-        endpoint = "http://localhost:8890/sparql";
-        
-        repository = new SPARQLRepository(endpoint);
-        try {
-            repository.initialize();
-        } catch (RepositoryException ex) {
-            Logger.getLogger(EstaLdComponent.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        
+    private void initializeRepoGraph(){
         try {
             RepositoryConnection conn = repository.getConnection();
-            conn.prepareGraphQuery(QueryLanguage.SPARQL, "DROP GRAPH <http://regular-data-replica/>").evaluate();
-            conn.prepareGraphQuery(QueryLanguage.SPARQL, "CREATE GRAPH <http://regular-data-replica/>").evaluate();
-            String query = "INSERT INTO GRAPH <http://regular-data-replica/> {?s ?p ?o } "
-                    + "WHERE { GRAPH <http://validation-test/regular-data-nolabels/> { ?s ?p ?o } }";
+            String query = "CREATE SILENT GRAPH <" + repoGraph + ">";
             conn.prepareGraphQuery(QueryLanguage.SPARQL, query).evaluate();
         } catch (RepositoryException ex) {
             Logger.getLogger(DSDRepoComponent.class.getName()).log(Level.SEVERE, null, ex);
@@ -242,12 +227,17 @@ public class DSDRepoComponent extends CustomComponent {
         } catch (QueryEvaluationException ex) {
             Logger.getLogger(DSDRepoComponent.class.getName()).log(Level.SEVERE, null, ex);
         }
+    }
+    
+    public DSDRepoComponent(Repository repository, String dataGraph, String repoGraph){
+        this.repository = repository;
+        this.dataGraph = dataGraph;
+        this.repoGraph = repoGraph;
+        
+        initializeRepoGraph();
         
         dcRepo = new SparqlDCRepository(repository);
-//        graph = new SparqlDCGraph(repository, "http://validation-test/regular-all/");
-        graph = new SparqlDCGraph(repository, "http://regular-data-replica/");
-        dataGraph = graph.getUri();
-        repoGraph = "http://validation-test/regular-dsd-nolabels/";
+        graph = new SparqlDCGraph(repository, dataGraph);
         
         VerticalLayout rootLayout = new VerticalLayout();
         rootLayout.setWidth("100%");
@@ -269,7 +259,7 @@ public class DSDRepoComponent extends CustomComponent {
                 for (MenuBar.MenuItem item: menu.getItems()){
                     if (item == selectedItem){
                         if (!item.getStyleName().contains("selected")) {
-                            item.setStyleName("selected");
+                            if (ds != null ) item.setStyleName("selected");
                             findDSDs();
                         }
                     } else item.setStyleName("bleja");
@@ -282,7 +272,7 @@ public class DSDRepoComponent extends CustomComponent {
                 for (MenuBar.MenuItem item: menu.getItems()){
                     if (item == selectedItem){
                         if (!item.getStyleName().contains("selected")) {
-                            item.setStyleName("selected");
+                            if (ds != null ) item.setStyleName("selected");
                             createDSD();
                         }
                     } else item.setStyleName("bleja");
@@ -295,7 +285,7 @@ public class DSDRepoComponent extends CustomComponent {
                 for (MenuBar.MenuItem item: menu.getItems()){
                     if (item == selectedItem){
                         if (!item.getStyleName().contains("selected")) {
-                            item.setStyleName("selected");
+                            if (ds != null ) item.setStyleName("selected");
                             storeDSD();
                         }
                     } else item.setStyleName("bleja");
@@ -840,7 +830,7 @@ public class DSDRepoComponent extends CustomComponent {
                             dataTree.setChildrenAllowed(elem, false);
                         }
                     } else {
-                        CountingTreeHeader datatypes = createCountingTreeHeader(repoTree, "Datatypes");
+                        CountingTreeHeader datatypes = createCountingTreeHeader(dataTree, "Datatypes");
                         dataTree.setParent(datatypes, id);
                         CodeDatatypeTreeElement elem = new CodeDatatypeTreeElement(prop.getRange(), false, 0);
                         dataTree.addItem(elem);
@@ -996,7 +986,7 @@ public class DSDRepoComponent extends CustomComponent {
                     getWindow().showNotification("Set " + dsd + " as qb:DataStructureDefinition");
                     dataTree.containerItemSetChange(null);
                     ds = new SparqlDataSet(repository, ds.getUri(), dataGraph);
-                    refreshContentFindDSDs(ds);
+                    findDSDs();
                 }
             }
         });
@@ -1040,7 +1030,10 @@ public class DSDRepoComponent extends CustomComponent {
     }
     
     private void refreshContentFindDSDs(DataSet ds){
-        if (ds == null) return;
+        if (ds == null) {
+            getWindow().showNotification("No dataset selected", Window.Notification.TYPE_ERROR_MESSAGE);
+            return;
+        }
         Structure struct = ds.getStructure();
         if (struct != null){
             contentLayout.addComponent(new Label("The dataset already has a DSD!"));
@@ -1069,7 +1062,10 @@ public class DSDRepoComponent extends CustomComponent {
     }
     
     private void refreshContentStoreDSD(DataSet ds){
-        if (ds ==null) return;
+        if (ds == null) {
+            getWindow().showNotification("No dataset selected", Window.Notification.TYPE_ERROR_MESSAGE);
+            return;
+        }
         Structure struct = ds.getStructure();
         if (struct == null){
             contentLayout.addComponent(new Label("The dataset doesn't contain a DSD!"));
@@ -1092,7 +1088,10 @@ public class DSDRepoComponent extends CustomComponent {
     }
     
     private void refreshContentCreateDSD(DataSet ds){
-        if (ds == null) return;
+        if (ds == null) {
+            getWindow().showNotification("No dataset selected", Window.Notification.TYPE_ERROR_MESSAGE);
+            return;
+        }
         Structure struct = ds.getStructure();
         if (struct != null){
             contentLayout.addComponent(new Label("The dataset already has a DSD!"));
@@ -1219,6 +1218,9 @@ public class DSDRepoComponent extends CustomComponent {
                             DSDRepoUtils.qCreateDSD(dataset, dsd, dList, mList, aList, propList, rangeList, dataGraph));
                     query.evaluate();
                     getWindow().showNotification("DSD created!");
+                    DSDRepoComponent.this.ds = new SparqlDataSet(repository, 
+                            DSDRepoComponent.this.ds.getUri(), dataGraph);
+                    createDSD();
                 } catch (RepositoryException ex) {
                     Logger.getLogger(DSDRepoComponent.class.getName()).log(Level.SEVERE, null, ex);
                 } catch (MalformedQueryException ex) {
