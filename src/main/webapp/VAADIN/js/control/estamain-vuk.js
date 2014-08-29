@@ -26,7 +26,7 @@ var geoLevels = [];//geo levels of codes (populated by broader-narrower queries
 function domReadyVuk() {
 	
 	//Setup the ajax indicator ('loading')
-	$('body').append('<div id="ajaxBusy"><p><img src="resources/images/loading.gif"></p></div>');
+	$('body').append('<div id="ajaxBusy"><p><img src="ESTA-LD/VAADIN/resources/images/loading.gif"></p></div>');
 	
 	$('#ajaxBusy').css({
 		display:'none',
@@ -161,7 +161,7 @@ function domReadyVuk() {
 	populateGeoLevelsLists();
 	
 	//initially run sparql query depending on the selected analysis
-	runSparqlYearIncentive();//run anyway to get the data for the map
+//	runSparqlYearIncentive();//run anyway to get the data for the map
 	if (analysisType === 'bartime') {
 		runSparqlRsgeoIncentive();
 		$('input:radio[name=independentParameter][value=Time]').prop('checked', true);
@@ -181,7 +181,7 @@ function geoLevelChanged() {
 	$('input:radio[name=independentParameter][value=Geo]').prop('checked', true);
 	
 	refreshMap();
-	refreshSpaceChart();
+//	refreshSpaceChart();
 }
 
 
@@ -228,7 +228,7 @@ function isObservationValueDefined(code) {
 
 //prefixes for sparql queries
 var CODE_PREFIX = 'http://elpo.stat.gov.rs/lod2/RS-DIC/geo/';
-var YEAR_PREFIX = '<http://elpo.stat.gov.rs/lod2/RS-DIC/time/Y';
+var YEAR_PREFIX = 'http://elpo.stat.gov.rs/lod2/RS-DIC/time/';
 var INCENTIVE_PREFIX = '<http://stat.apr.gov.rs/lod2/RS-DIC/IncentivePurpose/';
 
 
@@ -238,28 +238,32 @@ function loadGeoNamesAndValues() {
 
 	geoLayerNames.length = 0;
 	geoLayerValues.length = 0;
-	var selectedGeoLevelCodes = geoLevels[visibleGeoLevel];
 	
-	for (var i = 0; i < selectedGeoLevelCodes.length; i++) {
-		var code = selectedGeoLevelCodes[i];
-		var value = hashCodeToObservationValues[code];
-		
-		var intValue = parseInt(value);
-		
-		if (maxObservationValue === 0 || intValue > maxObservationValue) {
-			maxObservationValue = intValue;
-		} 
-		if (minObservationValue === 0 || intValue < minObservationValue) {
-			minObservationValue = intValue;
-		}
-		
-		geoLayerNames.push(hashCodeToNames[code]);//find area names
-		geoLayerValues.push(intValue);
-	}
-	
-	//Sort the area values
-	sortArrays(geoLayerValues, geoLayerNames, false);
-	
+        if (geoLevels.length > visibleGeoLevel) {
+    
+            var selectedGeoLevelCodes = geoLevels[visibleGeoLevel];
+
+            for (var i = 0; i < selectedGeoLevelCodes.length; i++) {
+                    var code = selectedGeoLevelCodes[i];
+                    var value = hashCodeToObservationValues[code];
+
+                    var intValue = parseInt(value);
+                    if (!isNaN(intValue)) {
+                        if (maxObservationValue === 0 || intValue > maxObservationValue) {
+                                maxObservationValue = intValue;
+                        } 
+                        if (minObservationValue === 0 || intValue < minObservationValue) {
+                                minObservationValue = intValue;
+                        }
+
+                        geoLayerNames.push(hashCodeToNames[code]);//find area names
+                        geoLayerValues.push(intValue);
+                    }
+            }
+
+            //Sort the area values
+            sortArrays(geoLayerValues, geoLayerNames, false);
+        }
 }
 
 //callback function - fills the hash with the keys and values and finds new min and max observation values
@@ -340,7 +344,7 @@ function refreshMap() {
 	var data = [];
 
 	data = geoData[visibleGeoLevel];
-	
+        
 	loadGeoNamesAndValues();
 	
 	
@@ -448,7 +452,7 @@ function runSparqlYearIncentive() {
 	hideCharts();
 //	loading = true;
 	
-	var yearUrl = YEAR_PREFIX + $('#year').val() + '>';//year url used in the sparql query
+	var yearUrl = '<' + YEAR_PREFIX + 'Y' + $('#year').val() + '>';//year url used in the sparql query
 	var incentiveUrl = INCENTIVE_PREFIX + $('#incentive').val() + '>';//incentive url used in the sparql query
 	
 //	var year = $('#year').val();
@@ -482,7 +486,7 @@ function runSparqlRsgeoYear() {
 	
 	var rsgeoString = CODE_PREFIX + rsgeoSelected;
 	
-	var yearUrl = YEAR_PREFIX + $('#year').val() + '>';//year url used in the sparql query
+	var yearUrl = '<' + YEAR_PREFIX + 'Y' + $('#year').val() + '>';//year url used in the sparql query
 	
 	$('body').css('cursor', 'wait');
 	
@@ -566,7 +570,7 @@ function runSparqlYear() {
 	
 	$('body').css('cursor', 'wait');
 	
-	execSparqlYear(YEAR_PREFIX + $('#year').val() + '>', cbfuncYear);
+	execSparqlYear('<' + YEAR_PREFIX + 'Y' + $('#year').val() + '>', cbfuncYear);
 }
 
 
@@ -585,19 +589,15 @@ function getSelectedRsgeoData(e) {
 function populateGeoLevelsLists() {
 	
 	//Find top geo level
-	execSparqlTopGeoBroaderNarrower(cbfuncGetGeoCodes);//sinchronous call
+	execSparqlTopGeoBroaderNarrower(cbfuncGetGeoCodes);
 	
-	//If previous sparql query returned empty fetch all geo codes.
-	if (geoLevels.length === 0) {
-		execSparqlAllGeoCodes(cbfuncGetGeoCodes);//sinchronous call
-	}
+//	var i = 0;
+//	while (geoLevels.length > i) {
+//		execSparqlBroaderNarrowerForArray(CODE_PREFIX, geoLevels[i], cbfuncGetGeoCodes);//sinchronous call
+//		i++;
+//	}
 	
-	var i = 0;
-	while (geoLevels.length > i) {
-		execSparqlBroaderNarrowerForArray(CODE_PREFIX, geoLevels[i], cbfuncGetGeoCodes);//sinchronous call
-		i++;
-	}
-	
+
 }
 
 function estamainInitVuk(){
@@ -619,11 +619,11 @@ function estamainInitVuk(){
         refreshMap();
         
         // TODO see wheter to keep this part
-        if ((analysisType === 'bartime') && firstRun) {//if it is the first run and bartime analysis do not show this chart (another one will be displayed)
-            firstRun = false;
-        } else {
-            refreshSpaceChart();
-        }
+//        if ((analysisType === 'bartime') && firstRun) {//if it is the first run and bartime analysis do not show this chart (another one will be displayed)
+//            firstRun = false;
+//        } else {
+//            refreshSpaceChart();
+//        }
     };
 
 
@@ -719,7 +719,7 @@ cbfuncRsgeoIncentive = function(data) {
 	var chartData = [];
 	$(data.results.bindings).each(function(key, val){
 		var timeUri = val.time.value;
-		var year = timeUri.substring(YEAR_PREFIX.length - 1, timeUri.length);// -1, since prefix starts with '<'
+		var year = timeUri.substring(YEAR_PREFIX.length + 1, timeUri.length);
 		var value = val.observation.value;
 		var intValue = parseInt(value);
 		
@@ -791,7 +791,7 @@ cbfuncRsgeo = function(data) {
 		var incentiveUri = val.incentive.value;
 		var value = val.observation.value;
 		
-		var year = timeUri.substring(YEAR_PREFIX.length - 1, timeUri.length);// -1, since prefix starts with '<'
+		var year = timeUri.substring(YEAR_PREFIX.length + 1, timeUri.length);
 		var incentiveCode = incentiveUri.substring(INCENTIVE_PREFIX.length - 1, incentiveUri.length);
 		
 		var indexI = findIndex(YEARS, year);
@@ -900,7 +900,8 @@ cbfuncTwoFreeVuk = function(data) {
         });
 
         $('body').css('cursor', 'default');
-        var chartSubtitle = 'Area: ' + hashCodeToNames[rsgeoSelected];
+//        var chartSubtitle = 'Area: ' + hashCodeToNames[rsgeoSelected];
+        var chartSubtitle = '';
 
         createChartBarMultiple(chartSubtitle, doubleArray, categoriesArray, seriesArray);
     } else {
@@ -935,8 +936,8 @@ cbfuncTwoFreeVuk = function(data) {
         });
 
         $('body').css('cursor', 'default');
-        var chartSubtitle = 'Area: ' + hashCodeToNames[rsgeoSelected];
-
+//        var chartSubtitle = 'Area: ' + hashCodeToNames[rsgeoSelected];
+        var chartSubtitle = '';
         createChartBarMultiple(chartSubtitle, doubleArray, categoriesArray, seriesArray);
     }
 }
@@ -970,8 +971,15 @@ cbfuncOneFreeVuk = function(data) {
         for (var i=0; i<valuesArray.length; i++)
             valuesArray[i] = 0;
 
+        var timeTitle = '';
         $(data.results.bindings).each(function(key, val){
                 var dim1Uri = val.dim1.value;
+                
+                if (dim1Uri.substring(0, dim1Uri.lastIndexOf('/') + 1) === YEAR_PREFIX) {
+                    
+                    timeTitle = dim1Uri;
+                }
+                
                 var code = uriLastPart(dim1Uri);
                 var value = val.observation.value;
                 var intValue = parseInt(value);
@@ -988,8 +996,49 @@ cbfuncOneFreeVuk = function(data) {
     //    sortArrays(chartBarValues, chartBarCategories, false);
         $('body').css('cursor', 'default');
 
-        createChartBarSingle('', categoriesArray, valuesArray, javaSelectedDimensions[javaFreeDimensions[0]]);
+        if (timeTitle !== '') {//show Highstock chart
+            var chartData = createHighstockDataFromElpoStat(categoriesArray, valuesArray);
+            var granularity = getGranularityFromElpoStat(categoriesArray);
+            createTimeChart('highchartsbarmultiple', chartData, timeTitle, '', javaSelectedDimensions[javaFreeDimensions[0]], 'column', granularity);
+        } else {
+            createChartBarSingle('', categoriesArray, valuesArray, javaSelectedDimensions[javaFreeDimensions[0]]);
+        }
     }
+}
+
+function getGranularityFromElpoStat(elpoStatArray) {
+    for (var i = 0; i < elpoStatArray.length; i++) {
+        if (elpoStatArray[i].indexOf('M') > -1) {
+            return 'M';
+        }
+    }
+    return 'Y';
+}
+
+function createHighstockDataFromElpoStat(elpoStatArray, valuesArray) {
+    var chartDataNames = [];
+    var chartDataValues = [];
+    for (var i = 0; i < elpoStatArray.length; i++) {
+            
+            var year = elpoStatArray[i].substring(1, 5);
+            var month = 0;
+            if (elpoStatArray[i].length > 5) {
+                month = elpoStatArray[i].substring(6, elpoStatArray[i].length);
+            }
+            
+            chartDataNames.push(Date.UTC(year, month));
+            chartDataValues.push(valuesArray[i]);
+    }
+    
+    sortArrays(chartDataNames, chartDataValues, true);//sort by names (dates)
+    var chartData = [];
+    for (var i = 0; i < elpoStatArray.length; i++) {
+        var chartItem = [];
+        chartItem.push(chartDataNames[i]);
+        chartItem.push(chartDataValues[i]);
+        chartData.push(chartItem);
+    }
+    return chartData;
 }
 
 cbfuncIncentive = function(data) {
@@ -1021,7 +1070,7 @@ cbfuncIncentive = function(data) {
 		var rsgeoUri = val.rsgeo.value;
 		var value = val.observation.value;
 		
-		var year = timeUri.substring(YEAR_PREFIX.length - 1, timeUri.length);// -1, since prefix starts with '<'
+		var year = timeUri.substring(YEAR_PREFIX.length + 1, timeUri.length);
 		var rsgeoCode = rsgeoUri.substring(CODE_PREFIX.length, rsgeoUri.length);
 
 //													if (rsgeoCode.length === requiredCodeLength) {
@@ -1102,8 +1151,8 @@ cbfuncYear = function(data) {
     createChartBarMultiple('Year: ' + displayYear, arrayIncentiveRsgeo, arrayNames, INCENTIVE_NAMES[1]);
 	
 };
-
-cbfuncGetGeoCodes = function(data) {
+    
+    cbfuncGetGeoCodes = function(data) {
 	var geoLevelArray = [];
 	
 	$(data.results.bindings).each(function(key, val){
@@ -1115,9 +1164,17 @@ cbfuncGetGeoCodes = function(data) {
 
 	if (geoLevelArray.length > 0) {
 		geoLevels.push(geoLevelArray);
+                execSparqlBroaderNarrowerForArray(CODE_PREFIX, geoLevelArray, cbfuncGetGeoCodes);
+	} else {//end - redraw
+            geoLevelChanged();
+        }
+        
+        //If broader-narrower returned empty fetch all geo codes.
+	if (geoLevels.length === 0) {
+		execSparqlAllGeoCodes(cbfuncGetGeoCodes);//sinchronous call
 	}
 	
-};
+    };
 
     domReadyVuk();
 

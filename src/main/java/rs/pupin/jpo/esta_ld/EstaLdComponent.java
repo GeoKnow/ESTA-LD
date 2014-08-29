@@ -196,10 +196,12 @@ public class EstaLdComponent extends CustomComponent {
         selectDataSet.addListener(new Property.ValueChangeListener() {
             public void valueChange(Property.ValueChangeEvent event) {
                 DataSet ds = (DataSet) event.getProperty().getValue();
-                final String function = "javaSetGraphAndDataSet('" +
-                        ds.getGraph() + "','" + ds.getUri() + "')";
-                getWindow().executeJavaScript(function);
-                refreshDimensions();
+                if (ds != null){
+                    final String function = "javaSetGraphAndDataSet('" +
+                            ds.getGraph() + "','" + ds.getUri() + "')";
+                    getWindow().executeJavaScript(function);
+                    refreshDimensions();
+                }
             }
         });
     }

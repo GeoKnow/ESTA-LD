@@ -12,11 +12,15 @@ var COLORS = ['rgb(247,251,255)', 'rgb(222,235,247)', 'rgb(198,219,239)', 'rgb(1
 function recalculateColorGradeValues(minObservationValue, maxObservationValue) {
 	var range = maxObservationValue - minObservationValue;
 	var step = range / colorGradeValues.length;
-	var roundStep = Math.round(step / 100000) * 100000;
-	
-	if (roundStep === 0) {
-		roundStep = 10000;
+        var divisor = 100000;
+	var roundStep = Math.round(step / divisor) * divisor;
+	while (roundStep === 0 && divisor > 1) {
+                divisor /= 10;
+		roundStep = Math.round(step / divisor) * divisor;
 	}
+        if (roundStep === 0) {
+            roundStep = 1;
+        }
 	
 	//find the largest multiple of roundStep which is lower than minObservationValue
 	var firstRangeValue = 0;

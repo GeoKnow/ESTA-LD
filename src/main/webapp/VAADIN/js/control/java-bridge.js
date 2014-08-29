@@ -65,7 +65,9 @@ function javaSetPossibleValues(vals){
 function javaSetGraphAndDataSet(graph,ds){
     javaGraph = graph;
     javaDataSet = ds;
-    sessionStorage.setItem('endpoint','http://jpo.imp.bg.ac.rs/sparql');
+    sessionStorage.setItem('endpoint','http://147.91.50.167/sparql');
+//    sessionStorage.setItem('endpoint','http://localhost:8890/sparql');
+//    sessionStorage.setItem('endpoint','http://jpo.imp.bg.ac.rs/sparql');
     sessionStorage.setItem('graph',javaGraph);
 //    for (var i=1; i<5; i++) {
 //        for (var j=1; j<5; j++) {

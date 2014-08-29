@@ -1,8 +1,10 @@
 var endpoint = 'http://147.91.50.167/sparql';
+//var endpoint = 'http://jpo.imp.bg.ac.rs/sparql';
 //var endpoint = 'http://localhost:8890/sparql';
 var sessionEndpoint;
 
 var server = 'http://147.91.50.167/';
+//var server = 'http://jpo.imp.bg.ac.rs/';
 //var server = 'http://localhost:8890/';
 var index;
 
@@ -72,7 +74,7 @@ function execSparqlTopGeoBroaderNarrower(callbackFunction) {//FIND TOP ELEMENT (
 		'{?rsgeo skos:broader ?rsgeo6. }}} ' + 
 		'}';
 	
-	var queryUrlEncoded = endpoint + '?query=' + $.URLEncode(sparqlQuery);
+	var queryUrlEncoded = endpoint + '?query=' + $.URLEncode(sparqlQuery)+'&format=json';
 	
 //	$.getJSON(queryUrlEncoded, callbackFunction).error(function() { alert("There was an error during communication with the sparql endpoint"); });
 	
@@ -80,26 +82,7 @@ function execSparqlTopGeoBroaderNarrower(callbackFunction) {//FIND TOP ELEMENT (
 	$.ajax({
 	    async: false,
 	    url: queryUrlEncoded,
-		dataType: 'json',
-	    success: callbackFunction,
-	    error: function() { alert("There was an error during communication with the sparql endpoint");}
-	});
-}
-
-function execSparqlAllGeoCodes(callbackFunction) {//FIND TOP ELEMENT (BROADER/NARROWER)
-	var sparqlQuery = 'prefix rs: <http://elpo.stat.gov.rs/lod2/RS-DIC/rs/> ' +
-		'select distinct ?rsgeo ' +
-		'where {?y1 rs:geo ?rsgeo. }';
-	
-	var queryUrlEncoded = endpoint + '?query=' + $.URLEncode(sparqlQuery);
-	
-//	$.getJSON(queryUrlEncoded, callbackFunction).error(function() { alert("There was an error during communication with the sparql endpoint"); });
-	
-	//needs to be synchronous
-	$.ajax({
-	    async: false,
-	    url: queryUrlEncoded,
-		dataType: 'json',
+            dataType: 'jsonp',
 	    success: callbackFunction,
 	    error: function() { alert("There was an error during communication with the sparql endpoint");}
 	});
@@ -119,7 +102,7 @@ function execSparqlBroaderNarrowerForArray(codePrefix, geoStringArray, callbackF
 		querySubstring +
 		' }';
 	
-	var queryUrlEncoded = endpoint + '?query=' + $.URLEncode(sparqlQuery);
+	var queryUrlEncoded = endpoint + '?query=' + $.URLEncode(sparqlQuery)+'&format=json';
 	
 //	$.getJSON(queryUrlEncoded, callbackFunction).error(function() { alert("There was an error during communication with the sparql endpoint"); });
 	
@@ -127,12 +110,29 @@ function execSparqlBroaderNarrowerForArray(codePrefix, geoStringArray, callbackF
 	$.ajax({
 	    async: false,
 	    url: queryUrlEncoded,
-		dataType: 'json',
+            dataType: 'jsonp',
 	    success: callbackFunction,
 	    error: function() { alert("There was an error during communication with the sparql endpoint");}
 	});
 }
 
+function execSparqlAllGeoCodes(callbackFunction) {//FIND TOP ELEMENT (BROADER/NARROWER)
+	var sparqlQuery = 'prefix rs: <http://elpo.stat.gov.rs/lod2/RS-DIC/rs/> ' +
+		'select distinct ?rsgeo ' +
+		'where {?y1 rs:geo ?rsgeo. }';
+	
+	var queryUrlEncoded = endpoint + '?query=' + $.URLEncode(sparqlQuery)+'&format=json';
+	
+//	$.getJSON(queryUrlEncoded, callbackFunction).error(function() { alert("There was an error during communication with the sparql endpoint"); });
+	
+	//needs to be synchronous
+	$.ajax({
+	    url: queryUrlEncoded,
+            dataType: 'jsonp',
+	    success: callbackFunction,
+	    error: function() { alert("There was an error during communication with the sparql endpoint");}
+	});
+}
 //function execSparqlNarrower(geoString, callbackFunction) {//geostring: '<http://elpo.stat.gov.rs/lod2/RS-DIC/geo/RS>'
 //	var sparqlQuery = 'prefix skos: <http://www.w3.org/2004/02/skos/core#> ' +
 //		'select distinct ?rsgeo ' +
@@ -159,9 +159,16 @@ function execSparqlForGeoMapVuk(callbackFunction){
     }
     sparqlQuery += '}';
     
-    var queryUrlEncoded = endpoint + '?query=' + $.URLEncode(sparqlQuery);
+    var queryUrlEncoded = endpoint + '?query=' + $.URLEncode(sparqlQuery)+'&format=json';
 
-    $.getJSON(queryUrlEncoded, callbackFunction).error(function() { alert("There was an error during communication with the sparql endpoint\n"+sparqlQuery); });
+//    $.getJSON(queryUrlEncoded, callbackFunction).error(function() { alert("There was an error during communication with the sparql endpoint\n"+sparqlQuery); });
+    
+    $.ajax({
+        url: queryUrlEncoded,
+        dataType: 'jsonp',
+        success: callbackFunction,
+        error: function() { alert("There was an error during communication with the sparql endpoint");}
+    });
 }
 
 function execSparqlRegionalDevelopment(querySubstring, callbackFunction) {
@@ -177,10 +184,15 @@ function execSparqlRegionalDevelopment(querySubstring, callbackFunction) {
 				querySubstring +
 				'?y sdmx-measure:obsValue ?observation. }';
 	
-	var queryUrlEncoded = endpoint + '?query=' + $.URLEncode(sparqlQuery);
+	var queryUrlEncoded = endpoint + '?query=' + $.URLEncode(sparqlQuery)+'&format=json';
 
-	$.getJSON(queryUrlEncoded, callbackFunction).error(function() { alert("There was an error during communication with the sparql endpoint"); });
-	
+//	$.getJSON(queryUrlEncoded, callbackFunction).error(function() { alert("There was an error during communication with the sparql endpoint"); });
+	$.ajax({
+	    url: queryUrlEncoded,
+            dataType: 'jsonp',
+	    success: callbackFunction,
+	    error: function() { alert("There was an error during communication with the sparql endpoint");}
+	});
 	
 //	var query = endpoint + '?query=PREFIX+rs%3A+%3Chttp%3A%2F%2Felpo.stat.gov.rs%2Flod2%2FRS%2DDIC%2Frs%2F%3E+PREFIX+geo%3A+%3Chttp%3A%2F%2Felpo.stat.gov.rs%2Flod2%2FRS%2DDIC%2Fgeo%2F%3E+PREFIX+apr%3A+%3Chttp%3A%2F%2Fstat.apr.gov.rs%2Flod2%2F%3E+PREFIX+sdmx%2Dmeasure%3A+%3Chttp%3A%2F%2Fpurl.org%2Flinked%2Ddata%2Fsdmx%2F2009%2Fmeasure%23%3E+SELECT+DISTINCT+%3Ftime+%3Fincentive+%3Frsgeo+%3Fobservation+WHERE+%7B+%3Fy+rs%3Ageo+%3Frsgeo.+%3Fy+rs%3Atime+%3Ftime.+%3Fy+apr%3AincentiveAim+%3Fincentive.+%3Fy+rs%3Atime+%3Chttp%3A%2F%2Felpo.stat.gov.rs%2Flod2%2FRS%2DDIC%2Ftime%2FY' + year + '%3E.+%3Fy+apr%3AincentiveAim+%3Chttp%3A%2F%2Fstat.apr.gov.rs%2Flod2%2FRS%2DDIC%2FIncentivePurpose%2F' + incentive + '%3E.+%3Fy+sdmx%2Dmeasure%3AobsValue+%3Fobservation.}';
 	
@@ -239,9 +251,17 @@ function execSparqlGeoSelectedVuk(rsgeoString, callbackFunction) {
                                 '?y <' + javaSelectedDimensions[1] + '> ?dim2 . }' +
                                 'order by ?dim1 ?dim2';
     
-    var queryUrlEncoded = endpoint + '?query=' + $.URLEncode(sparqlQuery);
+    var queryUrlEncoded = endpoint + '?query=' + $.URLEncode(sparqlQuery)+'&format=json';
 
-    $.getJSON(queryUrlEncoded, callbackFunction).error(function() { alert("There was an error during communication with the sparql endpoint\n"+sparqlQuery); });
+//    $.getJSON(queryUrlEncoded, callbackFunction).error(function() { alert("There was an error during communication with the sparql endpoint\n"+sparqlQuery); });
+
+
+    $.ajax({
+        url: queryUrlEncoded,
+        dataType: 'jsonp',
+        success: callbackFunction,
+        error: function() { alert("There was an error during communication with the sparql endpoint");}
+    });
 }
 
 function execSparqlDimensionValueChangedVuk(cbfuncOneFreeVuk,cbfuncTwoFreeVuk){
@@ -278,12 +298,24 @@ function execSparqlDimensionValueChangedVuk(cbfuncOneFreeVuk,cbfuncTwoFreeVuk){
     if (javaGeoValue != null && javaGeoValue != '' && javaGeoFree) numFree++;
     if (numFree == 2) sparqlQuery += ' ?dim2';
     
-    var queryUrlEncoded = endpoint + '?query=' + $.URLEncode(sparqlQuery);
+    var queryUrlEncoded = endpoint + '?query=' + $.URLEncode(sparqlQuery)+'&format=json';
     
     if (numFree == 2){
-        $.getJSON(queryUrlEncoded, cbfuncTwoFreeVuk).error(function() { alert("There was an error during communication with the sparql endpoint\n"+sparqlQuery); });
+//        $.getJSON(queryUrlEncoded, cbfuncTwoFreeVuk).error(function() { alert("There was an error during communication with the sparql endpoint\n"+sparqlQuery); });
+        $.ajax({
+	    url: queryUrlEncoded,
+		dataType: 'jsonp',
+	    success: cbfuncTwoFreeVuk,
+	    error: function() { alert("There was an error during communication with the sparql endpoint");}
+	});
     } else if (numFree == 1){
-        $.getJSON(queryUrlEncoded, cbfuncOneFreeVuk).error(function() { alert("There was an error during communication with the sparql endpoint\n"+sparqlQuery); });
+//        $.getJSON(queryUrlEncoded, cbfuncOneFreeVuk).error(function() { alert("There was an error during communication with the sparql endpoint\n"+sparqlQuery); });
+        $.ajax({
+	    url: queryUrlEncoded,
+		dataType: 'jsonp',
+	    success: cbfuncOneFreeVuk,
+	    error: function() { alert("There was an error during communication with the sparql endpoint");}
+	});
     }
 }
 
@@ -310,19 +342,26 @@ function execSparqlGraphs() {
 //	'?s ?p ?o' +//	get all graphs
 	'} .  }';
 
-	var queryUrlEncoded = inputEndpoint + '?query=' + $.URLEncode(sparqlQuery);
+	var queryUrlEncoded = inputEndpoint + '?query=' + $.URLEncode(sparqlQuery)+'&format=json';
 	
-	$.getJSON(queryUrlEncoded, cbFuncGraph).error(function() { 
-		$("#error").css('visibility', 'visible');//display error message on screen
-		$('#launch').attr('disabled','disabled');//disable launch button
-		$("#launch").attr('src', 'resources/images/launch_d.png');
+//	$.getJSON(queryUrlEncoded, cbFuncGraph).error(function() { 
+//		$("#error").css('visibility', 'visible');//display error message on screen
+//		$('#launch').attr('disabled','disabled');//disable launch button
+//		$("#launch").attr('src', 'resources/images/launch_d.png');
+//	});
+
+        $.ajax({
+	    url: queryUrlEncoded,
+		dataType: 'jsonp',
+	    success: cbFuncGraph,
+	    error: function() { alert("There was an error during communication with the sparql endpoint");}
 	});
 }
 
 function exploreWithCubeViz() {
 	window.open(server + 'ontowiki/cubeviz/?m=' + $.URLEncode(graph));
 }
-// http://147.91.50.167/ontowiki/cubeviz/?m=http%3A%2F%2Fstat.apr.gov.rs%2Flod2%2FRegister%2FRegional_Development
+// http://fraunhofer2.imp.bg.ac.rs/ontowiki/cubeviz/?m=http%3A%2F%2Fstat.apr.gov.rs%2Flod2%2FRegister%2FRegional_Development
 
 function sparqlqueryInitVuk(){
     sessionEndpoint = sessionStorage.getItem("endpoint");
