@@ -99,7 +99,7 @@
                         <properties>
                             <cargo.remote.username>test</cargo.remote.username>
                             <cargo.remote.password>tst4144</cargo.remote.password>
-                            <cargo.tomcat.manager.url>http://147.91.50.167/t7man/text</cargo.tomcat.manager.url>
+                            <cargo.remote.uri>http://147.91.50.167/t7man/text</cargo.remote.uri>
                         </properties>
                     </configuration>
                     <deployer>
@@ -185,6 +185,16 @@
             <artifactId>servlet-api</artifactId>
             <version>2.5</version>
             <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-log4j12</artifactId>
+            <version>1.5.3</version>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>1.5.3</version>
         </dependency>
     </dependencies>
 
