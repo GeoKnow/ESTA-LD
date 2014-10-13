@@ -34,7 +34,7 @@ import rs.pupin.jpo.datacube.sparql_impl.SparqlDCRepository;
 public class EstaLdComponent extends CustomComponent {
     
     private final Repository repository;
-    private final String endpoint = "http://localhost:8890/sparql";
+    private final String endpoint = "http://147.91.50.167/sparql";
     private final VerticalLayout mainLayout;
     private VerticalLayout geoLayout;
     private HorizontalLayout dimLayout;
