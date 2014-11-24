@@ -97,8 +97,8 @@
                     <configuration>
                         <type>runtime</type>
                         <properties>
-                            <cargo.remote.username>test</cargo.remote.username>
-                            <cargo.remote.password>tst4144</cargo.remote.password>
+                            <cargo.remote.username>${esta-ld.remote.username}</cargo.remote.username>
+                            <cargo.remote.password>${esta-ld.remote.password}</cargo.remote.password>
                             <cargo.remote.uri>http://147.91.50.167/t7man/text</cargo.remote.uri>
                         </properties>
                     </configuration>
