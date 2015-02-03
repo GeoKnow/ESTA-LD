@@ -324,7 +324,8 @@ public class EstaLdComponent extends CustomComponent {
             ComboBox boxValue = new ComboBox(null, vals);
             boxValue.setImmediate(true);
             boxValue.setNullSelectionAllowed(false);
-            boxValue.select(vals.iterator().next());
+            if (vals.iterator().hasNext()) boxValue.select(vals.iterator().next());
+            else boxValue.setEnabled(false);
             boxValue.setSizeUndefined();
             boxValue.setWidth("100%");
             boxValue.setHeight(CONTENT_ELEM_HEIGHT);
@@ -413,7 +414,7 @@ public class EstaLdComponent extends CustomComponent {
         Iterator<DataCubeGraph> iter = dcRepo.getDataCubeGraphs().iterator();
         while (iter.hasNext()){
             DataCubeGraph g = iter.next();
-            if (g.getUri().equalsIgnoreCase("http://stat.apr.gov.rs/lod2/id/Register/RegionalDevelopmentMeasuresandIncentives")){
+            if (g.getUri().equalsIgnoreCase("http://demo/reg-dev/")){
                 selectGraph.select(g);
                 break;
             }

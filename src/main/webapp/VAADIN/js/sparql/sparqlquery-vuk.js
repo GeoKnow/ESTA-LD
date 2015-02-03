@@ -61,6 +61,7 @@ function execSparqlTopGeoBroaderNarrower(callbackFunction) {//FIND TOP ELEMENT (
 	var sparqlQuery = 'prefix skos: <http://www.w3.org/2004/02/skos/core#> ' +
 		'prefix rs: <http://elpo.stat.gov.rs/lod2/RS-DIC/rs/> ' +
 		'select distinct ?rsgeo ' +
+                'from <' + javaGraph + '> ' +
 		'where { ' + 
 		'{{?y1 rs:geo ?rsgeo. ' + 
 		'?rsgeo1 skos:broader ?rsgeo.} ' + 
@@ -98,6 +99,7 @@ function execSparqlBroaderNarrowerForArray(codePrefix, geoStringArray, callbackF
 	
 	var sparqlQuery = 'prefix skos: <http://www.w3.org/2004/02/skos/core#> ' +
 		'select distinct ?rsgeo ' +
+                'from <' + javaGraph + '> ' +
 		'where { ' +
 		querySubstring +
 		' }';
@@ -119,6 +121,7 @@ function execSparqlBroaderNarrowerForArray(codePrefix, geoStringArray, callbackF
 function execSparqlAllGeoCodes(callbackFunction) {//FIND TOP ELEMENT (BROADER/NARROWER)
 	var sparqlQuery = 'prefix rs: <http://elpo.stat.gov.rs/lod2/RS-DIC/rs/> ' +
 		'select distinct ?rsgeo ' +
+                'from <' + javaGraph + '> ' +
 		'where {?y1 rs:geo ?rsgeo. }';
 	
 	var queryUrlEncoded = endpoint + '?query=' + $.URLEncode(sparqlQuery)+'&format=json';

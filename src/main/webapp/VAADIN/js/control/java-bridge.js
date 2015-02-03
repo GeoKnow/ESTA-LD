@@ -86,6 +86,7 @@ function javaSetGraphAndDataSet(graph,ds){
 //    }
 //    refreshMap();
 //    sessionStorage.setItem('analysistype','barspace');
+    populateGeoLevelsLists();
 }
 
 function javaPrintAll(){

@@ -587,7 +587,10 @@ function getSelectedRsgeoData(e) {
 }
 
 function populateGeoLevelsLists() {
-	
+//    geoLevels.length = 0;
+	while(geoLevels.length > 0) {
+            geoLevels.pop();
+        }
 	//Find top geo level
 	execSparqlTopGeoBroaderNarrower(cbfuncGetGeoCodes);
 	

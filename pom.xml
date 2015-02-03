@@ -86,6 +86,17 @@
             </plugin>
             
             <plugin>
+                <groupId>org.apache.tomcat.maven</groupId>
+                <artifactId>tomcat7-maven-plugin</artifactId>
+                <version>2.2</version>
+                <configuration>
+                    <server>local-tomcat7</server>
+                    <url>http://localhost:8080/manager/text</url>
+                    <path>/ESTA-LD</path>
+                </configuration>
+            </plugin>
+            
+            <plugin>
                 <groupId>org.codehaus.cargo</groupId>
                 <artifactId>cargo-maven2-plugin</artifactId>
                 <version>1.1.1</version>
