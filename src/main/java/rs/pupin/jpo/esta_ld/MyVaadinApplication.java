@@ -26,22 +26,23 @@ import java.util.Map;
 @SuppressWarnings("serial")
 public class MyVaadinApplication extends Application
 {
+    private boolean first = true;
     private Window window;
 
     @Override
     public void init()
     {
         window = new Window("ESTA-LD");
-        final StringBuilder sb = new StringBuilder();
         window.addParameterHandler(new ParameterHandler() {
             public void handleParameters(Map<String, String[]> parameters) {
-                if (sb.length() > 0) return;
+                if (!first) return;
+                first = false;
                 String[] titleParam = parameters.get("title");
-                sb.append((titleParam == null)?null:titleParam[0]);
-                window.showNotification(sb.toString()); // TODO remove when finished with 
-                System.out.println(sb.toString());
+                String endpointURL = (titleParam == null)?null:titleParam[0];
+                window.showNotification(endpointURL); // TODO remove when finished with 
+                System.out.println(endpointURL);
                 
-                EstaLdComponent component = new EstaLdComponent();
+                EstaLdComponent component = new EstaLdComponent(endpointURL);
         
                 window.addComponent(component);
                 window.executeJavaScript("estamainInitVuk()");

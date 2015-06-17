@@ -303,20 +303,38 @@ var legend;
 
 
 
-function redrawMap(data, minObservationValue, maxObservationValue) {
-	recalculateColorGradeValues(minObservationValue, maxObservationValue);
-	map.removeControl(legend);
-	legend.addTo(map);
+function redrawMap(data, minObservationValue, maxObservationValue, updateStyle) {
+//    console.log('redrawMap data:');
+//    console.log(data);
+    var start = new Date().getTime();
+    recalculateColorGradeValues(minObservationValue, maxObservationValue);
+    var wp1 = new Date().getTime();
+//    console.log('Recalc color grades: ' + (wp1-start));
+    
+    map.removeControl(legend);
+    legend.addTo(map);
+    var wp2 = new Date().getTime();
+//    console.log('Remove and add legend: ' + (wp2-wp1));
 
-	map.removeLayer(geojson);
-	
-	geojson = L.geoJson(data, {
-		style: getStyleHash,
-		onEachFeature: onEachFeature,
-	}).addTo(map);
+//    map.removeLayer(geojson);
+    if (updateStyle) {
+        geojson.setStyle(getStyleHash);
+    }
+    else {
+        geojson.clearLayers();
+        geojson.addData(data);
+    } 
+
+//    geojson = L.geoJson(data, {
+//        style: getStyleHash,
+//        onEachFeature: onEachFeature,
+//    }).addTo(map);
+    var wp3 = new Date().getTime();
+//    console.log('Remove and add geojson: ' + (wp3-wp2));
 }
 
 function rammapInitVuk() {
+    if (map !== undefined) map.remove();
     map = L.map('map').setView([43.7, 21.5], 7);//leaflet map object
 
 //ADD LAYER TO MAP

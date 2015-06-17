@@ -380,14 +380,14 @@ legend.addTo(map);
 
 
 function redrawMap(data, minObservationValue, maxObservationValue) {
-	recalculateColorGradeValues(minObservationValue, maxObservationValue);
-	map.removeControl(legend);
-	legend.addTo(map);
+    recalculateColorGradeValues(minObservationValue, maxObservationValue);
+    map.removeControl(legend);
+    legend.addTo(map);
+    
+    map.removeLayer(geojson);
 
-	map.removeLayer(geojson);
-	
-	geojson = L.geoJson(data, {
-		style: getStyleHash,
-		onEachFeature: onEachFeature,
-	}).addTo(map);
+    geojson = L.geoJson(data, {
+        style: getStyleHash,
+        onEachFeature: onEachFeature,
+    }).addTo(map);
 }

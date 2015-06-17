@@ -1,3 +1,16 @@
+function getItemToIncrease(targetArray, item){
+    var ret = null;
+    $(targetArray).each(function(i, v){
+        if (v.rsgeo.value === item.rsgeo.value) {
+            ret = v;
+            return false;
+        }
+    });
+    return ret;
+}
+
+var redrawCount = 0;
+
 /*
  * Creates Highstock chart
  * @param {String} containerName 
@@ -25,7 +38,48 @@ function createTimeChart(containerName, chartData, titleText, subtitleText, seri
 	chart = new Highcharts.StockChart({
 	    chart: {
 	    	renderTo : containerName,
-	        alignTicks: false
+	        alignTicks: false,
+                zoomType: 'x',
+                events: {
+                    redraw: function(event) {
+                        var s = new Date().getTime();
+                        var minInt = event.target.xAxis[0].min;
+                        var maxInt = event.target.xAxis[0].max;
+                        if (geoForMapAllTimesData.active){
+                            var newData = {
+                                results: {
+                                    bindings: []
+                                }
+                            };
+                            $(geoForMapAllTimesData.dataAllTimes.results.bindings).each(function(index, item) {
+                                var currentDate = Date.UTC(item.parsedTime.year, item.parsedTime.month);
+                                if (currentDate >= minInt && currentDate <= maxInt) {
+                                    // add item if it doesn't exist
+                                    var itemToIncrease = getItemToIncrease(newData.results.bindings, item);
+                                    if (itemToIncrease === null) {
+                                        var itemAdd = $.extend(true, {}, item);
+                                        itemAdd.rstime.value = "Aggregated";
+                                        newData.results.bindings.push(itemAdd);
+                                    } else { // add value if it does exist
+                                        var sum = parseFloat(itemToIncrease.observation.value);
+                                        sum += parseFloat(item.observation.value);
+                                        itemToIncrease.observation.value = sum.toString();
+                                    }
+                                }
+                            });
+                            if (geoForMapAllTimesData.cbFunction) geoForMapAllTimesData.cbFunction(newData, true);
+                        }
+                        var e = new Date().getTime();
+                        redrawCount++;
+//                        console.log('Redraw called: ' + redrawCount);
+//                        console.log('Execution time: ' + (e - s));
+                    }, 
+                    selection: function(event) {
+//                        console.log('Selection changed');
+//                        console.log(event.xAxis[0]);
+//                        console.log(event.yAxis[0]);
+                    }
+                }
 	    },
 	    tooltip: {
 	        formatter: function() {

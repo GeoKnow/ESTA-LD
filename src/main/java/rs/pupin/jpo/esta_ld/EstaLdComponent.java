@@ -7,6 +7,7 @@
 package rs.pupin.jpo.esta_ld;
 
 import com.vaadin.data.Property;
+import com.vaadin.terminal.ExternalResource;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.ComboBox;
@@ -14,6 +15,7 @@ import com.vaadin.ui.CustomComponent;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.VerticalLayout;
+import com.vaadin.ui.Window;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -23,8 +25,10 @@ import org.openrdf.repository.Repository;
 import org.openrdf.repository.RepositoryException;
 import org.openrdf.repository.sparql.SPARQLRepository;
 import rs.pupin.jpo.datacube.DataCubeGraph;
+import rs.pupin.jpo.datacube.DataCubeRepository;
 import rs.pupin.jpo.datacube.DataSet;
 import rs.pupin.jpo.datacube.Dimension;
+import rs.pupin.jpo.datacube.sparql_impl.DummyDCRepository;
 import rs.pupin.jpo.datacube.sparql_impl.SparqlDCRepository;
 
 /**
@@ -33,9 +37,9 @@ import rs.pupin.jpo.datacube.sparql_impl.SparqlDCRepository;
  */
 public class EstaLdComponent extends CustomComponent {
     
-    private final Repository repository;
-    private final String endpoint = "http://147.91.50.167/sparql";
-    private final VerticalLayout mainLayout;
+    private Repository repository;
+    private String endpoint = "http://147.91.50.167/sparql";
+    private VerticalLayout mainLayout;
     private VerticalLayout geoLayout;
     private HorizontalLayout dimLayout;
     private VerticalLayout mapLayout;
@@ -43,7 +47,7 @@ public class EstaLdComponent extends CustomComponent {
     private VerticalLayout chartLayout;
     private HorizontalLayout datasetLayout;
     private HorizontalLayout contentLayout;
-    private SparqlDCRepository dcRepo;
+    private DataCubeRepository dcRepo;
     private ComboBox selectGraph;
     private ComboBox selectDataSet;
     private Button[] dimNames;
@@ -60,15 +64,39 @@ public class EstaLdComponent extends CustomComponent {
     private Dimension geoDimension;
     private Button btnGeo;
     private ComboBox boxGeo;
+    private Property.ValueChangeListener graphListener;
+    private Property.ValueChangeListener datasetListener;
+    private Button btnVisualize;
+    private Button btnInspect;
+    private VerticalLayout inspectLayout;
     
     public EstaLdComponent(Repository repository){
         this.repository = repository;
         
-        mainLayout = new VerticalLayout();
+        createGUI();
+        createDimAndGeoListeners();
+        
         setCompositionRoot(mainLayout);
     }
     
-    public EstaLdComponent(){
+    public EstaLdComponent(String endpoint){
+        this.endpoint = endpoint;
+        
+        initializeRepository();
+        createGUI();
+        createDimAndGeoListeners();
+        
+        setCompositionRoot(mainLayout);
+    }
+    
+    private void initializeRepository(){
+        if (endpoint == null) {
+//            repository = null;
+//            dcRepo = new DummyDCRepository();
+//            geoDimension = null;
+//            return;
+            endpoint = "http://192.168.56.101/sparql";
+        }
         repository = new SPARQLRepository(endpoint);
         try {
             repository.initialize();
@@ -77,7 +105,30 @@ public class EstaLdComponent extends CustomComponent {
         }
         dcRepo = new SparqlDCRepository(repository);
         geoDimension = null;
+    }
+    
+    private void createGUI(){
+        mainLayout = new VerticalLayout();
+        mainLayout.setWidth("100%");
+        mainLayout.setSpacing(true);
+        datasetLayout = new HorizontalLayout();
+        datasetLayout.setSpacing(true);
+        datasetLayout.setWidth("100%");
         
+        mainLayout.addComponent(datasetLayout);
+        
+        mainLayout.addComponent(new Label("<hr/>", Label.CONTENT_XHTML));
+        
+        contentLayout = new HorizontalLayout();
+        contentLayout.setSizeFull();
+        contentLayout.setWidth("100%");
+        contentLayout.setSpacing(true);
+        mainLayout.addComponent(contentLayout);
+        
+        createDataSetLayout();
+    }
+    
+    private void createDimAndGeoListeners(){
         dimListener = new Property.ValueChangeListener() {
             public void valueChange(Property.ValueChangeEvent event) {
                 if (dimNames == null || dimNames.length == 0){
@@ -99,7 +150,7 @@ public class EstaLdComponent extends CustomComponent {
                 }
                 String javaDims = (builderDims.length()==0)?"[]":"[" + builderDims.substring(1) + "]";
                 String javaVals = (builderVals.length()==0)?"[]":"[" + builderVals.substring(1) + "]";
-                String javaFree = (builderFree.length()==0)?"[]":"[" + builderFree.substring(1) + "]";
+                String javaFree = (builderFree.length()==0)?"[]":"[" + builderFree.substring(1) + "]"; // This is unused!!!
                 String function = "javaSetDimsVals(" + javaDims + "," + javaVals + ");";
                 getWindow().executeJavaScript(function);
 //                getWindow().executeJavaScript("javaPrintAll()");
@@ -119,31 +170,26 @@ public class EstaLdComponent extends CustomComponent {
                 getWindow().executeJavaScript(builder.toString());
             }
         };
-        
-        mainLayout = new VerticalLayout();
-        mainLayout.setWidth("100%");
-        mainLayout.setSpacing(true);
-        datasetLayout = new HorizontalLayout();
-        datasetLayout.setSpacing(true);
-        datasetLayout.setWidth("100%");
-        createDataSetLayout();
-        mainLayout.addComponent(datasetLayout);
-        
-        mainLayout.addComponent(new Label("<hr/>", Label.CONTENT_XHTML));
-        
-        contentLayout = new HorizontalLayout();
-        contentLayout.setSizeFull();
-        contentLayout.setWidth("100%");
-        contentLayout.setSpacing(true);
-        mainLayout.addComponent(contentLayout);
+    }
+    
+    public EstaLdComponent(){
+        initializeRepository();
+        createGUI();
+        createDimAndGeoListeners();
         setCompositionRoot(mainLayout);
     }
     
     private void createDataSetLayout(){
+        Button btnEndpoint = new Button("Endpoint");
+        datasetLayout.addComponent(btnEndpoint);
+        datasetLayout.setExpandRatio(btnEndpoint, 0.0f);
+        datasetLayout.setComponentAlignment(btnEndpoint, Alignment.TOP_LEFT);
+        
         Label lbl = new Label("Choose graph: ");
         lbl.setSizeUndefined();
         datasetLayout.addComponent(lbl);
         datasetLayout.setExpandRatio(lbl, 0.0f);
+        datasetLayout.setComponentAlignment(lbl, Alignment.MIDDLE_LEFT);
         selectGraph = new ComboBox(null, dcRepo.getDataCubeGraphs());
         selectGraph.setImmediate(true);
         selectGraph.setNewItemsAllowed(false);
@@ -151,11 +197,13 @@ public class EstaLdComponent extends CustomComponent {
         selectGraph.setWidth("100%");
         datasetLayout.addComponent(selectGraph);
         datasetLayout.setExpandRatio(selectGraph, 2.0f);
+        datasetLayout.setComponentAlignment(selectGraph, Alignment.MIDDLE_LEFT);
         
         lbl = new Label("Choose dataset: ");
         lbl.setSizeUndefined();
         datasetLayout.addComponent(lbl);
         datasetLayout.setExpandRatio(lbl, 0.0f);
+        datasetLayout.setComponentAlignment(lbl, Alignment.MIDDLE_LEFT);
         selectDataSet = new ComboBox(null, dcRepo.getDataSets());
         selectDataSet.setImmediate(true);
         selectDataSet.setNewItemsAllowed(false);
@@ -164,8 +212,40 @@ public class EstaLdComponent extends CustomComponent {
         selectDataSet.setWidth("100%");
         datasetLayout.addComponent(selectDataSet);
         datasetLayout.setExpandRatio(selectDataSet, 2.0f);
+        datasetLayout.setComponentAlignment(selectDataSet, Alignment.MIDDLE_LEFT);
         
-        selectGraph.addListener(new Property.ValueChangeListener() {
+        btnVisualize = new Button("Visualize");
+        btnVisualize.addStyleName("btn-switch-view");
+        btnVisualize.addStyleName("selected");
+        datasetLayout.addComponent(btnVisualize);
+        datasetLayout.setExpandRatio(btnVisualize, 0.0f);
+        btnInspect = new Button("Inspect");
+        btnInspect.addStyleName("btn-switch-view");
+        datasetLayout.addComponent(btnInspect);
+        datasetLayout.setExpandRatio(btnInspect, 0.0f);
+        btnVisualize.addListener(new Button.ClickListener() {
+            public void buttonClick(Button.ClickEvent event) {
+                btnVisualize.addStyleName("selected");
+                btnInspect.removeStyleName("selected");
+                
+                inspectLayout.setVisible(false);
+                contentLayout.setVisible(true);
+//                refreshJS();
+            }
+        });
+        btnInspect.addListener(new Button.ClickListener() {
+            public void buttonClick(Button.ClickEvent event) {
+                btnInspect.addStyleName("selected");
+                btnVisualize.removeStyleName("selected");
+                
+                contentLayout.setVisible(false);
+                inspectLayout.setVisible(true);
+                
+//                getWindow().open(new ExternalResource("http://localhost:8080/ESTA-LD/dsdrepo"), "_blank");
+            }
+        });
+        
+        graphListener = new Property.ValueChangeListener() {
             public void valueChange(Property.ValueChangeEvent event) {
                 Object prop = event.getProperty().getValue();
                 selectDataSet.removeAllItems();
@@ -192,18 +272,82 @@ public class EstaLdComponent extends CustomComponent {
                     }
                 }
             }
-        });
-        selectDataSet.addListener(new Property.ValueChangeListener() {
+        };
+        selectGraph.addListener(graphListener);
+        datasetListener = new Property.ValueChangeListener() {
             public void valueChange(Property.ValueChangeEvent event) {
                 DataSet ds = (DataSet) event.getProperty().getValue();
                 if (ds != null){
                     final String function = "javaSetGraphAndDataSet('" +
-                            ds.getGraph() + "','" + ds.getUri() + "')";
+                            ds.getGraph() + "','" + ds.getUri() + "','" + 
+                            endpoint + "')";
                     getWindow().executeJavaScript(function);
                     refreshDimensions();
                 }
+                inspectLayout.removeAllComponents();
+                inspectLayout.addComponent(new InspectComponent(
+                        repository, 
+                        selectGraph.getValue().toString(), 
+                        ((DataSet)selectDataSet.getValue()).getUri()
+                ));
+            }
+        };
+        selectDataSet.addListener(datasetListener);
+        
+        btnEndpoint.addListener(new Button.ClickListener() {
+            public void buttonClick(Button.ClickEvent event) {
+                final EndpointWindow.EndpointState state = new EndpointWindow.EndpointState();
+                state.endpoint = endpoint;
+                Window w = new EndpointWindow(state);
+                w.addListener(new Window.CloseListener() {
+                    @Override
+                    public void windowClose(Window.CloseEvent e) {
+                        try {
+                            if (!endpoint.equals(state.endpoint))
+                                repository.shutDown();
+                        } catch (RepositoryException ex) {
+                            Logger.getLogger(EstaLdComponent.class.getName()).log(Level.SEVERE, null, ex);
+                        }
+                        if (state.repository != null && state.repository.isInitialized()) {
+                            repository = state.repository;
+                            endpoint = state.endpoint;
+                            endpointChanged();
+                        }
+                    }
+                });
+                getWindow().addWindow(w);
             }
         });
+    }
+    
+    private void endpointChanged(){
+        dcRepo = new SparqlDCRepository(repository);
+        selectGraph.removeListener(graphListener);
+        selectDataSet.removeListener(datasetListener);
+        selectGraph.removeAllItems();
+        selectDataSet.removeAllItems();
+        if (!repository.isInitialized()) {
+            getWindow().showNotification("Repo " + repository.toString() + " not initialized somehow", Window.Notification.TYPE_ERROR_MESSAGE);
+        }
+        Collection<DataCubeGraph> dcGraphs = dcRepo.getDataCubeGraphs();
+        Collection<DataSet> dcDataSets = dcRepo.getDataSets();
+        
+        DataCubeGraph demoGraph = null;
+        for (DataCubeGraph graph: dcGraphs){
+            selectGraph.addItem(graph);
+            if (endpoint.equals("http://jpo2.imp.bg.ac.rs/sparql") && graph.getUri().equals("http://demo/reg-dev/"))
+                demoGraph = graph;
+        }
+        for (DataSet ds: dcDataSets)
+            selectDataSet.addItem(ds);
+        
+        selectGraph.addListener(graphListener);
+        selectDataSet.addListener(datasetListener);
+        
+        if (demoGraph != null)
+            selectGraph.select(demoGraph);
+        else if (dcGraphs.iterator().hasNext())
+            selectGraph.select(dcGraphs.iterator().next());
     }
     
     private void refresh(){
@@ -221,7 +365,19 @@ public class EstaLdComponent extends CustomComponent {
         final Label levelLabel = new Label(LEVEL_LABEL_CONTENT, Label.CONTENT_XHTML);
         geoLayout.addComponent(levelLabel);
         // create a layout for the map
-        mapLayout = new VerticalLayout();
+//        mapLayout = new VerticalLayout();
+        mapLayout = new VerticalLayout() {
+            @Override
+            public void attach() {
+                getWindow().executeJavaScript("console.log('Attached the map')");
+            }
+        };
+        mapLayout.addListener(new ComponentAttachListener() {
+
+            public void componentAttachedToContainer(ComponentAttachEvent event) {
+                getWindow().executeJavaScript("console.log('ComponentAttachedListener triggered')");
+            }
+        });
         mapLayout.setSizeUndefined();
         mapLayout.setWidth("100%");
         mapLayout.setHeight("620px");
@@ -255,6 +411,11 @@ public class EstaLdComponent extends CustomComponent {
         chartLayout2.setHeight("500px");
         chartLayout2.setDebugId("highchartsbarmultiple");
         rightLayout.addComponent(chartLayout2);
+        
+        inspectLayout = new VerticalLayout();
+        inspectLayout.setVisible(false);
+        inspectLayout.setWidth("100%");
+        mainLayout.addComponent(inspectLayout);
     }
     
     private void refreshDimensions(){
@@ -409,16 +570,17 @@ public class EstaLdComponent extends CustomComponent {
 
     @Override
     public void attach() {
-        refresh();
         super.attach();
+        refresh();
         Iterator<DataCubeGraph> iter = dcRepo.getDataCubeGraphs().iterator();
+        DataCubeGraph g = null;
         while (iter.hasNext()){
-            DataCubeGraph g = iter.next();
+            g = iter.next();
             if (g.getUri().equalsIgnoreCase("http://demo/reg-dev/")){
-                selectGraph.select(g);
                 break;
             }
         }
+        if (g != null) selectGraph.select(g);
     }
     
     public void refreshJS(){

@@ -73,3 +73,7 @@ and open the template in the editor.
     color: white;
     font-weight: bolder;
 }
+
+.v-verticallayout.v-verticallayout-hidden.hidden {
+    display:none;
+}

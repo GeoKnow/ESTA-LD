@@ -10,6 +10,8 @@ var javaGeoPossibleValues = [];
 var javaGeoValue = '';
 var javaGeoFree = false;
 
+var vaadinRedrawsMap = false;
+
 function javaSetSelectedDimensions(dims){
     javaSelectedDimensions = dims;
 }
@@ -62,13 +64,15 @@ function javaSetPossibleValues(vals){
     javaPossibleValues = vals;
 }
 
-function javaSetGraphAndDataSet(graph,ds){
+function javaSetGraphAndDataSet(graph, ds, endpoint){
     javaGraph = graph;
     javaDataSet = ds;
-    sessionStorage.setItem('endpoint','http://147.91.50.167/sparql');
+//    sessionStorage.setItem('endpoint','http://147.91.50.167/sparql');
+    sessionStorage.setItem('endpoint', endpoint);
+    window.endpoint = endpoint;
 //    sessionStorage.setItem('endpoint','http://localhost:8890/sparql');
 //    sessionStorage.setItem('endpoint','http://jpo.imp.bg.ac.rs/sparql');
-    sessionStorage.setItem('graph',javaGraph);
+    sessionStorage.setItem('graph', javaGraph);
 //    for (var i=1; i<5; i++) {
 //        for (var j=1; j<5; j++) {
 //            for (var k=1; k<5; k++){

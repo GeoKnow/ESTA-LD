@@ -1,3 +1,14 @@
+var timeSelected;
+var geoForMapAllTimesData = {
+    active: false,
+    selectedTimeUri: null,
+    selectedTimeValue: null,
+    dataAllTimes: null,
+    cbFunction: function(data) {
+        
+    }
+};
+
 var firstRun = true;
 											//var visibleLayer = 'Areas';//Area - Region - Municipality selection
 var visibleGeoLevel = 2;// visible geo layer level
@@ -62,6 +73,7 @@ function domReadyVuk() {
 	//onclick for plus and minus buttons for selecting geo level
 	// Plus button will increment the visibleLayerLevel till max
     $('#geoplus').click(function(e){
+        console.log('Geo Plus');
         // Stop acting like a button
         e.preventDefault();
         // Increment
@@ -81,6 +93,7 @@ function domReadyVuk() {
     });
     // Minus button will decrement the visibleLayerLevel till 0
     $("#geominus").click(function(e) {
+        console.log('Geo Minus');
         // Stop acting like a button
         e.preventDefault();
         // Decrement one
@@ -268,6 +281,7 @@ function loadGeoNamesAndValues() {
 
 //callback function - fills the hash with the keys and values and finds new min and max observation values
 //from sparql query with year and incentive fixed
+var cbfuncForGeoMapAllTimes;
 var cbfuncForGeoMap;
 
 var cbfuncYearIncentive;
@@ -340,7 +354,7 @@ function findIndex(array, value) {
 }
 
 //refresh map to display new data
-function refreshMap() {
+function refreshMap(updateStyle) {
 	var data = [];
 
 	data = geoData[visibleGeoLevel];
@@ -370,7 +384,7 @@ function refreshMap() {
 //												minObservationValue = minCountryObservationValue;
 //												maxObservationValue = maxCountryObservationValue;
 //											}
-	redrawMap(data, minObservationValue, maxObservationValue);
+	redrawMap(data, minObservationValue, maxObservationValue, updateStyle);
 }
 
 //refresh chart to display new data
@@ -603,10 +617,74 @@ function populateGeoLevelsLists() {
 
 }
 
+function proxyForGeoMapAllTimes(queryUrlEncoded, timeDimensionUri, timeDimensionValue, callbackFunction){
+    $.ajax({
+        url: queryUrlEncoded,
+        dataType: 'jsonp',
+        success: function (data) {
+            geoForMapAllTimesData.cbFunction = callbackFunction;
+            geoForMapAllTimesData.dataAllTimes = data;
+            geoForMapAllTimesData.selectedTimeUri = timeDimensionUri;
+            geoForMapAllTimesData.selectedTimeValue = timeDimensionValue;
+            geoForMapAllTimesData.active = true;
+            var dataToPass = {
+                results: {
+                    bindings: []
+                }
+            };
+            $(data.results.bindings).each(function (k, item) {
+                if (item.rstime.value === timeDimensionValue) dataToPass.results.bindings.push(item);
+                var lastPart = item.rstime.value.substring(item.rstime.value.lastIndexOf('/')+1, 
+                    item.rstime.value.length);
+                var year = parseInt(lastPart.substring(1, 5));
+                var month = 0;
+                if (lastPart.length > 5) month = parseInt(lastPart.substring(6));
+                item.parsedTime = {
+                    year: year,
+                    month: month
+                };
+            });
+            if (callbackFunction) callbackFunction(dataToPass);
+        },
+        error: function() { alert("There was an error during communication with the sparql endpoint");}
+    });
+}
+
 function estamainInitVuk(){
     analysisType = sessionStorage.getItem("analysistype");
     
-    cbfuncForGeoMap = function(data) {
+    $(document).on('DOMSubtreeModified', function(e) {
+//            
+//        if (e.target.id === 'map') {
+//            console.log('Map was inserted');
+//            console.log(e);
+//            if (vaadinRedrawsMap) {
+//                vaadinRedrawsMap = false;
+//                estamainInitVuk();
+//                sparqlqueryInitVuk();
+//                rammapInitVuk();
+//                chartsInitVuk();
+//                timechartInitVuk();
+//            }
+//        }
+//        
+//        if ($(e.target).hasClass('leaflet-container')) {
+//            console.log('Fuck yeah!')
+//            console.log(e);
+//        }
+    });
+    
+    cbfuncForGeoMapAllTimes = function(data) {
+//        console.log(data.results.bindings);
+//        console.log('Selected time: ' + timeSelected);
+        
+        //////////////////////////////////////////
+        // Condition to check if the dimension is temporal
+        // if (dim1Uri.substring(0, dim1Uri.lastIndexOf('/') + 1) === YEAR_PREFIX)
+        //////////////////////////////////////////
+    }
+    
+    cbfuncForGeoMap = function(data, updateStyle) {
         hashCodeToObservationValues = new Object();
         $(data.results.bindings).each(function(key, val){
             var rsgeoUri  = val.rsgeo.value;
@@ -619,7 +697,7 @@ function estamainInitVuk(){
     
         //refresh map and chart
 	info.update();//to display initial info when mouse is out of the map
-        refreshMap();
+        refreshMap(updateStyle);
         
         // TODO see wheter to keep this part
 //        if ((analysisType === 'bartime') && firstRun) {//if it is the first run and bartime analysis do not show this chart (another one will be displayed)

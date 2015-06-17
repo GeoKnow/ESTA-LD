@@ -64,13 +64,13 @@ function execSparqlTopGeoBroaderNarrower(callbackFunction) {//FIND TOP ELEMENT (
                 'from <' + javaGraph + '> ' +
 		'where { ' + 
 		'{{?y1 rs:geo ?rsgeo. ' + 
-		'?rsgeo1 skos:broader ?rsgeo.} ' + 
+		'?rsgeo1 skos:broader ?rsgeo.} ' +  // Vuk: why this line, what if there's only one level?
 		'FILTER NOT EXISTS {{?rsgeo2 skos:narrower ?rsgeo} UNION ' + 
 		'{?rsgeo skos:broader ?rsgeo3.}}} ' + 
 		
 		'UNION  ' + 
 		'{{?y2 rs:geo ?rsgeo. ' + 
-		'?rsgeo skos:narrower ?rsgeo4.} ' + 
+		'?rsgeo skos:narrower ?rsgeo4.} ' +  // Vuk: again, why this line, what if there's only one level?
 		'FILTER NOT EXISTS {{?rsgeo5 skos:narrower ?rsgeo} UNION ' + 
 		'{?rsgeo skos:broader ?rsgeo6. }}} ' + 
 		'}';
@@ -157,21 +157,46 @@ function execSparqlForGeoMapVuk(callbackFunction){
                                 'where { ?y qb:dataSet <' + javaDataSet + '> . ' + 
                                 '?y rs:geo ?rsgeo . ' + 
                                 '?y sdmx-measure:obsValue ?observation . ';
+    var hasTimeDimension = false;
+    var timeDimensionUri = '';
+    var timeDimensionValue = '';
     for (i=0; i<javaSelectedDimensions.length; i++){
-        sparqlQuery += '?y <' + javaSelectedDimensions[i] + '> <' + javaDimensionValues[i] + '> . ';
+        if (javaDimensionValues[i].substring(0, javaDimensionValues[i].lastIndexOf('/') + 1) === YEAR_PREFIX) {
+            // if it is a time dimension make it a free variable
+            sparqlQuery += '?y <' + javaSelectedDimensions[i] + '> ?rstime . ';
+            hasTimeDimension = true;
+            timeDimensionUri = javaSelectedDimensions[i];
+            timeDimensionValue = javaDimensionValues[i];
+        }
+        else sparqlQuery += '?y <' + javaSelectedDimensions[i] + '> <' + javaDimensionValues[i] + '> . ';
     }
     sparqlQuery += '}';
+    if (hasTimeDimension) { 
+        sparqlQuery = sparqlQuery.replace('select distinct ?rsgeo ?observation ', 
+            'select distinct ?rstime ?rsgeo ?observation ');
+        sparqlQuery += ' order by ?rsgeo';
+    }
     
     var queryUrlEncoded = endpoint + '?query=' + $.URLEncode(sparqlQuery)+'&format=json';
 
 //    $.getJSON(queryUrlEncoded, callbackFunction).error(function() { alert("There was an error during communication with the sparql endpoint\n"+sparqlQuery); });
     
-    $.ajax({
-        url: queryUrlEncoded,
-        dataType: 'jsonp',
-        success: callbackFunction,
-        error: function() { alert("There was an error during communication with the sparql endpoint");}
-    });
+    if (hasTimeDimension) {
+        proxyForGeoMapAllTimes(queryUrlEncoded, timeDimensionUri, timeDimensionValue, callbackFunction);
+//        $.ajax({
+//            url: queryUrlEncoded,
+//            dataType: 'jsonp',
+//            success: cbfuncForGeoMapAllTimes,
+//            error: function() { alert("There was an error during communication with the sparql endpoint");}
+//        });
+    } else {
+        $.ajax({
+            url: queryUrlEncoded,
+            dataType: 'jsonp',
+            success: callbackFunction,
+            error: function() { alert("There was an error during communication with the sparql endpoint");}
+        });
+    }
 }
 
 function execSparqlRegionalDevelopment(querySubstring, callbackFunction) {
