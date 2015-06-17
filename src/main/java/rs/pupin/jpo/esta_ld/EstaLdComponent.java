@@ -283,13 +283,14 @@ public class EstaLdComponent extends CustomComponent {
                             endpoint + "')";
                     getWindow().executeJavaScript(function);
                     refreshDimensions();
+                    
+                    inspectLayout.removeAllComponents();
+                    inspectLayout.addComponent(new InspectComponent(
+                            repository, 
+                            ds.getGraph(), 
+                            ds.getUri()
+                    ));
                 }
-                inspectLayout.removeAllComponents();
-                inspectLayout.addComponent(new InspectComponent(
-                        repository, 
-                        selectGraph.getValue().toString(), 
-                        ((DataSet)selectDataSet.getValue()).getUri()
-                ));
             }
         };
         selectDataSet.addListener(datasetListener);

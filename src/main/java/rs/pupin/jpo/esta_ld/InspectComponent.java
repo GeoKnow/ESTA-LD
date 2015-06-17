@@ -17,12 +17,15 @@ import com.vaadin.ui.CustomComponent;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.MenuBar;
+import com.vaadin.ui.Table;
 import com.vaadin.ui.TextField;
 import com.vaadin.ui.Tree;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window;
 import java.net.URISyntaxException;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.logging.Level;
@@ -97,6 +100,8 @@ public class InspectComponent extends CustomComponent {
     private static final Action ACTION_SET_AS_CL = new Action("Set as Code List");
     
     private static final Action ACTION_STORE = new Action("Store DSD in repository");
+    
+    private static final Action ACTION_TRANSFORM_DIM = new Action("Transform Dimension");
 
     private static final Action [] ACTIONS = new Action[] { 
         ACTION_SET_AS_DIM, ACTION_SET_AS_MEAS, ACTION_SET_AS_ATTR, 
@@ -126,6 +131,7 @@ public class InspectComponent extends CustomComponent {
     private int numMissingCodeLists = 0;
     private Label lblMissingCodeLists;
     private Label lblUndefined;
+    private VerticalLayout dimTransformLayout;
     
     private void updateUndefinedAndMissing(){
         int num = 0;
@@ -416,16 +422,76 @@ public class InspectComponent extends CustomComponent {
     private void addDataTreeListenersStore(){
         dataTree.addActionHandler(new Action.Handler() {
             public Action[] getActions(Object target, Object sender) {
-                if (target instanceof Structure)
-                    return new Action [] { ACTION_STORE };
-                else 
+                if (target instanceof Dimension) {
+                    return new Action [] { ACTION_TRANSFORM_DIM };
+                } else
                     return null;
             }
             public void handleAction(Action action, Object sender, Object target) {
                 if (action == null) return;
-                if (action == ACTION_STORE) {
-                    getWindow().showNotification("Not Implemented");
+                if (action == ACTION_TRANSFORM_DIM) {
+                    showTransformDimensionView((Dimension)target);
                 }
+            }
+        });
+    }
+    
+    private void showTransformDimensionView(Dimension dim) {
+        dimTransformLayout.removeAllComponents();
+        dimTransformLayout.addComponent(new Label("<h1>Dimension: " + dim.getUri() + "</h1>", Label.CONTENT_XHTML));
+        
+        // show properties table
+        final Table propertiesTable = new Table("Properties");
+        propertiesTable.setHeight("250px");
+        propertiesTable.setWidth("100%");
+        propertiesTable.addContainerProperty("Property", String.class, null);
+        propertiesTable.addContainerProperty("Object", String.class, null);
+        dimTransformLayout.addComponent(propertiesTable);
+        try {
+            RepositoryConnection conn = repository.getConnection();
+            TupleQuery query = conn.prepareTupleQuery(QueryLanguage.SPARQL, DSDRepoUtils.qResourcePorperties(dim.getUri(), dataGraph));
+            TupleQueryResult res = query.evaluate();
+            int i = 0;
+            while (res.hasNext()) {
+                BindingSet set = res.next();
+                Object [] row = new Object [] {
+                    set.getValue("p").stringValue(), 
+                    set.getValue("o").stringValue()
+                };
+                propertiesTable.addItem(row, i++);
+            }
+        } catch (RepositoryException ex) {
+            Logger.getLogger(InspectComponent.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (MalformedQueryException ex) {
+            Logger.getLogger(InspectComponent.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (QueryEvaluationException ex) {
+            Logger.getLogger(InspectComponent.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+        // add separator
+        dimTransformLayout.addComponent(new Label("<hr/>", Label.CONTENT_XHTML));
+        
+        // TODO: show transform to time dimension 
+        // select: { year, month, date }
+        String [] options = new String [] { 
+            "Year", 
+            "Year-Month", 
+            "Year-Month-Date" 
+        };
+        final ComboBox comboType = new ComboBox("Choose type:", Arrays.asList(options));
+        comboType.setNullSelectionAllowed(false);
+        comboType.select(options[0]);
+        dimTransformLayout.addComponent(comboType);
+        // text field: { pattern }
+        final TextField fieldPattern = new TextField("Transformation Pattern:");
+        fieldPattern.setWidth("300px");
+        dimTransformLayout.addComponent(fieldPattern);
+        // button: transform
+        final Button btnTransform = new Button("Transform");
+        dimTransformLayout.addComponent(btnTransform);
+        btnTransform.addListener(new Button.ClickListener() {
+            public void buttonClick(Button.ClickEvent event) {
+                getWindow().showNotification("Not supported yet!");
             }
         });
     }
@@ -722,7 +788,7 @@ public class InspectComponent extends CustomComponent {
                 builder.append("<h2>Properties of ");
                 builder.append(uri);
                 builder.append("</h2><br>");
-                builder.append("Item description not available");
+                builder.append(generatePropertiesTable(uri, dataGraph));
                 return builder.toString();
             }
         });
@@ -786,6 +852,10 @@ public class InspectComponent extends CustomComponent {
         addDataTreeListenersStore();
         contentLayout.addComponent(dataTree);
         contentLayout.setExpandRatio(dataTree, 0.0f);
+        dimTransformLayout = new VerticalLayout();
+        dimTransformLayout.setSpacing(true);
+        contentLayout.addComponent(dimTransformLayout);
+        contentLayout.setExpandRatio(dimTransformLayout, 2.0f);
         repoTree = new Tree("Matching Structures");
         repoTree.setNullSelectionAllowed(true);
         repoTree.setImmediate(true);
