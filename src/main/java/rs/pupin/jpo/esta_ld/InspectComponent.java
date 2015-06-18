@@ -134,6 +134,7 @@ public class InspectComponent extends CustomComponent {
     private Label lblMissingCodeLists;
     private Label lblUndefined;
     private VerticalLayout dimTransformLayout;
+    private final Logger logger;
     
     private void updateUndefinedAndMissing(){
         int num = 0;
@@ -221,6 +222,8 @@ public class InspectComponent extends CustomComponent {
         this.repository = repository;
         this.dataGraph = dataGraph;
         
+        this.logger = Logger.getLogger(InspectComponent.class.getName());
+        
         dcRepo = new SparqlDCRepository(repository);
         graph = new SparqlDCGraph(repository, dataGraph);
         ds = new SparqlDataSet(repository, dataset, dataGraph);
@@ -296,11 +299,11 @@ public class InspectComponent extends CustomComponent {
             }
             builder.append("</table>");
         } catch (RepositoryException ex) {
-            Logger.getLogger(InspectComponent.class.getName()).log(Level.SEVERE, null, ex);
+            logger.log(Level.SEVERE, null, ex);
         } catch (MalformedQueryException ex) {
-            Logger.getLogger(InspectComponent.class.getName()).log(Level.SEVERE, null, ex);
+            logger.log(Level.SEVERE, null, ex);
         } catch (QueryEvaluationException ex) {
-            Logger.getLogger(InspectComponent.class.getName()).log(Level.SEVERE, null, ex);
+            logger.log(Level.SEVERE, null, ex);
         }
         return builder.toString();
     }
@@ -388,11 +391,11 @@ public class InspectComponent extends CustomComponent {
                             dataTree.setChildrenAllowed(elem, false);
                         }
                     } catch (RepositoryException ex) {
-                        Logger.getLogger(InspectComponent.class.getName()).log(Level.SEVERE, null, ex);
+                        logger.log(Level.SEVERE, null, ex);
                     } catch (MalformedQueryException ex) {
-                        Logger.getLogger(InspectComponent.class.getName()).log(Level.SEVERE, null, ex);
+                        logger.log(Level.SEVERE, null, ex);
                     } catch (QueryEvaluationException ex) {
-                        Logger.getLogger(InspectComponent.class.getName()).log(Level.SEVERE, null, ex);
+                        logger.log(Level.SEVERE, null, ex);
                     }
                 }
             });
@@ -411,11 +414,11 @@ public class InspectComponent extends CustomComponent {
                 }
             });
         } catch (RepositoryException ex) {
-            Logger.getLogger(InspectComponent.class.getName()).log(Level.SEVERE, null, ex);
+            logger.log(Level.SEVERE, null, ex);
         } catch (MalformedQueryException ex) {
-            Logger.getLogger(InspectComponent.class.getName()).log(Level.SEVERE, null, ex);
+            logger.log(Level.SEVERE, null, ex);
         } catch (QueryEvaluationException ex) {
-            Logger.getLogger(InspectComponent.class.getName()).log(Level.SEVERE, null, ex);
+            logger.log(Level.SEVERE, null, ex);
         }
         dataTree.expandItemsRecursively(undef);
         dataTree.collapseItemsRecursively(undef);
@@ -463,11 +466,11 @@ public class InspectComponent extends CustomComponent {
                 propertiesTable.addItem(row, i++);
             }
         } catch (RepositoryException ex) {
-            Logger.getLogger(InspectComponent.class.getName()).log(Level.SEVERE, null, ex);
+            logger.log(Level.SEVERE, null, ex);
         } catch (MalformedQueryException ex) {
-            Logger.getLogger(InspectComponent.class.getName()).log(Level.SEVERE, null, ex);
+            logger.log(Level.SEVERE, null, ex);
         } catch (QueryEvaluationException ex) {
-            Logger.getLogger(InspectComponent.class.getName()).log(Level.SEVERE, null, ex);
+            logger.log(Level.SEVERE, null, ex);
         }
         
         // add separator
@@ -496,15 +499,15 @@ public class InspectComponent extends CustomComponent {
         try {
             timeTransformator.initialize();
         } catch (RepositoryException ex) {
-            Logger.getLogger(InspectComponent.class.getName()).log(Level.SEVERE, null, ex);
+            logger.log(Level.SEVERE, null, ex);
             btnTransform.setEnabled(false);
             getWindow().showNotification(ex.getMessage(), Window.Notification.TYPE_ERROR_MESSAGE);
         } catch (MalformedQueryException ex) {
-            Logger.getLogger(InspectComponent.class.getName()).log(Level.SEVERE, null, ex);
+            logger.log(Level.SEVERE, null, ex);
             btnTransform.setEnabled(false);
             getWindow().showNotification(ex.getMessage(), Window.Notification.TYPE_ERROR_MESSAGE);
         } catch (QueryEvaluationException ex) {
-            Logger.getLogger(InspectComponent.class.getName()).log(Level.SEVERE, null, ex);
+            logger.log(Level.SEVERE, null, ex);
             btnTransform.setEnabled(false);
             getWindow().showNotification(ex.getMessage(), Window.Notification.TYPE_ERROR_MESSAGE);
         }
@@ -516,29 +519,29 @@ public class InspectComponent extends CustomComponent {
                 }
                 try {
                     // first check if the values can be parsed
-                    System.out.println("Parsing...");
+                    logger.fine("Parsing...");
                     timeTransformator.parse(fieldPattern.getValue().toString());
                     // if parsing went fine fire away
-                    System.out.println("Modifying dimension...");
+                    logger.fine("Modifying dimension...");
                     timeTransformator.modifyDimension();
-                    System.out.println("Removing old...");
+                    logger.fine("Removing old...");
                     timeTransformator.removeOld();
-                    System.out.println("Inserting new...");
+                    logger.fine("Inserting new...");
                     timeTransformator.insertNew();
-                    System.out.println("Finished transformation!!!");
+                    logger.fine("Finished transformation!!!");
                     getWindow().showNotification("Dimension transformed");
                 } catch (ParseException ex) {
-                    Logger.getLogger(InspectComponent.class.getName()).log(Level.SEVERE, null, ex);
+                    logger.log(Level.SEVERE, null, ex);
                     String msg = "Could not parse values \n";
                     getWindow().showNotification(msg + ex.getMessage(), Window.Notification.TYPE_ERROR_MESSAGE);
                 } catch (RepositoryException ex) {
-                    Logger.getLogger(InspectComponent.class.getName()).log(Level.SEVERE, null, ex);
+                    logger.log(Level.SEVERE, null, ex);
                     getWindow().showNotification(ex.getMessage(), Window.Notification.TYPE_ERROR_MESSAGE);
                 } catch (MalformedQueryException ex) {
-                    Logger.getLogger(InspectComponent.class.getName()).log(Level.SEVERE, null, ex);
+                    logger.log(Level.SEVERE, null, ex);
                     getWindow().showNotification(ex.getMessage(), Window.Notification.TYPE_ERROR_MESSAGE);
                 } catch (QueryEvaluationException ex) {
-                    Logger.getLogger(InspectComponent.class.getName()).log(Level.SEVERE, null, ex);
+                    logger.log(Level.SEVERE, null, ex);
                     getWindow().showNotification(ex.getMessage(), Window.Notification.TYPE_ERROR_MESSAGE);
                 }
             }
@@ -703,11 +706,11 @@ public class InspectComponent extends CustomComponent {
                                 }
                                 updateUndefinedAndMissing();
                             } catch (RepositoryException ex) {
-                                Logger.getLogger(InspectComponent.class.getName()).log(Level.SEVERE, null, ex);
+                                logger.log(Level.SEVERE, null, ex);
                             } catch (MalformedQueryException ex) {
-                                Logger.getLogger(InspectComponent.class.getName()).log(Level.SEVERE, null, ex);
+                                logger.log(Level.SEVERE, null, ex);
                             } catch (QueryEvaluationException ex) {
-                                Logger.getLogger(InspectComponent.class.getName()).log(Level.SEVERE, null, ex);
+                                logger.log(Level.SEVERE, null, ex);
                             }
                         }
                     });
@@ -736,11 +739,11 @@ public class InspectComponent extends CustomComponent {
                         dataTree.removeItem(itemsHeader);
                         updateUndefinedAndMissing();
                     } catch (RepositoryException ex) {
-                        Logger.getLogger(InspectComponent.class.getName()).log(Level.SEVERE, null, ex);
+                        logger.log(Level.SEVERE, null, ex);
                     } catch (MalformedQueryException ex) {
-                        Logger.getLogger(InspectComponent.class.getName()).log(Level.SEVERE, null, ex);
+                        logger.log(Level.SEVERE, null, ex);
                     } catch (QueryEvaluationException ex) {
-                        Logger.getLogger(InspectComponent.class.getName()).log(Level.SEVERE, null, ex);
+                        logger.log(Level.SEVERE, null, ex);
                     }
                 }
             }
@@ -1020,11 +1023,11 @@ public class InspectComponent extends CustomComponent {
                             InspectComponent.this.ds.getUri(), dataGraph);
                     createDSD();
                 } catch (RepositoryException ex) {
-                    Logger.getLogger(InspectComponent.class.getName()).log(Level.SEVERE, null, ex);
+                    logger.log(Level.SEVERE, null, ex);
                 } catch (MalformedQueryException ex) {
-                    Logger.getLogger(InspectComponent.class.getName()).log(Level.SEVERE, null, ex);
+                    logger.log(Level.SEVERE, null, ex);
                 } catch (QueryEvaluationException ex) {
-                    Logger.getLogger(InspectComponent.class.getName()).log(Level.SEVERE, null, ex);
+                    logger.log(Level.SEVERE, null, ex);
                 }
             }
         });

@@ -16,10 +16,12 @@ import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window;
+import java.io.IOException;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.logging.Level;
+import java.util.logging.LogManager;
 import java.util.logging.Logger;
 import org.openrdf.repository.Repository;
 import org.openrdf.repository.RepositoryException;
@@ -69,6 +71,17 @@ public class EstaLdComponent extends CustomComponent {
     private Button btnVisualize;
     private Button btnInspect;
     private VerticalLayout inspectLayout;
+    
+    static {
+        try {
+            System.out.println(EstaLdComponent.class.getResourceAsStream("/logger.properties"));
+            LogManager.getLogManager().readConfiguration(EstaLdComponent.class.getResourceAsStream("/logger.properties"));
+        } catch (IOException ex) {
+            Logger.getLogger(EstaLdComponent.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (SecurityException ex) {
+            Logger.getLogger(EstaLdComponent.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
     
     public EstaLdComponent(Repository repository){
         this.repository = repository;

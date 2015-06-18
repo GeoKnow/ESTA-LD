@@ -37,6 +37,7 @@ public class TimeDimensionTransformator {
     private static final String XSD_YEAR = "xsd:gYear";
     private static final String XSD_YEAR_MONTH = "xsd:gYearMonth";
     private static final String XSD_DATE = "xsd:date";
+    private final Logger logger;
     
     public static enum Type {
         XSD_YEAR ("Year", "xsd:gYear"), 
@@ -75,6 +76,7 @@ public class TimeDimensionTransformator {
         this.pairs = null;
         this.parsedPairs = null;
         this.type = type;
+        this.logger = Logger.getLogger(getClass().getName());
     }
 
     public Type getType() {
@@ -159,7 +161,7 @@ public class TimeDimensionTransformator {
                     + parsed
                     + "\"^^" + type.typeTag;
             parsedPairs.add(p);
-            System.out.println(p.value);
+            logger.finest(p.value);
         }
     }
     
@@ -201,7 +203,7 @@ public class TimeDimensionTransformator {
                     .append(timeDimension).append("> ")
                     .append(pair.value).append(" . \n");
             if (++counter % limit == 0) {
-                System.out.println("Sending query, counter is " + counter);
+                logger.fine("Sending query, counter is " + counter);
                 // close the query and evaluate
                 builder.append("} } \n");
                 conn.prepareGraphQuery(QueryLanguage.SPARQL, builder.toString())
@@ -214,12 +216,12 @@ public class TimeDimensionTransformator {
             
         }
         if (counter % limit != 0){
-            System.out.println("Sending query, counter is " + counter);
+            logger.fine("Sending query, counter is " + counter);
             builder.append("} } \n");
             conn.prepareGraphQuery(QueryLanguage.SPARQL, builder.toString())
                     .evaluate();
         }
-        System.out.println("Finished inserting!!!");
+        logger.fine("Finished inserting!!!");
     }
     
 }
