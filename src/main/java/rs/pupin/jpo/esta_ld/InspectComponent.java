@@ -23,6 +23,7 @@ import com.vaadin.ui.Tree;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window;
 import java.net.URISyntaxException;
+import java.text.ParseException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -59,6 +60,7 @@ import rs.pupin.jpo.dsdrepo.CodeDatatypeTreeElement;
 import rs.pupin.jpo.dsdrepo.DSDRepo;
 import rs.pupin.jpo.dsdrepo.DSDRepoUtils;
 import rs.pupin.jpo.dsdrepo.CountingTreeHeader;
+import rs.pupin.jpo.esta_ld.utils.TimeDimensionTransformator;
 
 /**
  *
@@ -445,7 +447,7 @@ public class InspectComponent extends CustomComponent {
         propertiesTable.setHeight("250px");
         propertiesTable.setWidth("100%");
         propertiesTable.addContainerProperty("Property", String.class, null);
-        propertiesTable.addContainerProperty("Object", String.class, null);
+        propertiesTable.addContainerProperty("Value", String.class, null);
         dimTransformLayout.addComponent(propertiesTable);
         try {
             RepositoryConnection conn = repository.getConnection();
@@ -473,25 +475,72 @@ public class InspectComponent extends CustomComponent {
         
         // TODO: show transform to time dimension 
         // select: { year, month, date }
-        String [] options = new String [] { 
-            "Year", 
-            "Year-Month", 
-            "Year-Month-Date" 
-        };
-        final ComboBox comboType = new ComboBox("Choose type:", Arrays.asList(options));
+        final ComboBox comboType = new ComboBox("Choose type:", 
+                Arrays.asList(TimeDimensionTransformator.Type.values()));
         comboType.setNullSelectionAllowed(false);
-        comboType.select(options[0]);
+        comboType.select(TimeDimensionTransformator.Type.XSD_YEAR);
         dimTransformLayout.addComponent(comboType);
         // text field: { pattern }
         final TextField fieldPattern = new TextField("Transformation Pattern:");
-        fieldPattern.setWidth("300px");
+        fieldPattern.setWidth("400px");
         dimTransformLayout.addComponent(fieldPattern);
         // button: transform
         final Button btnTransform = new Button("Transform");
         dimTransformLayout.addComponent(btnTransform);
+        
+        final TimeDimensionTransformator timeTransformator = new TimeDimensionTransformator(
+                repository, 
+                dataGraph, 
+                dim.getUri(), 
+                (TimeDimensionTransformator.Type)comboType.getValue());
+        try {
+            timeTransformator.initialize();
+        } catch (RepositoryException ex) {
+            Logger.getLogger(InspectComponent.class.getName()).log(Level.SEVERE, null, ex);
+            btnTransform.setEnabled(false);
+            getWindow().showNotification(ex.getMessage(), Window.Notification.TYPE_ERROR_MESSAGE);
+        } catch (MalformedQueryException ex) {
+            Logger.getLogger(InspectComponent.class.getName()).log(Level.SEVERE, null, ex);
+            btnTransform.setEnabled(false);
+            getWindow().showNotification(ex.getMessage(), Window.Notification.TYPE_ERROR_MESSAGE);
+        } catch (QueryEvaluationException ex) {
+            Logger.getLogger(InspectComponent.class.getName()).log(Level.SEVERE, null, ex);
+            btnTransform.setEnabled(false);
+            getWindow().showNotification(ex.getMessage(), Window.Notification.TYPE_ERROR_MESSAGE);
+        }
+        
         btnTransform.addListener(new Button.ClickListener() {
             public void buttonClick(Button.ClickEvent event) {
-                getWindow().showNotification("Not supported yet!");
+                if (fieldPattern.getValue() == null) {
+                    getWindow().showNotification("Come on, you need to provide the transformation pattern");
+                }
+                try {
+                    // first check if the values can be parsed
+                    System.out.println("Parsing...");
+                    timeTransformator.parse(fieldPattern.getValue().toString());
+                    // if parsing went fine fire away
+                    System.out.println("Modifying dimension...");
+                    timeTransformator.modifyDimension();
+                    System.out.println("Removing old...");
+                    timeTransformator.removeOld();
+                    System.out.println("Inserting new...");
+                    timeTransformator.insertNew();
+                    System.out.println("Finished transformation!!!");
+                    getWindow().showNotification("Dimension transformed");
+                } catch (ParseException ex) {
+                    Logger.getLogger(InspectComponent.class.getName()).log(Level.SEVERE, null, ex);
+                    String msg = "Could not parse values \n";
+                    getWindow().showNotification(msg + ex.getMessage(), Window.Notification.TYPE_ERROR_MESSAGE);
+                } catch (RepositoryException ex) {
+                    Logger.getLogger(InspectComponent.class.getName()).log(Level.SEVERE, null, ex);
+                    getWindow().showNotification(ex.getMessage(), Window.Notification.TYPE_ERROR_MESSAGE);
+                } catch (MalformedQueryException ex) {
+                    Logger.getLogger(InspectComponent.class.getName()).log(Level.SEVERE, null, ex);
+                    getWindow().showNotification(ex.getMessage(), Window.Notification.TYPE_ERROR_MESSAGE);
+                } catch (QueryEvaluationException ex) {
+                    Logger.getLogger(InspectComponent.class.getName()).log(Level.SEVERE, null, ex);
+                    getWindow().showNotification(ex.getMessage(), Window.Notification.TYPE_ERROR_MESSAGE);
+                }
             }
         });
     }
