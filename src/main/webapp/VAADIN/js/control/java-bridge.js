@@ -12,6 +12,8 @@ var javaGeoFree = false;
 
 var vaadinRedrawsMap = false;
 
+var javaAggregatedColoring = false;
+
 function javaSetSelectedDimensions(dims){
     javaSelectedDimensions = dims;
 }
@@ -119,4 +121,18 @@ function findIndexForGeoDimension(uri){
 
 function uriLastPart(uri){
     return uri.substring(uri.lastIndexOf('/')+1, uri.length);
+}
+
+function javaSelectAggregColoring(){
+    console.log('Select Aggreg Coloring');
+    javaAggregatedColoring = true;
+    if (geoForMapAllTimesData.cbFunction && geoForMapAllTimesData.newData)
+        geoForMapAllTimesData.cbFunction(geoForMapAllTimesData.newData, true);
+}
+
+function javaUnselectAggregColoring(){
+    console.log('Unselect Aggreg Coloring');
+    javaAggregatedColoring = false;
+    if (geoForMapAllTimesData.cbFunction && geoForMapAllTimesData.newData)
+        geoForMapAllTimesData.cbFunction(geoForMapAllTimesData.newData, true);
 }

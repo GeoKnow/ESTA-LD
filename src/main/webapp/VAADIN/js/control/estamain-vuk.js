@@ -217,6 +217,8 @@ var hashCodeToNames = new Object();
 hashCodeToNames['RS'] = 'Serbia';
 var minObservationValue = 0;
 var maxObservationValue = 0;
+var maxObservationValueAggregated = 0;
+var minObservationValueAggregated = 0;
 //						var minAreaObservationValue = 0;
 //						var maxAreaObservationValue = 0;
 //						var minRegionObservationValue = 0;
@@ -245,7 +247,7 @@ var YEAR_PREFIX = 'http://elpo.stat.gov.rs/lod2/RS-DIC/time/';
 var INCENTIVE_PREFIX = '<http://stat.apr.gov.rs/lod2/RS-DIC/IncentivePurpose/';
 
 
-function loadGeoNamesAndValues() {
+function loadGeoNamesAndValues(updateStyle) {
 	minObservationValue = 0;
 	maxObservationValue = 0;
 
@@ -255,7 +257,7 @@ function loadGeoNamesAndValues() {
         if (geoLevels.length > visibleGeoLevel) {
     
             var selectedGeoLevelCodes = geoLevels[visibleGeoLevel];
-
+            
             for (var i = 0; i < selectedGeoLevelCodes.length; i++) {
                     var code = selectedGeoLevelCodes[i];
                     var value = hashCodeToObservationValues[code];
@@ -627,6 +629,7 @@ function proxyForGeoMapAllTimes(queryUrlEncoded, timeDimensionUri, timeDimension
             geoForMapAllTimesData.selectedTimeUri = timeDimensionUri;
             geoForMapAllTimesData.selectedTimeValue = timeDimensionValue;
             geoForMapAllTimesData.active = true;
+            
             var dataToPass = {
                 results: {
                     bindings: []
@@ -641,9 +644,24 @@ function proxyForGeoMapAllTimes(queryUrlEncoded, timeDimensionUri, timeDimension
                 if (lastPart.length > 5) month = parseInt(lastPart.substring(6));
                 item.parsedTime = {
                     year: year,
-                    month: month
+                    month: month,
+                    millis: Date.UTC(year,month)
                 };
             });
+            
+            
+            geoForMapAllTimesData.dataAllTimes.results.bindings.sort(function(a,b){
+                if (a.rsgeo.value < b.rsgeo.value)
+                    return -1;
+                else if (a.rsgeo.value > b.rsgeo.value)
+                    return 1;
+                else if (a.parsedTime.millis < b.parsedTime.millis)
+                    return -1;
+                else if (a.parsedTime.millis > b.parsedTime.millis)
+                    return 1;
+                return 0;
+            });
+            
             if (callbackFunction) callbackFunction(dataToPass);
         },
         error: function() { alert("There was an error during communication with the sparql endpoint");}

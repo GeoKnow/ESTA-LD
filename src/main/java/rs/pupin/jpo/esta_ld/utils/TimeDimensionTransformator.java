@@ -12,7 +12,9 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.openrdf.model.Statement;
 import org.openrdf.model.Value;
+import org.openrdf.model.ValueFactory;
 import org.openrdf.query.BindingSet;
 import org.openrdf.query.GraphQueryResult;
 import org.openrdf.query.MalformedQueryException;
@@ -34,26 +36,29 @@ public class TimeDimensionTransformator {
             + "PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> \n"
             + "PREFIX skos: <http://www.w3.org/2004/02/skos/core#> \n\n";
     
-    private static final String XSD_YEAR = "xsd:gYear";
-    private static final String XSD_YEAR_MONTH = "xsd:gYearMonth";
-    private static final String XSD_DATE = "xsd:date";
     private final Logger logger;
     
     public static enum Type {
-        XSD_YEAR ("Year", "xsd:gYear"), 
-        XSD_YEAR_MONTH ("Year-Month", "xsd:gYearMonth"), 
-        XSD_DATE ("Year-Month-Date", "xsd:date");
+        XSD_YEAR ("Year", "xsd:gYear", "http://www.w3.org/2001/XMLSchema#gYear"), 
+        XSD_YEAR_MONTH ("Year-Month", "xsd:gYearMonth", "http://www.w3.org/2001/XMLSchema#gYearMonth"), 
+        XSD_DATE ("Year-Month-Date", "xsd:date", "http://www.w3.org/2001/XMLSchema#date");
         
         private final String title;
         private final String typeTag;
-        Type(String title, String typeTag) {
+        private final String longType;
+        Type(String title, String typeTag, String longType) {
             this.title = title;
             this.typeTag = typeTag;
+            this.longType = longType;
         }
 
         @Override
         public String toString() {
             return title;
+        }
+        
+        public String getLongType() {
+            return longType;
         }
     }
     
@@ -65,6 +70,8 @@ public class TimeDimensionTransformator {
     private static class ObsValPair {
         public String observation;
         public String value;
+        public String literal = null;
+        public String type = null;
     }
     private List<ObsValPair> pairs;
     private List<ObsValPair> parsedPairs;
@@ -160,6 +167,8 @@ public class TimeDimensionTransformator {
             p.value = "\""
                     + parsed
                     + "\"^^" + type.typeTag;
+            p.literal = parsed;
+            p.type = type.longType;
             parsedPairs.add(p);
             logger.finest(p.value);
         }
@@ -222,6 +231,21 @@ public class TimeDimensionTransformator {
                     .evaluate();
         }
         logger.fine("Finished inserting!!!");
+    }
+    
+    public void insertNewAlt() throws RepositoryException {
+        RepositoryConnection conn = repository.getConnection();
+        List<Statement> stmts = new LinkedList<Statement>();
+        ValueFactory factory = conn.getValueFactory();
+        for (ObsValPair pair: parsedPairs) {
+            stmts.add(factory.createStatement(
+                    factory.createURI(pair.observation),
+                    factory.createURI(timeDimension), 
+                    factory.createLiteral(pair.literal, factory.createURI(pair.type))
+            ));
+        }
+        if (stmts.isEmpty()) return;
+        conn.add(stmts, factory.createURI(graph));
     }
     
 }

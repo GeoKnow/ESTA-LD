@@ -307,7 +307,10 @@ function redrawMap(data, minObservationValue, maxObservationValue, updateStyle) 
 //    console.log('redrawMap data:');
 //    console.log(data);
     var start = new Date().getTime();
-    recalculateColorGradeValues(minObservationValue, maxObservationValue);
+    if (updateStyle && javaAggregatedColoring)
+        recalculateColorGradeValues(minObservationValueAggregated, maxObservationValueAggregated);
+    else
+        recalculateColorGradeValues(minObservationValue, maxObservationValue);
     var wp1 = new Date().getTime();
 //    console.log('Recalc color grades: ' + (wp1-start));
     

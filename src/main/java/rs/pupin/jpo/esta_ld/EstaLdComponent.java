@@ -82,6 +82,7 @@ public class EstaLdComponent extends CustomComponent {
             Logger.getLogger(EstaLdComponent.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
+    private Button btnAggregColor;
     
     public EstaLdComponent(Repository repository){
         this.repository = repository;
@@ -229,11 +230,13 @@ public class EstaLdComponent extends CustomComponent {
         
         btnVisualize = new Button("Visualize");
         btnVisualize.addStyleName("btn-switch-view");
+        btnVisualize.addStyleName("dim-name");
         btnVisualize.addStyleName("selected");
         datasetLayout.addComponent(btnVisualize);
         datasetLayout.setExpandRatio(btnVisualize, 0.0f);
         btnInspect = new Button("Inspect");
         btnInspect.addStyleName("btn-switch-view");
+        btnInspect.addStyleName("dim-name");
         datasetLayout.addComponent(btnInspect);
         datasetLayout.setExpandRatio(btnInspect, 0.0f);
         btnVisualize.addListener(new Button.ClickListener() {
@@ -376,8 +379,25 @@ public class EstaLdComponent extends CustomComponent {
         contentLayout.addComponent(geoLayout);
         contentLayout.setExpandRatio(geoLayout, 0.0f);
         // create Level and +- controls
+        HorizontalLayout hl = new HorizontalLayout();
+        hl.setSpacing(true);
         final Label levelLabel = new Label(LEVEL_LABEL_CONTENT, Label.CONTENT_XHTML);
-        geoLayout.addComponent(levelLabel);
+        hl.addComponent(levelLabel);
+        btnAggregColor = new Button("Aggregated Coloring");
+        btnAggregColor.addStyleName("dim-name");
+        btnAggregColor.addListener(new Button.ClickListener() {
+            public void buttonClick(Button.ClickEvent event) {
+                if (btnAggregColor.getStyleName().contains("selected")){
+                    btnAggregColor.removeStyleName("selected");
+                    getWindow().executeJavaScript("javaUnselectAggregColoring()");
+                } else {
+                    btnAggregColor.addStyleName("selected");
+                    getWindow().executeJavaScript("javaSelectAggregColoring()");
+                }
+            }
+        });
+        hl.addComponent(btnAggregColor);
+        geoLayout.addComponent(hl);
         // create a layout for the map
 //        mapLayout = new VerticalLayout();
         mapLayout = new VerticalLayout() {
