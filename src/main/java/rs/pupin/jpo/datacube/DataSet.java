@@ -7,6 +7,7 @@
 package rs.pupin.jpo.datacube;
 
 import java.util.Collection;
+import org.openrdf.model.Value;
 
 /**
  *
@@ -15,6 +16,6 @@ import java.util.Collection;
 public interface DataSet extends Thing{
     
     public Structure getStructure();
-    public Collection<String> getValuesForDimension(Dimension dimension);
+    public Collection<Value> getValuesForDimension(Dimension dimension);
     
 }

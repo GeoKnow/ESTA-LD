@@ -10,6 +10,7 @@ import java.util.Collection;
 import java.util.LinkedList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.openrdf.model.Value;
 import org.openrdf.query.BindingSet;
 import org.openrdf.query.MalformedQueryException;
 import org.openrdf.query.QueryEvaluationException;
@@ -78,7 +79,7 @@ public class SparqlDataSet extends SparqlThing implements DataSet {
         this.structure = structure;
     }
 
-    public Collection<String> getValuesForDimension(Dimension dimension) {
+    public Collection<Value> getValuesForDimension(Dimension dimension) {
         for (Dimension dim: getStructure().getDimensions())
             if (dim.equals(dimension)) {
                 try {
@@ -87,9 +88,9 @@ public class SparqlDataSet extends SparqlThing implements DataSet {
                     query = query.replace("@graph", graph).replace("@ds", uri).replace("@dim", dimension.getUri());
                     TupleQuery q = conn.prepareTupleQuery(QueryLanguage.SPARQL, query);
                     TupleQueryResult results = q.evaluate();
-                    LinkedList<String> codes = new LinkedList<String>();
+                    LinkedList<Value> codes = new LinkedList<Value>();
                     while (results.hasNext())
-                        codes.add(results.next().getValue("val").stringValue());
+                        codes.add(results.next().getValue("val"));
                     return codes;
                 } catch (RepositoryException ex) {
                     Logger.getLogger(SparqlDataSet.class.getName()).log(Level.SEVERE, null, ex);

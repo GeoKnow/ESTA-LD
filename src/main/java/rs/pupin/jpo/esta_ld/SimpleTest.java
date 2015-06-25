@@ -8,6 +8,7 @@ package rs.pupin.jpo.esta_ld;
 
 import java.util.Collection;
 import java.util.LinkedList;
+import org.openrdf.model.Value;
 import org.openrdf.repository.RepositoryException;
 import org.openrdf.repository.sparql.SPARQLRepository;
 import rs.pupin.jpo.datacube.Attribute;
@@ -29,7 +30,7 @@ public class SimpleTest {
     }
     
     public static void main (String [] args) throws RepositoryException{
-        SPARQLRepository repo = new SPARQLRepository("http://jpo.imp.bg.ac.rs/sparql");
+        SPARQLRepository repo = new SPARQLRepository("http://192.168.56.101/sparql");
         repo.initialize();
         SparqlDCRepository dcRepo = new SparqlDCRepository(repo);
         
@@ -63,7 +64,7 @@ public class SimpleTest {
             printDCDimension(dcDimension);
             if (dcDimension.getCodeList() == null) continue;
             System.out.println("--------- Codes (used)");
-            for (String code: dcDataSet.getValuesForDimension(dcDimension))
+            for (Value code: dcDataSet.getValuesForDimension(dcDimension))
                 System.out.println("          " + code);
         }
         System.out.println("------ Attributes");

@@ -23,6 +23,7 @@ import java.util.LinkedList;
 import java.util.logging.Level;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
+import org.openrdf.model.Value;
 import org.openrdf.repository.Repository;
 import org.openrdf.repository.RepositoryException;
 import org.openrdf.repository.sparql.SPARQLRepository;
@@ -83,6 +84,20 @@ public class EstaLdComponent extends CustomComponent {
         }
     }
     private Button btnAggregColor;
+    
+    public static class ValueWrapper {
+        private final Value value;
+        public ValueWrapper(Value value){
+            this.value = value;
+        }
+        public Value getValue(){
+            return value;
+        }
+        @Override
+        public String toString(){
+            return value.stringValue();
+        }
+    }
     
     public EstaLdComponent(Repository repository){
         this.repository = repository;
@@ -154,7 +169,7 @@ public class EstaLdComponent extends CustomComponent {
                 StringBuilder builderFree = new StringBuilder();
                 for (int i=0; i<dimNames.length; i++){
                     Dimension d = (Dimension) dimNames[i].getData();
-                    String val = (String) dimValues[i].getValue();
+                    Value val = ((ValueWrapper) dimValues[i].getValue()).getValue();
                     if (val == null){
                         builderFree.append(",'").append(d.getUri()).append("'");
                     } else {
@@ -514,12 +529,14 @@ public class EstaLdComponent extends CustomComponent {
             dimNames[i] = btnName;
             
             // create a combo box for picking dimension value
-            Collection<String> vals = ds.getValuesForDimension(dim);
+            Collection<Value> vals = ds.getValuesForDimension(dim);
+            Collection<ValueWrapper> valsWrapped = new LinkedList<ValueWrapper>();
+            for (Value v: vals) valsWrapped.add(new ValueWrapper(v));
             builderPossibleValues.append(",").append(stringifyCollection(vals));
-            ComboBox boxValue = new ComboBox(null, vals);
+            ComboBox boxValue = new ComboBox(null, valsWrapped);
             boxValue.setImmediate(true);
             boxValue.setNullSelectionAllowed(false);
-            if (vals.iterator().hasNext()) boxValue.select(vals.iterator().next());
+            if (valsWrapped.iterator().hasNext()) boxValue.select(valsWrapped.iterator().next());
             else boxValue.setEnabled(false);
             boxValue.setSizeUndefined();
             boxValue.setWidth("100%");
@@ -563,8 +580,8 @@ public class EstaLdComponent extends CustomComponent {
             });
             
             StringBuilder builder = new StringBuilder();
-            Collection<String> posVals = ds.getValuesForDimension(geoDimension);
-            String selectedVal = posVals.iterator().next();
+            Collection<Value> posVals = ds.getValuesForDimension(geoDimension);
+            Value selectedVal = posVals.iterator().next();
             builder.append("javaSetGeoAll('").append(geoDimension.getUri());
             builder.append("',").append(stringifyCollection(posVals));
             builder.append(",'").append(selectedVal).append("')");
@@ -621,9 +638,9 @@ public class EstaLdComponent extends CustomComponent {
         dimListener.valueChange(null);
     }
 
-    private String stringifyCollection(Collection<String> vals) {
+    private String stringifyCollection(Collection<Value> vals) {
         StringBuilder builder = new StringBuilder();
-        for (String s: vals)
+        for (Value s: vals)
             builder.append(",'").append(s).append("'");
         return builder.replace(0, 1, "[").append("]").toString();
     }
