@@ -2,7 +2,7 @@
 var chartBarSingleOptions;
 
 var chartBarMultipleOptions;
-
+var chartBarMultiple;
 
 function hideCharts() {
 //	$('#highchartsbarsingle').hide();
@@ -12,7 +12,7 @@ function hideCharts() {
 
 function createChartBarMultiple(chartSubtitle, arrayMultiple, chartCategories, seriesNames ) {
 	
-	var chartBarMultiple = new Highcharts.Chart(chartBarMultipleOptions);
+	chartBarMultiple = new Highcharts.Chart(chartBarMultipleOptions);
     chartBarMultiple.setTitle({text: 'Regional development incentives'}, {text: chartSubtitle});
     chartBarMultiple.xAxis[0].setCategories(chartCategories, false);
     var numberOfSeries = seriesNames.length;
@@ -52,7 +52,7 @@ function chartsInitVuk(){
     chartBarSingleOptions = {
 	    chart: {
 	    	renderTo: 'highchartsbarmultiple',
-	    	type: 'bar',
+	    	type: 'column',
             margin: [50, 70, 70, 130]
 	    },
 	    title: {
@@ -118,9 +118,54 @@ function chartsInitVuk(){
 chartBarMultipleOptions = {
 	    chart: {
 	    	renderTo: 'highchartsbarmultiple',
-	        type: 'bar',
+	        type: 'column',
             margin: [50, 70, 70, 130]
 	    },
+            exporting: {
+                buttons: {
+                    stackButton: {
+                        text: 'Stack', 
+//                        symbol: 'square', 
+                        onclick: function () {
+                            if (chartBarMultiple.options.plotOptions.column.stacking)
+                                delete chartBarMultiple.options.plotOptions.column.stacking;
+                            else {
+                                var plotOptionsObject = {
+                                    column: {
+                                        stacking: 'normal'
+                                    }
+                                };
+                                $.extend(true, chartBarMultiple.options.plotOptions, plotOptionsObject);
+                            }
+                            
+                            chartBarMultiple.xAxis[0].update({}, false);
+                            chartBarMultiple.yAxis[0].update({}, false);
+                            $(chartBarMultiple.series).each(function (k,v) {
+                                v.update({}, false);
+                            });
+            
+                            chartBarMultiple.redraw();
+                        }
+                    }, 
+                    invertButton: {
+                        text: 'Invert', 
+                        onclick: function () {
+                            if (chartBarMultiple.inverted)
+                                chartBarMultiple.inverted = false;
+                            else
+                                chartBarMultiple.inverted = true;
+                            
+                            chartBarMultiple.xAxis[0].update({}, false);
+                            chartBarMultiple.yAxis[0].update({}, false);
+                            $(chartBarMultiple.series).each(function (k,v) {
+                                v.update({}, false);
+                            });
+            
+                            chartBarMultiple.redraw();
+                        }
+                    }
+                }
+            }, 
 	    title: {
 	    	margin: 30,
 	        text: 'Regional development incentives'

@@ -526,9 +526,11 @@ function runSparqlGeoSelectedVuk(rsgeo) {
     // add JS code to put the value in the ComboBox
     var value = CODE_PREFIX + rsgeo;
     var isInTheList = false;
+    var valueWithType = value;
     for (var i=0; i<javaGeoPossibleValues.length; i++){
-        if (value == javaGeoPossibleValues[i]){
+        if (value == cleanValue(javaGeoPossibleValues[i])){
             isInTheList = true;
+            valueWithType = javaGeoPossibleValues[i];
 //            break;
         }
     }
@@ -544,7 +546,7 @@ function runSparqlGeoSelectedVuk(rsgeo) {
 //        return;
 //    }
 //    execSparqlDimensionValueChangedVuk(cbfuncOneFreeVuk,cbfuncTwoFreeVuk);
-    javaSetGeoValue(value);
+    javaSetGeoValue(valueWithType);
 }
 
 function runSparqlDimensionValueChangedVuk(){
@@ -619,6 +621,17 @@ function populateGeoLevelsLists() {
 
 }
 
+function cleanValue(value) {
+    var firstChar = value.charAt(0);
+    if (firstChar === "<")
+        return value.substring(1, value.length - 1);
+    
+    return value.substring(
+            1, 
+            value.lastIndexOf(firstChar)
+    );
+}
+
 function proxyForGeoMapAllTimes(queryUrlEncoded, timeDimensionUri, timeDimensionValue, callbackFunction){
     $.ajax({
         url: queryUrlEncoded,
@@ -627,7 +640,9 @@ function proxyForGeoMapAllTimes(queryUrlEncoded, timeDimensionUri, timeDimension
             geoForMapAllTimesData.cbFunction = callbackFunction;
             geoForMapAllTimesData.dataAllTimes = data;
             geoForMapAllTimesData.selectedTimeUri = timeDimensionUri;
-            geoForMapAllTimesData.selectedTimeValue = timeDimensionValue;
+            var timeDimensionValueCleaned = cleanValue(timeDimensionValue);
+                
+            geoForMapAllTimesData.selectedTimeValue = timeDimensionValueCleaned;
             geoForMapAllTimesData.active = true;
             
             var dataToPass = {
@@ -636,7 +651,7 @@ function proxyForGeoMapAllTimes(queryUrlEncoded, timeDimensionUri, timeDimension
                 }
             };
             $(data.results.bindings).each(function (k, item) {
-                if (item.rstime.value === timeDimensionValue) dataToPass.results.bindings.push(item);
+                if (item.rstime.value === timeDimensionValueCleaned) dataToPass.results.bindings.push(item);
                 var lastPart = item.rstime.value.substring(item.rstime.value.lastIndexOf('/')+1, 
                     item.rstime.value.length);
                 var year = parseInt(lastPart.substring(1, 5));
@@ -930,7 +945,7 @@ cbfuncGeoSelectedVuk = function(data) {
         doubleArray[i] = new Array(size);
 //        var year = javaPossibleValues[seriesIndex][i].substring(YEAR_PREFIX.length - 1, 
 //                javaPossibleValues[seriesIndex][i].length);var s='s';
-        var seriesName = uriLastPart(javaPossibleValues[seriesIndex][i]);
+        var seriesName = uriLastPart(cleanValue(javaPossibleValues[seriesIndex][i]));
         seriesArray.push(seriesName);
         for (var j=0; j<size; j++){
             doubleArray[i][j] = 0;
@@ -939,7 +954,7 @@ cbfuncGeoSelectedVuk = function(data) {
     for (var i=0; i<javaPossibleValues[categoriesIndex].length; i++){
 //        var incentiveCode = javaPossibleValues[1][i].substring(INCENTIVE_PREFIX.length - 1, 
 //                javaPossibleValues[1][i].length);
-        var categoryName = uriLastPart(javaPossibleValues[categoriesIndex][i]);
+        var categoryName = uriLastPart(cleanValue(javaPossibleValues[categoriesIndex][i]));
         categoriesArray.push(categoryName);
     }
 //    var prevTime = '';
@@ -976,14 +991,14 @@ cbfuncTwoFreeVuk = function(data) {
         for (var i=0; i<javaPossibleValues[seriesIndex].length; i++) {
             var size = javaGeoPossibleValues.length;
             doubleArray[i] = new Array(size);
-            var seriesName = uriLastPart(javaPossibleValues[seriesIndex][i]);
+            var seriesName = uriLastPart(cleanValue(javaPossibleValues[seriesIndex][i]));
             seriesArray.push(seriesName);
             for (var j=0; j<size; j++){
                 doubleArray[i][j] = 0;
             }
         }
         for (var i=0; i<javaGeoPossibleValues.length; i++){
-            var categoryName = uriLastPart(javaGeoPossibleValues[i]);
+            var categoryName = uriLastPart(cleanValue(javaGeoPossibleValues[i]));
             categoriesArray.push(categoryName);
         }
         
@@ -1012,14 +1027,14 @@ cbfuncTwoFreeVuk = function(data) {
         for (var i=0; i<javaPossibleValues[seriesIndex].length; i++) {
             var size = javaPossibleValues[categoriesIndex].length;
             doubleArray[i] = new Array(size);
-            var seriesName = uriLastPart(javaPossibleValues[seriesIndex][i]);
+            var seriesName = uriLastPart(cleanValue(javaPossibleValues[seriesIndex][i]));
             seriesArray.push(seriesName);
             for (var j=0; j<size; j++){
                 doubleArray[i][j] = 0;
             }
         }
         for (var i=0; i<javaPossibleValues[categoriesIndex].length; i++){
-            var categoryName = uriLastPart(javaPossibleValues[categoriesIndex][i]);
+            var categoryName = uriLastPart(cleanValue(javaPossibleValues[categoriesIndex][i]));
             categoriesArray.push(categoryName);
         }
 
@@ -1045,7 +1060,7 @@ cbfuncOneFreeVuk = function(data) {
     if (javaGeoValue != null && javaGeoValue != '' && javaGeoFree){
         var categoriesArray = new Array(javaGeoPossibleValues.length);
         for (var i=0; i<categoriesArray.length; i++)
-            categoriesArray[i] = uriLastPart(javaGeoPossibleValues[i]);
+            categoriesArray[i] = uriLastPart(cleanValue(javaGeoPossibleValues[i]));
         var valuesArray = new Array(categoriesArray.length);
         for (var i=0; i<valuesArray.length; i++)
             valuesArray[i] = 0;
@@ -1064,13 +1079,22 @@ cbfuncOneFreeVuk = function(data) {
     } else {
         var categoriesIndex = javaFreeDimensions[0];
         var categoriesArray = new Array(javaPossibleValues[categoriesIndex].length);
-        for (var i=0; i<categoriesArray.length; i++)
-            categoriesArray[i] = uriLastPart(javaPossibleValues[categoriesIndex][i]);
+        for (var i=0; i<categoriesArray.length; i++) {
+            categoriesArray[i] = uriLastPart(cleanValue(javaPossibleValues[categoriesIndex][i]));
+            if (categoriesArray[i].indexOf('Y') === 0) 
+                categoriesArray[i] = categoriesArray[i].substring(1,categoriesArray[i].length);
+        }
         var valuesArray = new Array(categoriesArray.length);
         for (var i=0; i<valuesArray.length; i++)
             valuesArray[i] = 0;
 
         var timeTitle = '';
+        if (javaSelectedDimensions[javaFreeDimensions[0]] === 'http://elpo.stat.gov.rs/lod2/RS-DIC/rs/time') {
+            timeTitle = 'http://elpo.stat.gov.rs/lod2/RS-DIC/rs/time';
+        }
+        if (javaSelectedDimensions[javaFreeDimensions[0]] === 'http://purl.org/dc/terms/date') {
+            timeTitle = 'http://purl.org/dc/terms/date';
+        }
         $(data.results.bindings).each(function(key, val){
                 var dim1Uri = val.dim1.value;
                 
@@ -1119,10 +1143,14 @@ function createHighstockDataFromElpoStat(elpoStatArray, valuesArray) {
     var chartDataValues = [];
     for (var i = 0; i < elpoStatArray.length; i++) {
             
-            var year = elpoStatArray[i].substring(1, 5);
+            var year = elpoStatArray[i].substring(0, 4);
             var month = 0;
-            if (elpoStatArray[i].length > 5) {
-                month = elpoStatArray[i].substring(6, elpoStatArray[i].length);
+            if (elpoStatArray[i].length > 4) {
+                if (elpoStatArray[i].length === 6)
+                    month = elpoStatArray[i].substring(5, 6);
+                else
+                    month = elpoStatArray[i].substring(5, 7);
+//                month = elpoStatArray[i].substring(5, elpoStatArray[i].length);
             }
             
             chartDataNames.push(Date.UTC(year, month));
@@ -1269,7 +1297,7 @@ cbfuncYear = function(data) {
         }
         
         //If broader-narrower returned empty fetch all geo codes.
-	if (geoLevels.length === 0) {
+	if (geoLevels.length === 0) { return;
 		execSparqlAllGeoCodes(cbfuncGetGeoCodes);//sinchronous call
 	}
 	

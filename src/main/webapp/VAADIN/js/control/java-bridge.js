@@ -105,18 +105,20 @@ function javaPrintAll(){
 
 function findIndexForDimension(dimNumber, uri){
     for (var i=0; i<javaPossibleValues[dimNumber].length; i++){
-        if (uri == javaPossibleValues[dimNumber][i])
+        if (uri == cleanValue(javaPossibleValues[dimNumber][i]))
             return i;
     }
+    console.log(javaPossibleValues[dimNumber]);
     alert('Couldnt find index of ' + uri + ' in ' + javaSelectedDimensions[dimNumber]);
 }
 
 function findIndexForGeoDimension(uri){
     for (var i=0; i<javaGeoPossibleValues.length; i++){
-        if (uri == javaGeoPossibleValues[i])
+        if (uri == cleanValue(javaGeoPossibleValues[i]))
             return i;
     }
-    alert('Couldnt find index of ' + uri + ' in ' + javaGeoPossibleValues);
+    console.log(javaGeoPossibleValues);
+    alert('Couldnt find index of geo ' + uri + ' in ' + javaGeoPossibleValues);
 }
 
 function uriLastPart(uri){

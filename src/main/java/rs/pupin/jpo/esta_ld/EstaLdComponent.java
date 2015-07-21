@@ -23,6 +23,8 @@ import java.util.LinkedList;
 import java.util.logging.Level;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
+import org.openrdf.model.Literal;
+import org.openrdf.model.URI;
 import org.openrdf.model.Value;
 import org.openrdf.repository.Repository;
 import org.openrdf.repository.RepositoryException;
@@ -174,7 +176,21 @@ public class EstaLdComponent extends CustomComponent {
                         builderFree.append(",'").append(d.getUri()).append("'");
                     } else {
                         builderDims.append(",'").append(d.getUri()).append("'");
-                        builderVals.append(",'").append(val).append("'");
+                        builderVals.append(",'");
+                        if (val instanceof URI)
+                            builderVals.append("<")
+                                    .append(val.stringValue())
+                                    .append(">");
+                        else {
+                            Literal l = (Literal)val;
+                            builderVals.append("\"").append(l.stringValue()).append("\"");
+                            URI dataType = l.getDatatype();
+                            if (dataType != null && !dataType.stringValue().contains("string")) 
+                                builderVals.append("^^<")
+                                        .append(dataType.stringValue())
+                                        .append(">");
+                        }
+                        builderVals.append("'");
                     }
                 }
                 String javaDims = (builderDims.length()==0)?"[]":"[" + builderDims.substring(1) + "]";
@@ -192,8 +208,16 @@ public class EstaLdComponent extends CustomComponent {
                     return;
                 }
                 StringBuilder builder = new StringBuilder();
+                Value val = ((ValueWrapper) boxGeo.getValue()).getValue();
                 builder.append("javaSetGeoValue('");
-                builder.append((String)boxGeo.getValue());
+                if (val instanceof URI)
+                    builder.append("<").append(val.stringValue()).append(">");
+                else {
+                    URI dataType = ((Literal)val).getDatatype();
+                    builder.append("\"").append(val.stringValue()).append("\"");
+                    if (dataType != null && !dataType.stringValue().contains("string")) 
+                        builder.append("^^<").append(dataType.stringValue()).append(">");
+                }
                 builder.append("')");
                 
                 getWindow().executeJavaScript(builder.toString());
@@ -581,16 +605,28 @@ public class EstaLdComponent extends CustomComponent {
             
             StringBuilder builder = new StringBuilder();
             Collection<Value> posVals = ds.getValuesForDimension(geoDimension);
+            Collection<ValueWrapper> posValsWrapped = new LinkedList<ValueWrapper>();
+            for (Value v: posVals) posValsWrapped.add(new ValueWrapper(v));
             Value selectedVal = posVals.iterator().next();
+            String selectedValString = "";
+            if (selectedVal instanceof URI) {
+                selectedValString = "<" + selectedVal.stringValue() + ">";
+            } else {
+                selectedValString = "\"" + selectedVal.stringValue() + "\"";
+                URI dataType = ((Literal)selectedVal).getDatatype();
+                if (dataType != null && !dataType.stringValue().contains("string")) {
+                    selectedValString += "^^<" + dataType.stringValue() + ">";
+                }
+            }
             builder.append("javaSetGeoAll('").append(geoDimension.getUri());
             builder.append("',").append(stringifyCollection(posVals));
-            builder.append(",'").append(selectedVal).append("')");
-            boxGeo = new ComboBox(null, posVals);
+            builder.append(",'").append(selectedValString).append("')");
+            boxGeo = new ComboBox(null, posValsWrapped);
             boxGeo.setDebugId("geoValue");
             boxGeo.setData(posVals);
             boxGeo.setImmediate(true);
             boxGeo.setNullSelectionAllowed(false);
-            boxGeo.select(selectedVal);
+            boxGeo.select(posValsWrapped.iterator().next());
             boxGeo.setSizeUndefined();
             boxGeo.setWidth("100%");
             boxGeo.setHeight(CONTENT_ELEM_HEIGHT);
@@ -640,8 +676,18 @@ public class EstaLdComponent extends CustomComponent {
 
     private String stringifyCollection(Collection<Value> vals) {
         StringBuilder builder = new StringBuilder();
-        for (Value s: vals)
-            builder.append(",'").append(s).append("'");
+        for (Value s: vals) {
+            builder.append(",'");
+            if (s instanceof URI)
+                builder.append("<").append(s.stringValue()).append(">");
+            else {
+                builder.append("\"").append(s.stringValue()).append("\"");
+                URI dataType = ((Literal)s).getDatatype();
+                if (dataType != null && !dataType.stringValue().contains("string"))
+                    builder.append("^^<").append(dataType.stringValue()).append(">");
+            }
+            builder.append("'");
+        }
         return builder.replace(0, 1, "[").append("]").toString();
     }
     

@@ -75,7 +75,7 @@ function execSparqlTopGeoBroaderNarrower(callbackFunction) {//FIND TOP ELEMENT (
 		'{?rsgeo skos:broader ?rsgeo6. }}} ' + 
 		'}';
 	
-	var queryUrlEncoded = endpoint + '?query=' + $.URLEncode(sparqlQuery)+'&format=json';
+	var queryUrlEncoded = endpoint + '?query=' + $.URLEncode(sparqlQuery.replace('gYear','date'))+'&format=json';
 	
 //	$.getJSON(queryUrlEncoded, callbackFunction).error(function() { alert("There was an error during communication with the sparql endpoint"); });
 	
@@ -104,7 +104,7 @@ function execSparqlBroaderNarrowerForArray(codePrefix, geoStringArray, callbackF
 		querySubstring +
 		' }';
 	
-	var queryUrlEncoded = endpoint + '?query=' + $.URLEncode(sparqlQuery)+'&format=json';
+	var queryUrlEncoded = endpoint + '?query=' + $.URLEncode(sparqlQuery.replace('gYear','date'))+'&format=json';
 	
 //	$.getJSON(queryUrlEncoded, callbackFunction).error(function() { alert("There was an error during communication with the sparql endpoint"); });
 	
@@ -124,7 +124,7 @@ function execSparqlAllGeoCodes(callbackFunction) {//FIND TOP ELEMENT (BROADER/NA
                 'from <' + javaGraph + '> ' +
 		'where {?y1 rs:geo ?rsgeo. }';
 	
-	var queryUrlEncoded = endpoint + '?query=' + $.URLEncode(sparqlQuery)+'&format=json';
+	var queryUrlEncoded = endpoint + '?query=' + $.URLEncode(sparqlQuery.replace('gYear','date'))+'&format=json';
 	
 //	$.getJSON(queryUrlEncoded, callbackFunction).error(function() { alert("There was an error during communication with the sparql endpoint"); });
 	
@@ -141,7 +141,7 @@ function execSparqlAllGeoCodes(callbackFunction) {//FIND TOP ELEMENT (BROADER/NA
 //		'select distinct ?rsgeo ' +
 //		'where { ' + geoString + ' skos:narrower ?rsgeo.}';
 //	
-//	var queryUrlEncoded = endpoint + '?query=' + $.URLEncode(sparqlQuery);
+//	var queryUrlEncoded = endpoint + '?query=' + $.URLEncode(sparqlQuery.replace('gYear','date'));
 //	
 //	$.getJSON(queryUrlEncoded, callbackFunction).error(function() { alert("There was an error during communication with the sparql endpoint"); });
 //}
@@ -161,14 +161,14 @@ function execSparqlForGeoMapVuk(callbackFunction){
     var timeDimensionUri = '';
     var timeDimensionValue = '';
     for (i=0; i<javaSelectedDimensions.length; i++){
-        if (javaDimensionValues[i].substring(0, javaDimensionValues[i].lastIndexOf('/') + 1) === YEAR_PREFIX) {
+        if (javaDimensionValues[i].substring(1, javaDimensionValues[i].lastIndexOf('/') + 1) === YEAR_PREFIX) {
             // if it is a time dimension make it a free variable
             sparqlQuery += '?y <' + javaSelectedDimensions[i] + '> ?rstime . ';
             hasTimeDimension = true;
             timeDimensionUri = javaSelectedDimensions[i];
             timeDimensionValue = javaDimensionValues[i];
         }
-        else sparqlQuery += '?y <' + javaSelectedDimensions[i] + '> <' + javaDimensionValues[i] + '> . ';
+        else sparqlQuery += '?y <' + javaSelectedDimensions[i] + '> ' + javaDimensionValues[i] + ' . ';
     }
     sparqlQuery += '}';
     if (hasTimeDimension) { 
@@ -177,7 +177,7 @@ function execSparqlForGeoMapVuk(callbackFunction){
         sparqlQuery += ' order by ?rsgeo';
     }
     
-    var queryUrlEncoded = endpoint + '?query=' + $.URLEncode(sparqlQuery)+'&format=json';
+    var queryUrlEncoded = endpoint + '?query=' + $.URLEncode(sparqlQuery.replace('gYear','date'))+'&format=json';
 
 //    $.getJSON(queryUrlEncoded, callbackFunction).error(function() { alert("There was an error during communication with the sparql endpoint\n"+sparqlQuery); });
     
@@ -212,7 +212,7 @@ function execSparqlRegionalDevelopment(querySubstring, callbackFunction) {
 				querySubstring +
 				'?y sdmx-measure:obsValue ?observation. }';
 	
-	var queryUrlEncoded = endpoint + '?query=' + $.URLEncode(sparqlQuery)+'&format=json';
+	var queryUrlEncoded = endpoint + '?query=' + $.URLEncode(sparqlQuery.replace('gYear','date'))+'&format=json';
 
 //	$.getJSON(queryUrlEncoded, callbackFunction).error(function() { alert("There was an error during communication with the sparql endpoint"); });
 	$.ajax({
@@ -279,7 +279,7 @@ function execSparqlGeoSelectedVuk(rsgeoString, callbackFunction) {
                                 '?y <' + javaSelectedDimensions[1] + '> ?dim2 . }' +
                                 'order by ?dim1 ?dim2';
     
-    var queryUrlEncoded = endpoint + '?query=' + $.URLEncode(sparqlQuery)+'&format=json';
+    var queryUrlEncoded = endpoint + '?query=' + $.URLEncode(sparqlQuery.replace('gYear','date'))+'&format=json';
 
 //    $.getJSON(queryUrlEncoded, callbackFunction).error(function() { alert("There was an error during communication with the sparql endpoint\n"+sparqlQuery); });
 
@@ -309,13 +309,13 @@ function execSparqlDimensionValueChangedVuk(cbfuncOneFreeVuk,cbfuncTwoFreeVuk){
             else
                 sparqlQuery += '?y rs:geo ?dim2 . ';
         } else {
-            sparqlQuery += '?y rs:geo <' + javaGeoValue + '> . ';
+            sparqlQuery += '?y rs:geo ' + javaGeoValue + ' . ';
         }
     }
     for (var i=0; i<javaSelectedDimensions.length; i++){
         var freeIndex = javaFreeDimensions.indexOf(i);
         if (freeIndex == -1){
-            sparqlQuery += '?y <' + javaSelectedDimensions[i] + '> <' + javaDimensionValues[i] + '> . ';
+            sparqlQuery += '?y <' + javaSelectedDimensions[i] + '> ' + javaDimensionValues[i] + ' . ';
         } else {
             var dim = '?dim' + (freeIndex+1).toString();
             sparqlQuery += '?y <' + javaSelectedDimensions[i] + '> ' + dim + ' . ';
@@ -326,7 +326,7 @@ function execSparqlDimensionValueChangedVuk(cbfuncOneFreeVuk,cbfuncTwoFreeVuk){
     if (javaGeoValue != null && javaGeoValue != '' && javaGeoFree) numFree++;
     if (numFree == 2) sparqlQuery += ' ?dim2';
     
-    var queryUrlEncoded = endpoint + '?query=' + $.URLEncode(sparqlQuery)+'&format=json';
+    var queryUrlEncoded = endpoint + '?query=' + $.URLEncode(sparqlQuery.replace('gYear','date'))+'&format=json';
     
     if (numFree == 2){
 //        $.getJSON(queryUrlEncoded, cbfuncTwoFreeVuk).error(function() { alert("There was an error during communication with the sparql endpoint\n"+sparqlQuery); });
@@ -370,7 +370,7 @@ function execSparqlGraphs() {
 //	'?s ?p ?o' +//	get all graphs
 	'} .  }';
 
-	var queryUrlEncoded = inputEndpoint + '?query=' + $.URLEncode(sparqlQuery)+'&format=json';
+	var queryUrlEncoded = inputEndpoint + '?query=' + $.URLEncode(sparqlQuery.replace('gYear','date'))+'&format=json';
 	
 //	$.getJSON(queryUrlEncoded, cbFuncGraph).error(function() { 
 //		$("#error").css('visibility', 'visible');//display error message on screen

@@ -48,111 +48,10 @@ function createTimeChart(containerName, chartData, titleText, subtitleText, seri
 	        alignTicks: false,
                 zoomType: 'x',
                 events: {
-//                    redraw: function(event) {
-//                        var s = new Date().getTime();
-//                        var minInt = event.target.xAxis[0].min;
-//                        var maxInt = event.target.xAxis[0].max;
-//                        if (geoForMapAllTimesData.active){
-//                            var newData = {
-//                                results: {
-//                                    bindings: []
-//                                }
-//                            };
-//                            minObservationValueAggregated = 0;
-//                            maxObservationValueAggregated = 0;
-//                            var selectedGeoLevelCodes = geoLevels[visibleGeoLevel];
-//                            var timeSpan = maxInt - minInt;
-//                            $(geoForMapAllTimesData.dataAllTimes.results.bindings).each(function(index, item) {
-//                                var currentDate = Date.UTC(item.parsedTime.year, item.parsedTime.month);
-//                                if (currentDate >= minInt && currentDate <= maxInt) {
-//                                    // add item if it doesn't exist
-//                                    var itemToIncrease = getItemToIncrease(newData.results.bindings, item);
-//                                    if (itemToIncrease === null) {
-//                                        var itemAdd = $.extend(true, {}, item);
-//                                        itemAdd.rstime.value = "Aggregated";
-//                                        newData.results.bindings.push(itemAdd);
-//                                    } else { // add value if it does exist
-//                                        var sum = parseFloat(itemToIncrease.observation.value);
-//                                        sum += parseFloat(item.observation.value);
-//                                        itemToIncrease.observation.value = sum.toString();
-//                                    }
-//                                }
-//                                
-//                                ///////////////////////////////////////
-//                                // and now calculation of min and max
-//                                ///////////////////////////////////////
-//                                if (geoLevels.length > visibleGeoLevel) {
-//                                    var rsgeoUri = item.rsgeo.value;
-//                                    var code = rsgeoUri.substring(CODE_PREFIX.length, rsgeoUri.length);
-//                                    if (!code) return true;
-//
-//                                    // if this item/geo is not on the map go to next iteration
-//                                    if (selectedGeoLevelCodes.indexOf(code) < 0) return true; //!!! this shouldn't happen before all geo levels are added
-//
-//                                    // update min/,ax
-//                                    // create new current and calc local min and max
-//                                
-//                                    var currentGeo = item.rsgeo.value;
-//                                    var currentSum = parseFloat(item.observation.value);
-//                                    var currentTime = item.parsedTime.millis;
-//                                    $(geoForMapAllTimesData.dataAllTimes.results.bindings.slice(index+1)).each(function (j, timeItem) {
-//                                        // break if we are at the next geo
-//                                        if (timeItem.rsgeo.value !== currentGeo) return false;
-//                                        // break if the time is out of the window
-//                                        if (timeItem.parsedTime.millis - currentTime > timeSpan) return false;
-//                                        // if it is in the window increase the sum
-//                                        if (!isNaN(timeItem.observation.value))
-//                                            currentSum += parseFloat(timeItem.observation.value);
-//                                    });
-//                                    // now I have the sum for this element, so update min and max
-//                                    if (maxObservationValueAggregated === 0 || currentSum > maxObservationValueAggregated)
-//                                        maxObservationValueAggregated = currentSum;
-//                                    if (minObservationValueAggregated === 0 || currentSum < minObservationValueAggregated)
-//                                        minObservationValueAggregated = currentSum;
-//                                }
-//                                
-//                            });
-//                            console.log('Min: ' + minObservationValueAggregated);
-//                            console.log('Max: ' + maxObservationValueAggregated);
-//                            if (geoForMapAllTimesData.cbFunction) geoForMapAllTimesData.cbFunction(newData, true);
-//                        }
-//                        var e = new Date().getTime();
-//                        redrawCount++;
-////                        console.log('Redraw called: ' + redrawCount);
-////                        console.log('Execution time: ' + (e - s));
-//                    }, 
-                    selection: function(event) {
-//                        console.log('Selection changed');
-//                        console.log(event.xAxis[0]);
-//                        console.log(event.yAxis[0]);
-                    }
-                }
-	    },
-	    tooltip: {
-	        formatter: function() {
-	            var date = new Date(this.x);
-	            var year = date.getFullYear();
-	            var month = '';
-	            var day = '';
-	            if (granularity === 'M') {
-	            	month = ('0' + (date.getMonth() + 1)).slice(-2) + '/';
-	            } else if (granularity === 'D') {
-	            	day = ('0' + date.getDate()).slice(-2) + '/' ;
-	            	month = ('0' + (date.getMonth() + 1)).slice(-2) + '/';
-	            }
-	            
-	            var value = addThousandsSeparators(this.y);
-	            return day + month + year + '<br/>' + '<span style="color:'+this.points[0].series.color+'">'+ this.points[0].series.name +'</span>: '+ value;
-	         },
-	    },
-	    xAxis: {
-	    	type: 'datetime',
-                minRange: 7516800000, 
-                events: {
-                    setExtremes: function(event){
+                    redraw: function(event) {
                         var s = new Date().getTime();
-                        var minInt = event.min;
-                        var maxInt = event.max;
+                        var minInt = event.target.xAxis[0].min;
+                        var maxInt = event.target.xAxis[0].max;
                         if (geoForMapAllTimesData.active){
                             var newData = {
                                 results: {
@@ -215,7 +114,6 @@ function createTimeChart(containerName, chartData, titleText, subtitleText, seri
                             });
                             console.log('Min: ' + minObservationValueAggregated);
                             console.log('Max: ' + maxObservationValueAggregated);
-                            geoForMapAllTimesData.newData = newData;
                             if (geoForMapAllTimesData.cbFunction) geoForMapAllTimesData.cbFunction(newData, true);
                         }
                         var e = new Date().getTime();
@@ -223,6 +121,108 @@ function createTimeChart(containerName, chartData, titleText, subtitleText, seri
 //                        console.log('Redraw called: ' + redrawCount);
 //                        console.log('Execution time: ' + (e - s));
                     }, 
+                    selection: function(event) {
+//                        console.log('Selection changed');
+//                        console.log(event.xAxis[0]);
+//                        console.log(event.yAxis[0]);
+                    }
+                }
+	    },
+	    tooltip: {
+	        formatter: function() {
+	            var date = new Date(this.x);
+	            var year = date.getFullYear();
+	            var month = '';
+	            var day = '';
+	            if (granularity === 'M') {
+	            	month = ('0' + (date.getMonth() + 1)).slice(-2) + '/';
+	            } else if (granularity === 'D') {
+	            	day = ('0' + date.getDate()).slice(-2) + '/' ;
+	            	month = ('0' + (date.getMonth() + 1)).slice(-2) + '/';
+	            }
+	            
+	            var value = addThousandsSeparators(this.y);
+	            return day + month + year + '<br/>' + '<span style="color:'+this.points[0].series.color+'">'+ this.points[0].series.name +'</span>: '+ value;
+	         },
+	    },
+	    xAxis: {
+	    	type: 'datetime',
+                minRange: 7516800000, 
+                events: {
+//                    setExtremes: function(event){
+//                        var s = new Date().getTime();
+//                        var minInt = event.min;
+//                        var maxInt = event.max;
+//                        if (geoForMapAllTimesData.active){
+//                            var newData = {
+//                                results: {
+//                                    bindings: []
+//                                }
+//                            };
+//                            minObservationValueAggregated = 0;
+//                            maxObservationValueAggregated = 0;
+//                            var selectedGeoLevelCodes = geoLevels[visibleGeoLevel];
+//                            var timeSpan = maxInt - minInt;
+//                            $(geoForMapAllTimesData.dataAllTimes.results.bindings).each(function(index, item) {
+//                                var currentDate = Date.UTC(item.parsedTime.year, item.parsedTime.month);
+//                                if (currentDate >= minInt && currentDate <= maxInt) {
+//                                    // add item if it doesn't exist
+//                                    var itemToIncrease = getItemToIncrease(newData.results.bindings, item);
+//                                    if (itemToIncrease === null) {
+//                                        var itemAdd = $.extend(true, {}, item);
+//                                        itemAdd.rstime.value = "Aggregated";
+//                                        newData.results.bindings.push(itemAdd);
+//                                    } else { // add value if it does exist
+//                                        var sum = parseFloat(itemToIncrease.observation.value);
+//                                        sum += parseFloat(item.observation.value);
+//                                        itemToIncrease.observation.value = sum.toString();
+//                                    }
+//                                }
+//                                
+//                                ///////////////////////////////////////
+//                                // and now calculation of min and max
+//                                ///////////////////////////////////////
+//                                if (geoLevels.length > visibleGeoLevel) {
+//                                    var rsgeoUri = item.rsgeo.value;
+//                                    var code = rsgeoUri.substring(CODE_PREFIX.length, rsgeoUri.length);
+//                                    if (!code) return true;
+//
+//                                    // if this item/geo is not on the map go to next iteration
+//                                    if (selectedGeoLevelCodes.indexOf(code) < 0) return true; //!!! this shouldn't happen before all geo levels are added
+//
+//                                    // update min/,ax
+//                                    // create new current and calc local min and max
+//                                
+//                                    var currentGeo = item.rsgeo.value;
+//                                    var currentSum = parseFloat(item.observation.value);
+//                                    var currentTime = item.parsedTime.millis;
+//                                    $(geoForMapAllTimesData.dataAllTimes.results.bindings.slice(index+1)).each(function (j, timeItem) {
+//                                        // break if we are at the next geo
+//                                        if (timeItem.rsgeo.value !== currentGeo) return false;
+//                                        // break if the time is out of the window
+//                                        if (timeItem.parsedTime.millis - currentTime > timeSpan) return false;
+//                                        // if it is in the window increase the sum
+//                                        if (!isNaN(timeItem.observation.value))
+//                                            currentSum += parseFloat(timeItem.observation.value);
+//                                    });
+//                                    // now I have the sum for this element, so update min and max
+//                                    if (maxObservationValueAggregated === 0 || currentSum > maxObservationValueAggregated)
+//                                        maxObservationValueAggregated = currentSum;
+//                                    if (minObservationValueAggregated === 0 || currentSum < minObservationValueAggregated)
+//                                        minObservationValueAggregated = currentSum;
+//                                }
+//                                
+//                            });
+//                            console.log('Min: ' + minObservationValueAggregated);
+//                            console.log('Max: ' + maxObservationValueAggregated);
+//                            geoForMapAllTimesData.newData = newData;
+//                            if (geoForMapAllTimesData.cbFunction) geoForMapAllTimesData.cbFunction(newData, true);
+//                        }
+//                        var e = new Date().getTime();
+//                        redrawCount++;
+////                        console.log('Redraw called: ' + redrawCount);
+////                        console.log('Execution time: ' + (e - s));
+//                    }, 
                     afterSetExtremes: function(event) {
                         //console.log('Extremes set: ' + event.min + '\t' + event.max);
                     }
