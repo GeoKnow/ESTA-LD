@@ -28,6 +28,7 @@ public class MyJavascriptLoadingServlet extends ApplicationServlet {
         page.write("<script src=\"/ESTA-LD/VAADIN/resources/libs/highstock/2.0.1/exporting.js\"></script>\n");
         page.write("<script src=\"/ESTA-LD/VAADIN/resources/libs/leaflet/0.7.2/leaflet.js\"></script>\n");
         page.write("<script src=\"/ESTA-LD/VAADIN/resources/libs/urlEncode.js\"></script>\n");
+        page.write("<script src=\"/ESTA-LD/VAADIN/resources/libs/wellknown.js\"></script>\n");
         page.write("<script src=\"/ESTA-LD/VAADIN/js/geojson/geojson-data.js\" ></script>\n");
         page.write("<script src=\"/ESTA-LD/VAADIN/js/geojson/geojson-area.js\" ></script>\n");
         page.write("<script src=\"/ESTA-LD/VAADIN/js/geojson/geojson-region.js\" ></script>\n");

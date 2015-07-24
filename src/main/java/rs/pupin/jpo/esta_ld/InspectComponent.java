@@ -60,6 +60,7 @@ import rs.pupin.jpo.dsdrepo.CodeDatatypeTreeElement;
 import rs.pupin.jpo.dsdrepo.DSDRepo;
 import rs.pupin.jpo.dsdrepo.DSDRepoUtils;
 import rs.pupin.jpo.dsdrepo.CountingTreeHeader;
+import rs.pupin.jpo.esta_ld.utils.SpatialDimensionManipulator;
 import rs.pupin.jpo.esta_ld.utils.TimeDimensionTransformator;
 
 /**
@@ -104,6 +105,7 @@ public class InspectComponent extends CustomComponent {
     private static final Action ACTION_STORE = new Action("Store DSD in repository");
     
     private static final Action ACTION_TRANSFORM_DIM = new Action("Transform Dimension");
+    private static final Action ACTION_MANAGE_GEO = new Action("Manage as Spatial Dimension");
 
     private static final Action [] ACTIONS = new Action[] { 
         ACTION_SET_AS_DIM, ACTION_SET_AS_MEAS, ACTION_SET_AS_ATTR, 
@@ -428,7 +430,7 @@ public class InspectComponent extends CustomComponent {
         dataTree.addActionHandler(new Action.Handler() {
             public Action[] getActions(Object target, Object sender) {
                 if (target instanceof Dimension) {
-                    return new Action [] { ACTION_TRANSFORM_DIM };
+                    return new Action [] { ACTION_TRANSFORM_DIM, ACTION_MANAGE_GEO };
                 } else
                     return null;
             }
@@ -436,6 +438,9 @@ public class InspectComponent extends CustomComponent {
                 if (action == null) return;
                 if (action == ACTION_TRANSFORM_DIM) {
                     showTransformDimensionView((Dimension)target);
+                }
+                if (action == ACTION_MANAGE_GEO) {
+                    showManageGeoView((Dimension)target);
                 }
             }
         });
@@ -544,6 +549,70 @@ public class InspectComponent extends CustomComponent {
                     logger.log(Level.SEVERE, null, ex);
                     getWindow().showNotification(ex.getMessage(), Window.Notification.TYPE_ERROR_MESSAGE);
                 }
+            }
+        });
+    }
+    
+    private void showManageGeoView(Dimension dim) {
+        dimTransformLayout.removeAllComponents();
+        dimTransformLayout.addComponent(new Label("<h1>Dimension: " + dim.getUri() + "</h1>", Label.CONTENT_XHTML));
+        
+        // show properties table
+        final Table propertiesTable = new Table("Properties");
+        propertiesTable.setHeight("250px");
+        propertiesTable.setWidth("100%");
+        propertiesTable.addContainerProperty("Property", String.class, null);
+        propertiesTable.addContainerProperty("Value", String.class, null);
+        dimTransformLayout.addComponent(propertiesTable);
+        try {
+            RepositoryConnection conn = repository.getConnection();
+            TupleQuery query = conn.prepareTupleQuery(QueryLanguage.SPARQL, DSDRepoUtils.qResourcePorperties(dim.getUri(), dataGraph));
+            TupleQueryResult res = query.evaluate();
+            int i = 0;
+            while (res.hasNext()) {
+                BindingSet set = res.next();
+                Object [] row = new Object [] {
+                    set.getValue("p").stringValue(), 
+                    set.getValue("o").stringValue()
+                };
+                propertiesTable.addItem(row, i++);
+            }
+        } catch (RepositoryException ex) {
+            logger.log(Level.SEVERE, null, ex);
+        } catch (MalformedQueryException ex) {
+            logger.log(Level.SEVERE, null, ex);
+        } catch (QueryEvaluationException ex) {
+            logger.log(Level.SEVERE, null, ex);
+        }
+        
+        // add separator
+        dimTransformLayout.addComponent(new Label("<hr/>", Label.CONTENT_XHTML));
+        
+        final SpatialDimensionManipulator manipulator = new SpatialDimensionManipulator(dim, SpatialDimensionManipulator.Kind.BY_CODE);
+        
+        final ComboBox comboKind = new ComboBox("Choose kind:", 
+                Arrays.asList(SpatialDimensionManipulator.Kind.values()));
+        comboKind.setNullSelectionAllowed(false);
+        comboKind.select(SpatialDimensionManipulator.Kind.BY_CODE);
+        dimTransformLayout.addComponent(comboKind);
+        // text field: { pattern }
+        final TextField fieldPrefix = new TextField("Prefix:");
+        fieldPrefix.setWidth("400px");
+        dimTransformLayout.addComponent(fieldPrefix);
+        // button: insert polygons
+        final Button btnInsertPolygons = new Button("Insert Polygons");
+        dimTransformLayout.addComponent(btnInsertPolygons);
+        
+        btnInsertPolygons.addListener(new Button.ClickListener() {
+            public void buttonClick(Button.ClickEvent event) {
+                String prefix = fieldPrefix.getValue().toString();
+                if (prefix == null) {
+                    return;
+                }
+                
+                String array = manipulator.extractPairs(prefix);
+                String jsCall = "javaInsertPolygons(" + array + ")";
+                getWindow().executeJavaScript(jsCall);
             }
         });
     }

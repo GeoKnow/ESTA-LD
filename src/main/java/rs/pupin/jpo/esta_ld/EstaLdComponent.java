@@ -126,7 +126,7 @@ public class EstaLdComponent extends CustomComponent {
 //            dcRepo = new DummyDCRepository();
 //            geoDimension = null;
 //            return;
-            endpoint = "http://192.168.56.101/sparql";
+            endpoint = "http://localhost:8890/sparql";
         }
         repository = new SPARQLRepository(endpoint);
         try {
@@ -663,7 +663,7 @@ public class EstaLdComponent extends CustomComponent {
         DataCubeGraph g = null;
         while (iter.hasNext()){
             g = iter.next();
-            if (g.getUri().equalsIgnoreCase("http://demo/reg-dev/")){
+            if (g.getUri().equalsIgnoreCase("http://demo/reg-dev-polygons/")){
                 break;
             }
         }

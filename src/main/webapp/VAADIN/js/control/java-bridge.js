@@ -1,3 +1,5 @@
+/* global geoForMapAllTimesData, cbfuncTwoFreeVuk, cbfuncOneFreeVuk, geoData */
+
 var javaSelectedDimensions = [];
 var javaDimensionValues = [];
 var javaPossibleValues = [[]];
@@ -137,4 +139,74 @@ function javaUnselectAggregColoring(){
     javaAggregatedColoring = false;
     if (geoForMapAllTimesData.cbFunction && geoForMapAllTimesData.newData)
         geoForMapAllTimesData.cbFunction(geoForMapAllTimesData.newData, true);
+}
+
+function javaInsertPolygons(pairs){
+    // add property ogc:hasGeometry and ogc:hasDefaultGeometry to the codes
+    // these geometry instances will then have ogc:asWKT properties
+    var intro = "PREFIX ogc: <http://www.opengis.net/ont/geosparql#>\n\
+INSERT INTO GRAPH <" + javaGraph + "> {";
+    var outro = "}";
+    var triples = "";
+    
+    $(pairs).each(function(index, pair){
+        var iteration = 0;
+        $(geoData).each(function(index, geoLevel){
+            $(geoLevel.features).each(function(index, feature){
+                if (feature.properties.NSTJ_CODE === pair.code) {
+                    // create wkt literal
+                    iteration++;
+                    console.log(feature.geometry);
+                    var wktLiteral = "\"" + stringify(feature.geometry) + "\"^^ogc:wktLiteral";
+                    // define URIs for code and the new geometry
+                    var geometryURI = "<" + pair.uri + "/defaultGeometry>";
+                    var codeURI = "<" + pair.uri + ">";
+                    
+                    triples = codeURI + " ogc:hasDefaultGeometry " + geometryURI + " . \n" +
+                            codeURI + " ogc:hasGeometry " + geometryURI + " . \n" +
+                            geometryURI + " ogc:asWKT " + wktLiteral + " . \n";
+//                    console.log(intro + triples + outro);
+                    // or do triples += and then execute full query
+                    var queryString = intro + triples + outro;
+                    console.log(queryString);
+                    $.ajax({
+                        async: false,
+                        url: endpoint,
+                        method: 'POST',
+                        type: 'POST', 
+                        data: { 
+                            query: queryString
+                        }, 
+                        success: function(data){
+                            console.log('Query executed correctly for iteration: ' + iteration);
+                            console.log(data);
+                        },
+                        error: function(data) { 
+                            console.error('Query error for iteration ' + iteration + '!!!');
+                            console.log(data); 
+                        }
+                    });
+                }
+            });
+        });
+    });
+    // execute query
+//    var queryUrlEncoded = endpoint + '?query=' + $.URLEncode(intro + triples + outro)+'&format=json';
+//    $.ajax({
+//        async: false,
+//        url: endpoint,
+//        method: 'POST',
+//        data: { 
+//            query: intro+triples+outro
+//        }, 
+//        success: function(data){
+//            console.log('Query executed correctly');
+//            console.log(data);
+//        },
+//        error: function(data) { 
+//            alert("There was an error during communication with the sparql endpoint"); 
+//            console.log('Query error!!!');
+//            console.log(data); 
+//        }
+//    });
 }
