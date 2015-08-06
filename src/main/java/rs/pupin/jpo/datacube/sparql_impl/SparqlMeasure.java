@@ -25,7 +25,7 @@ import rs.pupin.jpo.esta_ld.utils.SparqlUtils;
  *
  * @author vukm
  */
-public class SparqlMeasure extends SparqlThing implements Measure {
+public class SparqlMeasure extends SparqlComponentProperty implements Measure {
     
     private String range;
     private Structure structure;

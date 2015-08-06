@@ -25,7 +25,7 @@ import rs.pupin.jpo.esta_ld.utils.SparqlUtils;
  *
  * @author vukm
  */
-public class SparqlAttribute extends SparqlThing implements Attribute {
+public class SparqlAttribute extends SparqlComponentProperty implements Attribute {
     
     private String range;
     private Structure structure;

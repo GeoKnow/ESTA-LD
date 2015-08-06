@@ -25,7 +25,7 @@ import rs.pupin.jpo.esta_ld.utils.SparqlUtils;
  *
  * @author vukm
  */
-public class SparqlDimension extends SparqlThing implements Dimension {
+public class SparqlDimension extends SparqlComponentProperty implements Dimension {
     
     private String range;
     private Structure structure;
@@ -45,7 +45,8 @@ public class SparqlDimension extends SparqlThing implements Dimension {
         "http://www.w3.org/2002/07/owl#time"
     };
     private static final String[] GEO_RANGES = new String [] {
-        "http://elpo.stat.gov.rs/lod2/RS-DIC/rs/geo"
+        "http://elpo.stat.gov.rs/lod2/RS-DIC/rs/geo", 
+        "http://ontologycentral.com/2009/01/eurostat/ns#geo"
     } ;
     private static final String QUERY_CODELIST = "SELECT ?cl \n"
             + "FROM <@graph> \n"

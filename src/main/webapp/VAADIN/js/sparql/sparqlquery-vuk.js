@@ -60,17 +60,22 @@ var sessionGraph;
 function execSparqlTopGeoBroaderNarrower(callbackFunction) {//FIND TOP ELEMENT (BROADER/NARROWER)
 	var sparqlQuery = 'prefix skos: <http://www.w3.org/2004/02/skos/core#> ' +
 		'prefix rs: <http://elpo.stat.gov.rs/lod2/RS-DIC/rs/> ' +
-		'select distinct ?rsgeo ' +
+                'prefix ogc: <http://www.opengis.net/ont/geosparql#> ' +
+		'select distinct ?rsgeo ?geom ' +
                 'from <' + javaGraph + '> ' +
 		'where { ' + 
-		'{{?y1 rs:geo ?rsgeo. ' + 
-		'?rsgeo1 skos:broader ?rsgeo.} ' +  // Vuk: why this line, what if there's only one level?
+		'{{?y1 <' + javaGeoDimension + '> ?rsgeo. ' + 
+                'OPTIONAL { ?rsgeo ogc:hasDefaultGeometry ?g . ?g ogc:asWKT ?geom . } ' + 
+		//'?rsgeo1 skos:broader ?rsgeo.} ' +  // Vuk: why this line, what if there's only one level?
+                '} ' +
 		'FILTER NOT EXISTS {{?rsgeo2 skos:narrower ?rsgeo} UNION ' + 
 		'{?rsgeo skos:broader ?rsgeo3.}}} ' + 
 		
 		'UNION  ' + 
-		'{{?y2 rs:geo ?rsgeo. ' + 
-		'?rsgeo skos:narrower ?rsgeo4.} ' +  // Vuk: again, why this line, what if there's only one level?
+		'{{?y2 <' + javaGeoDimension + '> ?rsgeo. ' + 
+                'OPTIONAL { ?rsgeo ogc:hasDefaultGeometry ?g . ?g ogc:asWKT ?geom . } ' + 
+		//'?rsgeo skos:narrower ?rsgeo4.} ' +  // Vuk: again, why this line, what if there's only one level?
+                '} ' +
 		'FILTER NOT EXISTS {{?rsgeo5 skos:narrower ?rsgeo} UNION ' + 
 		'{?rsgeo skos:broader ?rsgeo6. }}} ' + 
 		'}';
@@ -85,44 +90,72 @@ function execSparqlTopGeoBroaderNarrower(callbackFunction) {//FIND TOP ELEMENT (
 	    url: queryUrlEncoded,
             dataType: 'jsonp',
 	    success: callbackFunction,
-	    error: function() { alert("There was an error during communication with the sparql endpoint");}
+	    error: function(msg) { alert("There was an error during communication with the sparql endpoint"); console.error(msg); }
 	});
 }
 
 function execSparqlBroaderNarrowerForArray(codePrefix, geoStringArray, callbackFunction) {//geostring: '<http://elpo.stat.gov.rs/lod2/RS-DIC/geo/RS>'
-	var querySubstring = '{ ?rsgeo skos:broader <' + codePrefix + geoStringArray[0] + '> .} ' +
-							'UNION { <' + codePrefix + geoStringArray[0] + '> skos:narrower ?rsgeo.} ';
+	var querySubstring = '{ ?rsgeo skos:broader <' + geoStringArray[0] + '> . OPTIONAL { ?rsgeo ogc:hasDefaultGeometry ?g . ?g ogc:asWKT ?geom . } } ' +
+							'UNION { <' + geoStringArray[0] + '> skos:narrower ?rsgeo . OPTIONAL { ?rsgeo ogc:hasDefaultGeometry ?g . ?g ogc:asWKT ?geom . } } ';
 	for (var i = 1; i < geoStringArray.length; i++) {
-		querySubstring += 'UNION { ?rsgeo skos:broader  <' + codePrefix + geoStringArray[i] + '> .} ' +
-		'UNION { <' + codePrefix + geoStringArray[i] + '> skos:narrower ?rsgeo.} ';
+		querySubstring += 'UNION { ?rsgeo skos:broader  <' + geoStringArray[i] + '> . OPTIONAL { ?rsgeo ogc:hasDefaultGeometry ?g . ?g ogc:asWKT ?geom . } } ' +
+		'UNION { <' + geoStringArray[i] + '> skos:narrower ?rsgeo . OPTIONAL { ?rsgeo ogc:hasDefaultGeometry ?g . ?g ogc:asWKT ?geom . } } ';
 	}
 	
 	var sparqlQuery = 'prefix skos: <http://www.w3.org/2004/02/skos/core#> ' +
-		'select distinct ?rsgeo ' +
+                'prefix ogc: <http://www.opengis.net/ont/geosparql#> ' + 
+		'select distinct ?rsgeo ?geom ' +
                 'from <' + javaGraph + '> ' +
 		'where { ' +
 		querySubstring +
 		' }';
 	
 	var queryUrlEncoded = endpoint + '?query=' + $.URLEncode(sparqlQuery.replace('gYear','date'))+'&format=json';
+        console.log(queryUrlEncoded);
 	
 //	$.getJSON(queryUrlEncoded, callbackFunction).error(function() { alert("There was an error during communication with the sparql endpoint"); });
 	
-	//needs to be synchronous
+	// just a test/workaround for huge queries
+//        if (sparqlQuery.length > 10000) {
+//            callbackFunction({
+//                head: {
+//                    link: [], 
+//                    vars: ["rsgeo","geom"]
+//                }, 
+//                results: {
+//                    distinct: false, 
+//                    ordered: true, 
+//                    bindings: []
+//                }
+//            });
+//        } else
+        //needs to be synchronous
 	$.ajax({
 	    async: false,
-	    url: queryUrlEncoded,
-            dataType: 'jsonp',
+//	    url: queryUrlEncoded, 
+            url: endpoint, 
+            data: {
+                query: sparqlQuery.replace('gYear','date'), 
+                format: 'json'
+            }, 
+            type: 'POST', 
+            method: 'POST', 
+//            dataType: 'jsonp',
 	    success: callbackFunction,
-	    error: function() { alert("There was an error during communication with the sparql endpoint");}
+	    error: function(msg) { 
+                alert("There was an error during communication with the sparql endpoint"); 
+                console.error(msg); 
+                console.error(callbackFunction); 
+            }
 	});
 }
 
 function execSparqlAllGeoCodes(callbackFunction) {//FIND TOP ELEMENT (BROADER/NARROWER)
 	var sparqlQuery = 'prefix rs: <http://elpo.stat.gov.rs/lod2/RS-DIC/rs/> ' +
-		'select distinct ?rsgeo ' +
+                'prefix ogc: <http://www.opengis.net/ont/geosparql#>' + 
+		'select distinct ?rsgeo ?geom ' +
                 'from <' + javaGraph + '> ' +
-		'where {?y1 rs:geo ?rsgeo. }';
+		'where {?y1 <' + javaGeoDimension + '> ?rsgeo. OPTIONAL { ?rsgeo ogc:hasDefaultGeometry ?g . ?g ogc:asWKT ?geom . } }';
 	
 	var queryUrlEncoded = endpoint + '?query=' + $.URLEncode(sparqlQuery.replace('gYear','date'))+'&format=json';
 	
@@ -133,7 +166,7 @@ function execSparqlAllGeoCodes(callbackFunction) {//FIND TOP ELEMENT (BROADER/NA
 	    url: queryUrlEncoded,
             dataType: 'jsonp',
 	    success: callbackFunction,
-	    error: function() { alert("There was an error during communication with the sparql endpoint");}
+	    error: function(msg) { alert("There was an error during communication with the sparql endpoint"); console.error(msg); }
 	});
 }
 //function execSparqlNarrower(geoString, callbackFunction) {//geostring: '<http://elpo.stat.gov.rs/lod2/RS-DIC/geo/RS>'
@@ -155,7 +188,7 @@ function execSparqlForGeoMapVuk(callbackFunction){
 				'select distinct ?rsgeo ?observation ' + 
                                 'from <' + javaGraph + '> ' +
                                 'where { ?y qb:dataSet <' + javaDataSet + '> . ' + 
-                                '?y rs:geo ?rsgeo . ' + 
+                                '?y <' + javaGeoDimension + '> ?rsgeo . ' + 
                                 '?y sdmx-measure:obsValue ?observation . ';
     var hasTimeDimension = false;
     var timeDimensionUri = '';
@@ -206,7 +239,7 @@ function execSparqlRegionalDevelopment(querySubstring, callbackFunction) {
 				'prefix apr: <http://stat.apr.gov.rs/lod2/> ' +
 				'prefix sdmx-measure: <http://purl.org/linked-data/sdmx/2009/measure#> ' +
 				'select distinct ?time ?incentive ?rsgeo ?observation ' +
-				'where { ?y rs:geo ?rsgeo. ' +
+				'where { ?y <' + javaGeoDimension + '> ?rsgeo. ' +
 				'?y rs:time ?time. ' +
 				'?y apr:incentiveAim ?incentive. ' +
 				querySubstring +
@@ -248,19 +281,19 @@ function execSparqlYearIncentive(yearUrlString, incentiveUrlString, callbackFunc
 }
 
 function execSparqlRsgeoIncentive(rsgeoString, incentiveUrlString, callbackFunction) {
-	var querySubstring = '?y rs:geo <' + rsgeoString + '>. ' +
+	var querySubstring = '?y <' + javaGeoDimension + '> <' + rsgeoString + '>. ' +
 							'?y apr:incentiveAim ' + incentiveUrlString + '. ';
 	execSparqlRegionalDevelopment(querySubstring, callbackFunction);
 }
 
 function execSparqlRsgeoYear(rsgeoString, yearUrlString, callbackFunction) {
-	var querySubstring = '?y rs:geo <' + rsgeoString + '>. ' +
+	var querySubstring = '?y <' + javaGeoDimension + '> <' + rsgeoString + '>. ' +
 							'?y rs:time ' + yearUrlString + '. ' ;
 	execSparqlRegionalDevelopment(querySubstring, callbackFunction);
 }
 
 function execSparqlRsgeo(rsgeoString, callbackFunction) {
-	var querySubstring = '?y rs:geo <' + rsgeoString + '>. ' ;
+	var querySubstring = '?y <' + javaGeoDimension + '> <' + rsgeoString + '>. ' ;
 	execSparqlRegionalDevelopment(querySubstring, callbackFunction);
 }
 
@@ -273,7 +306,7 @@ function execSparqlGeoSelectedVuk(rsgeoString, callbackFunction) {
 				'select distinct ?observation ?dim1 ?dim2 ' + 
                                 'from <' + javaGraph + '> ' +
                                 'where { ?y qb:dataSet <' + javaDataSet + '> . ' + 
-                                '?y rs:geo <' + rsgeoString + '> . ' + 
+                                '?y <' + javaGeoDimension + '> <' + rsgeoString + '> . ' + 
                                 '?y sdmx-measure:obsValue ?observation . ' + 
                                 '?y <' + javaSelectedDimensions[0] + '> ?dim1 . ' +
                                 '?y <' + javaSelectedDimensions[1] + '> ?dim2 . }' +
@@ -305,11 +338,11 @@ function execSparqlDimensionValueChangedVuk(cbfuncOneFreeVuk,cbfuncTwoFreeVuk){
     if (javaGeoValue != null && javaGeoValue != ''){
         if (javaGeoFree){
             if (javaFreeDimensions.length == 0)
-                sparqlQuery += '?y rs:geo ?dim1 . ';
+                sparqlQuery += '?y <' + javaGeoDimension + '> ?dim1 . ';
             else
-                sparqlQuery += '?y rs:geo ?dim2 . ';
+                sparqlQuery += '?y <' + javaGeoDimension + '> ?dim2 . ';
         } else {
-            sparqlQuery += '?y rs:geo ' + javaGeoValue + ' . ';
+            sparqlQuery += '?y <' + javaGeoDimension + '> ' + javaGeoValue + ' . ';
         }
     }
     for (var i=0; i<javaSelectedDimensions.length; i++){

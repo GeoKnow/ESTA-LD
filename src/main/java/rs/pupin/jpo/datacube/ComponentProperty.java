@@ -6,6 +6,8 @@
 
 package rs.pupin.jpo.datacube;
 
+import java.util.Collection;
+
 /**
  *
  * @author vukm
@@ -16,5 +18,6 @@ public interface ComponentProperty extends Thing {
     public CodeList getCodeList();
     public Structure getStructure();
     public String getRange();
+    public Collection<String> getValues();
     
 }

@@ -54,15 +54,15 @@ function getColorFromValue(value) {
 }
 
 function getStyleHash(feature, layer) {
-	var color = getColorFromHash(feature.properties.NSTJ_CODE);
+	var color = getColorFromHash(feature.properties.URI);
 //	if (visibleLayer === 'Municipalities') {
 //		color = getColorFromHash(feature.properties.MAT_BR_OPS);
 //	}
 	return getStyle(color);
 }
 
-function getColorFromHash(code) {
-	var value = hashCodeToObservationValues[code];
+function getColorFromHash(uri) {
+	var value = hashCodeToObservationValues[uri];
 	if (value == null) {
 		return WHITE_COLOR;
 	}
@@ -139,6 +139,10 @@ function onEachFeature(feature, layer) {
 	if (feature.properties && feature.properties.NSTJ_CODE) {
 		popupContent += '<p>NSTJ code: ' + feature.properties.NSTJ_CODE + '</p>';
 	}
+        
+        if (feature.properties && feature.properties.URI) {
+		popupContent += '<p>URI: ' + feature.properties.URI + '</p>';
+	}
 
 	if (feature.properties && feature.properties.AREA) {
 		popupContent += '<p>Area: ' + addThousandsSeparators(feature.properties.AREA) + '</p>';
@@ -148,11 +152,11 @@ function onEachFeature(feature, layer) {
 		popupContent += '<p>Perimeter: ' + addThousandsSeparators(feature.properties.PERIMETER) + '</p>';
 	}
 	
-	if (feature.properties && isObservationValueDefined(feature.properties.NSTJ_CODE)) {
-		popupContent += '<p>Value: ' + addThousandsSeparators(hashCodeToObservationValues[feature.properties.NSTJ_CODE]) + '</p>';
+	if (feature.properties && isObservationValueDefined(feature.properties.URI)) {
+		popupContent += '<p>Value: ' + addThousandsSeparators(hashCodeToObservationValues[feature.properties.URI]) + '</p>';
 	}
 
-	if (feature.properties && !isObservationValueDefined(feature.properties.NSTJ_CODE)) {
+	if (feature.properties && !isObservationValueDefined(feature.properties.URI)) {
 		popupContent += '<p>Value: No data</p>';
 	}
 	
@@ -175,7 +179,7 @@ function onEachFeature(feature, layer) {
 																						//		}
 																						//		
 																						//		if (feature.properties && isObservationValueDefined(feature.properties.NSTJ_CODE)) {
-																						//			popupContent += '<p>Value: ' + addThousandsSeparators(hashCodeToObservationValues[feature.properties.NSTJ_CODE]) + '</p>';
+																						//			popupContent += '<p>Value: ' + addThousandsSeparators(hashCodeToObservationValues[feature.properties.URI]) + '</p>';
 																						//		}
 																						//	
 																						//		if (feature.properties && !isObservationValueDefined(feature.properties.NSTJ_CODE)) {
@@ -208,7 +212,7 @@ function onEachFeature(feature, layer) {
 																						//		}
 																						//		
 																						//		if (feature.properties && isObservationValueDefined(feature.properties.NSTJ_CODE)) {
-																						//			popupContent += '<p>Value: ' + addThousandsSeparators(hashCodeToObservationValues[feature.properties.NSTJ_CODE]) + '</p>';
+																						//			popupContent += '<p>Value: ' + addThousandsSeparators(hashCodeToObservationValues[feature.properties.URI]) + '</p>';
 																						//		}
 																						//	
 																						//		if (feature.properties && !isObservationValueDefined(feature.properties.NSTJ_CODE)) {
@@ -225,7 +229,7 @@ function onEachFeature(feature, layer) {
 																						//		}
 																						//		
 																						//		if (feature.properties && isObservationValueDefined(feature.properties.NSTJ_CODE)) {
-																						//			popupContent += '<p>Value: ' + addThousandsSeparators(hashCodeToObservationValues[feature.properties.NSTJ_CODE]) + '</p>';
+																						//			popupContent += '<p>Value: ' + addThousandsSeparators(hashCodeToObservationValues[feature.properties.URI]) + '</p>';
 																						//		}
 																						//
 																						//		if (feature.properties && !isObservationValueDefined(feature.properties.NSTJ_CODE)) {
@@ -341,12 +345,12 @@ function rammapInitVuk() {
     map = L.map('map').setView([43.7, 21.5], 7);//leaflet map object
 
 //ADD LAYER TO MAP
-for (var i = 0; i < geoData.length; i++) {
-	var geojsonTemp = L.geoJson(geoData[i], {//preload names
-		style: getStyleHash,
-		onEachFeature: onEachFeature,
-	});
-}
+//for (var i = 0; i < geoData.length; i++) {
+//	var geojsonTemp = L.geoJson(geoData[i], {//preload names
+//		style: getStyleHash,
+//		onEachFeature: onEachFeature,
+//	});
+//}
 
 geojson = L.geoJson(geoData[2], {//areas
 	style: getStyleHash,
@@ -373,13 +377,13 @@ info.update = function (props) {
 	if (displayYear != null && displayIncentiveName != null) {
 		if (props != null) {
 			var areaRegionName = props.NAME;
-			var nstjCode = props.NSTJ_CODE;
+			var uri = props.URI;
 														//			if (visibleLayer === 'Municipalities') {
 														//				nstjCode = props.MAT_BR_OPS;
 														//				areaRegionName = 'Municipalities: ' + props.OPSTINA;
 														//			}
 			
-			var valueFromHash = hashCodeToObservationValues[nstjCode];
+			var valueFromHash = hashCodeToObservationValues[uri];
 			var value = 'No data';
 			if (valueFromHash != null) {
 				value = addThousandsSeparators(valueFromHash);
@@ -390,12 +394,12 @@ info.update = function (props) {
 				'<h4>Year: <a href="javascript:void(0)" onclick="runSparqlYear();">' + displayYear + '</a> ' +
 				'Incentive aim: <a href="javascript:void(0)" onclick="runSparqlIncentive();">' + displayIncentiveName + '</a></h4>' +
 		        '<b>' + areaRegionName + '</b><br />' + 
-		        'NSTJ code: ' + nstjCode + '<br />' + 
+		        'URI: ' + uri + '<br />' + 
 		        'Value: ' + value;
 		} else {
 			var valueRS = 'No data';
-			if (hashCodeToObservationValues['RS'] != null) {
-				valueRS = addThousandsSeparators(hashCodeToObservationValues['RS']);
+			if (hashCodeToObservationValues['http://elpo.stat.gov.rs/lod2/RS-DIC/geo/RS'] != null) {
+				valueRS = addThousandsSeparators(hashCodeToObservationValues['http://elpo.stat.gov.rs/lod2/RS-DIC/geo/RS']);
 			}
 			
 			this._div.innerHTML = '<h4>Regional development incentives</h4>' +

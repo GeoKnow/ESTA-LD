@@ -26,12 +26,10 @@ import java.net.URISyntaxException;
 import java.text.ParseException;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.openrdf.model.URI;
 import org.openrdf.model.Value;
 import org.openrdf.query.BindingSet;
 import org.openrdf.query.GraphQuery;
@@ -43,7 +41,6 @@ import org.openrdf.query.TupleQueryResult;
 import org.openrdf.repository.Repository;
 import org.openrdf.repository.RepositoryConnection;
 import org.openrdf.repository.RepositoryException;
-import org.openrdf.repository.sparql.SPARQLRepository;
 import rs.pupin.jpo.datacube.Attribute;
 import rs.pupin.jpo.datacube.CodeList;
 import rs.pupin.jpo.datacube.ComponentProperty;
@@ -55,7 +52,6 @@ import rs.pupin.jpo.datacube.Structure;
 import rs.pupin.jpo.datacube.sparql_impl.SparqlDCGraph;
 import rs.pupin.jpo.datacube.sparql_impl.SparqlDCRepository;
 import rs.pupin.jpo.datacube.sparql_impl.SparqlDataSet;
-import rs.pupin.jpo.datacube.sparql_impl.SparqlStructure;
 import rs.pupin.jpo.dsdrepo.CodeDatatypeTreeElement;
 import rs.pupin.jpo.dsdrepo.DSDRepo;
 import rs.pupin.jpo.dsdrepo.DSDRepoUtils;
@@ -889,6 +885,15 @@ public class InspectComponent extends CustomComponent {
                         dataTree.addItem(elem);
                         dataTree.setParent(elem, datatypes);
                         dataTree.setChildrenAllowed(elem, false);
+                        
+                        CountingTreeHeader values = createCountingTreeHeader(dataTree, "Values");
+                        dataTree.setParent(values, id);
+                        for (String val: prop.getValues()){
+                            CodeDatatypeTreeElement elem2 = new CodeDatatypeTreeElement(val, false, 0);
+                            dataTree.addItem(elem2);
+                            dataTree.setParent(elem2, values);
+                            dataTree.setChildrenAllowed(elem2, false);
+                        }
                     }
                 }
             }

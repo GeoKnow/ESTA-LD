@@ -30,9 +30,10 @@ var CODE_LENGTH_REGION = 4;//only region data (RS##)
 
 var hashIncentiveNames = new Object();
 
-var rsgeoSelected = 'RS';
+var rsgeoSelected = 'http://elpo.stat.gov.rs/lod2/RS-DIC/geo/RS';
 
 var geoLevels = [];//geo levels of codes (populated by broader-narrower queries
+var geoPolygons = [];
 
 function domReadyVuk() {
 	
@@ -189,7 +190,7 @@ function domReadyVuk() {
 };
 
 function geoLevelChanged() {
-	rsgeoSelected = 'RS';
+	rsgeoSelected = 'http://elpo.stat.gov.rs/lod2/RS-DIC/geo/RS';
 	
 	$('input:radio[name=independentParameter][value=Geo]').prop('checked', true);
 	
@@ -214,7 +215,7 @@ var geoLayerValues = [];
 
 var hashCodeToObservationValues = new Object();
 var hashCodeToNames = new Object();
-hashCodeToNames['RS'] = 'Serbia';
+hashCodeToNames['http://elpo.stat.gov.rs/lod2/RS-DIC/geo/RS'] = 'Serbia';
 var minObservationValue = 0;
 var maxObservationValue = 0;
 var maxObservationValueAggregated = 0;
@@ -231,14 +232,14 @@ function loadHashCodeToNames(featureProperties) {
 
 	if (featureProperties.NAME != undefined) {
 	
-		hashCodeToNames[featureProperties.NSTJ_CODE] = featureProperties.NAME;
+		hashCodeToNames[featureProperties.URI] = featureProperties.NAME;
 	}
 	hashCodeToNames[featureProperties.MAT_BR_OPS] = featureProperties.OPSTINA;
 }
 
 //Does observation value for given code exist
-function isObservationValueDefined(code) {
-	return hashCodeToObservationValues[code] != null;
+function isObservationValueDefined(geoURI) {
+	return hashCodeToObservationValues[geoURI] != null;
 }
 
 //prefixes for sparql queries
@@ -259,8 +260,8 @@ function loadGeoNamesAndValues(updateStyle) {
             var selectedGeoLevelCodes = geoLevels[visibleGeoLevel];
             
             for (var i = 0; i < selectedGeoLevelCodes.length; i++) {
-                    var code = selectedGeoLevelCodes[i];
-                    var value = hashCodeToObservationValues[code];
+                    var uri = selectedGeoLevelCodes[i];
+                    var value = hashCodeToObservationValues[uri];
 
                     var intValue = parseInt(value);
                     if (!isNaN(intValue)) {
@@ -271,7 +272,7 @@ function loadGeoNamesAndValues(updateStyle) {
                                 minObservationValue = intValue;
                         }
 
-                        geoLayerNames.push(hashCodeToNames[code]);//find area names
+                        geoLayerNames.push(hashCodeToNames[uri]);//find area names
                         geoLayerValues.push(intValue);
                     }
             }
@@ -359,7 +360,7 @@ function findIndex(array, value) {
 function refreshMap(updateStyle) {
 	var data = [];
 
-	data = geoData[visibleGeoLevel];
+	data = geoPolygons[visibleGeoLevel];
         
 	loadGeoNamesAndValues();
 	
@@ -483,7 +484,7 @@ function runSparqlYearIncentive() {
 function runSparqlRsgeoIncentive() {
 	hideCharts();
 	
-	var rsgeoString = CODE_PREFIX + rsgeoSelected;
+	var rsgeoString = rsgeoSelected;
 	var incentiveUrl = INCENTIVE_PREFIX + $('#incentive').val() + '>';//incentive url used in the sparql query
 	
 	$('body').css('cursor', 'wait');
@@ -497,7 +498,7 @@ function runSparqlRsgeoYear() {
 	hideCharts();
 	
 	if (rsgeoSelected == null) {
-		rsgeoSelected = 'RS';
+		rsgeoSelected = 'http://elpo.stat.gov.rs/lod2/RS-DIC/geo/RS';
 	}
 	
 	var rsgeoString = CODE_PREFIX + rsgeoSelected;
@@ -524,7 +525,7 @@ function runSparqlRsgeo(rsgeo) {
 // run sparql query with rsgeo parameter (execute cbfuncGeoSelectedVuk)
 function runSparqlGeoSelectedVuk(rsgeo) {
     // add JS code to put the value in the ComboBox
-    var value = CODE_PREFIX + rsgeo;
+    var value = rsgeo;
     var isInTheList = false;
     var valueWithType = value;
     for (var i=0; i<javaGeoPossibleValues.length; i++){
@@ -598,7 +599,7 @@ function getSelectedRsgeoData(e) {
 	var layer = e.target;
 	
 	//run appropriate sparql query
-	rsgeoSelected = layer.feature.properties.NSTJ_CODE; // save rsgeo selection
+	rsgeoSelected = layer.feature.properties.URI; // save rsgeo selection
 	
 //	runSparqlRsgeo(rsgeoSelected);
         runSparqlGeoSelectedVuk(rsgeoSelected);
@@ -609,8 +610,14 @@ function populateGeoLevelsLists() {
 	while(geoLevels.length > 0) {
             geoLevels.pop();
         }
+        while(geoPolygons.length > 0) {
+            geoPolygons.pop();
+        }
 	//Find top geo level
 	execSparqlTopGeoBroaderNarrower(cbfuncGetGeoCodes);
+        
+        geojson.clearLayers();
+        geojson.addData(geoPolygons[visibleGeoLevel]);
 	
 //	var i = 0;
 //	while (geoLevels.length > i) {
@@ -723,7 +730,7 @@ function estamainInitVuk(){
             var rsgeoUri  = val.rsgeo.value;
             var code = rsgeoUri.substring(CODE_PREFIX.length, rsgeoUri.length);
             var value = val.observation.value;
-            hashCodeToObservationValues[code] = value;//fill the hash with the keys and values
+            hashCodeToObservationValues[rsgeoUri] = value;//fill the hash with the keys and values
         });
         loadGeoNamesAndValues(); // or not
         $('body').css('cursor', 'default');
@@ -773,7 +780,7 @@ cbfuncYearIncentive = function(data) {
 //										minAreaObservationValue = intValue;
 //									}
 //									if (hashCodeToObservationValues[code] == null) {
-//										areaNames.push(hashCodeToNames[code]);//find area names
+//										areaNames.push(hashCodeToNames[rsgeoUri]);//find area names
 //										areaValues.push(intValue);
 //									}
 //									
@@ -785,7 +792,7 @@ cbfuncYearIncentive = function(data) {
 //										minRegionObservationValue = intValue;
 //									}
 //									if (hashCodeToObservationValues[code] == null) {
-//										regionNames.push(hashCodeToNames[code]);//find region names
+//										regionNames.push(hashCodeToNames[rsgeoUri]);//find region names
 //										regionValues.push(intValue);
 //									}
 //								} else if (code.length === CODE_LENGTH_COUNTRY) {
@@ -796,12 +803,12 @@ cbfuncYearIncentive = function(data) {
 //										minCountryObservationValue = intValue;
 //									}
 //									if (hashCodeToObservationValues[code] == null) {
-//										countryNames.push(hashCodeToNames[code]);//find country names
+//										countryNames.push(hashCodeToNames[rsgeoUri]);//find country names
 //										countryValues.push(intValue);
 //									}
 //								}
 		
-		hashCodeToObservationValues[code] = value;//fill the hash with the keys and values
+		hashCodeToObservationValues[rsgeoUri] = value;//fill the hash with the keys and values
 		
 	});
 
@@ -1198,7 +1205,6 @@ cbfuncIncentive = function(data) {
 		var value = val.observation.value;
 		
 		var year = timeUri.substring(YEAR_PREFIX.length + 1, timeUri.length);
-		var rsgeoCode = rsgeoUri.substring(CODE_PREFIX.length, rsgeoUri.length);
 
 //													if (rsgeoCode.length === requiredCodeLength) {
 //														var indexI = findIndex(YEARS, year);
@@ -1210,7 +1216,7 @@ cbfuncIncentive = function(data) {
 		
 		if ($.inArray(rsgeoCode, selectedGeoLevelCodes) ) {
 			var indexI = findIndex(YEARS, year);
-			var name = hashCodeToNames[rsgeoCode];
+			var name = hashCodeToNames[rsgeoUri];
 			var indexJ = findIndex(arrayNames, name);
 			arrayYearRsgeo[indexI][indexJ] = value;
 		}
@@ -1254,7 +1260,6 @@ cbfuncYear = function(data) {
 		var value = val.observation.value;
 		
 		var incentiveCode = incentiveUri.substring(INCENTIVE_PREFIX.length - 1, incentiveUri.length);// -1, since prefix starts with '<'
-		var rsgeoCode = rsgeoUri.substring(CODE_PREFIX.length, rsgeoUri.length);
 
 //													if (rsgeoCode.length === requiredCodeLength) {
 //														var indexI = findIndex(INCENTIVE_NAMES[0], incentiveCode);
@@ -1265,7 +1270,7 @@ cbfuncYear = function(data) {
 		
 		if ($.inArray(rsgeoCode, selectedGeoLevelCodes) ) {
 			var indexI = findIndex(INCENTIVE_NAMES[0], incentiveCode);
-			var name = hashCodeToNames[rsgeoCode];
+			var name = hashCodeToNames[rsgeoUri];
 			var indexJ = findIndex(arrayNames, name);
 			arrayIncentiveRsgeo[indexI][indexJ] = value;
 		}
@@ -1281,16 +1286,31 @@ cbfuncYear = function(data) {
     
     cbfuncGetGeoCodes = function(data) {
 	var geoLevelArray = [];
+        var geoDataArray = [];
 	
 	$(data.results.bindings).each(function(key, val){
 		var rsgeoUri  = val.rsgeo.value;
-		var code = rsgeoUri.substring(CODE_PREFIX.length, rsgeoUri.length);
-		geoLevelArray.push(code);
-
+//		var code = rsgeoUri.substring(CODE_PREFIX.length, rsgeoUri.length);
+		geoLevelArray.push(rsgeoUri);
+                if (val.geom){    
+                    var geom = val.geom.value;
+                    geoDataArray.push({
+                        properties: {
+                            URI: rsgeoUri
+                        }, 
+                        type: 'Feature', 
+                        geometry: parse(geom)
+                    });
+                }
 	});
 
 	if (geoLevelArray.length > 0) {
 		geoLevels.push(geoLevelArray);
+                geoPolygons.push({
+                    type: 'FeatureCollection', 
+                    features: geoDataArray
+                });
+                console.log(geoDataArray);
                 execSparqlBroaderNarrowerForArray(CODE_PREFIX, geoLevelArray, cbfuncGetGeoCodes);
 	} else {//end - redraw
             geoLevelChanged();
