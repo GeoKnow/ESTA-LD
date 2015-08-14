@@ -194,7 +194,7 @@ function execSparqlForGeoMapVuk(callbackFunction){
     var timeDimensionUri = '';
     var timeDimensionValue = '';
     for (i=0; i<javaSelectedDimensions.length; i++){
-        if (javaDimensionValues[i].substring(1, javaDimensionValues[i].lastIndexOf('/') + 1) === YEAR_PREFIX) {
+        if (javaHasTimeDimension && i === 0) {
             // if it is a time dimension make it a free variable
             sparqlQuery += '?y <' + javaSelectedDimensions[i] + '> ?rstime . ';
             hasTimeDimension = true;

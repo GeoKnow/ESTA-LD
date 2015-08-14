@@ -44,7 +44,11 @@ public class SparqlDimension extends SparqlComponentProperty implements Dimensio
         "http://www.w3.org/2001/XMLSchema#gYearMonth", 
         "http://www.w3.org/2002/07/owl#time"
     };
-    private static final String[] GEO_RANGES = new String [] {
+    private static final String[] TIME_URIS = new String[] {
+        "http://purl.org/dc/terms/date", 
+        "http://elpo.stat.gov.rs/lod2/RS-DIC/rs/time"
+    };
+    private static final String[] GEO_URIS = new String [] {
         "http://elpo.stat.gov.rs/lod2/RS-DIC/rs/geo", 
         "http://ontologycentral.com/2009/01/eurostat/ns#geo"
     } ;
@@ -80,13 +84,17 @@ public class SparqlDimension extends SparqlComponentProperty implements Dimensio
             if (r.equals(getRange())) 
                 return indTimeDimension = Boolean.TRUE;
         }
+        for (String r: TIME_URIS){
+            if (r.equals(uri)) 
+                return indTimeDimension = Boolean.TRUE;
+        }
         return indTimeDimension = Boolean.FALSE;
     }
 
     public boolean isGeoDimension() {
         if (indGeoDimension != null) return indGeoDimension;
         
-        for (String r: GEO_RANGES){
+        for (String r: GEO_URIS){
             if (r.equals(uri)) 
                 return indGeoDimension = Boolean.TRUE;
         }

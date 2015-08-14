@@ -9,7 +9,7 @@ var COLORS = ['rgb(247,251,255)', 'rgb(222,235,247)', 'rgb(198,219,239)', 'rgb(1
             'rgb(66,146,198)', 'rgb(33,113,181)', 'rgb(8,81,156)', 'rgb(8,48,107)'];
 
 //recalculate color grade values based on the min and max observation values
-function recalculateColorGradeValues(minObservationValue, maxObservationValue) {
+function recalculateColorGradeValuesOld(minObservationValue, maxObservationValue) {
 	var range = maxObservationValue - minObservationValue;
 	var step = range / colorGradeValues.length;
         var divisor = 100000;
@@ -32,6 +32,79 @@ function recalculateColorGradeValues(minObservationValue, maxObservationValue) {
 	for (var i = 0; i < colorGradeValues.length; i++) {
 		colorGradeValues[i] = firstRangeValue + i * roundStep;
 	}
+}
+
+function recalculateColorGradeValues(minObservationValue, maxObservationValue) {
+	var range = maxObservationValue - minObservationValue;
+	var step = range / colorGradeValues.length;
+        var divisor = 100000;
+	var roundStep = Math.floor(step / divisor) * divisor;
+	while (roundStep === 0 && divisor > 1) {
+                divisor /= 10;
+		roundStep = Math.floor(step / divisor) * divisor;
+	}
+        if (roundStep === 0) {
+            roundStep = 1;
+        } else {
+            var subDivisor = divisor / 10;
+            var subStep = Math.floor(step-roundStep);
+            roundStep += Math.floor(subStep / subDivisor) * subDivisor;
+        }
+	
+	//find the largest multiple of roundStep which is lower than minObservationValue
+	var firstRangeValue = 0;
+	while (firstRangeValue + roundStep < minObservationValue) {
+		firstRangeValue += roundStep;
+	}
+	
+	//create new colorGradeValues elements
+	for (var i = 0; i < colorGradeValues.length; i++) {
+		colorGradeValues[i] = firstRangeValue + i * roundStep;
+	}
+}
+
+function recalculateColorGradeValuesQuarters(minObservationValue, maxObservationValue) {
+    var range = maxObservationValue - minObservationValue;
+    var step = range / colorGradeValues.length;
+    var divisor = 100000;
+    var roundStep = Math.floor(step / divisor) * divisor;
+    var i=0;
+    while (roundStep === 0 && divisor > 1) {
+        i++;
+        if (i % 3 === 0) divisor /= 2.5;
+        else divisor /= 2;
+        roundStep = Math.round(step / divisor) * divisor;
+    }
+    if (roundStep === 0) {
+        roundStep = 1;
+    }
+	
+    //find the largest multiple of roundStep which is lower than minObservationValue
+    var firstRangeValue = 0;
+    while (firstRangeValue + roundStep < minObservationValue) {
+        firstRangeValue += roundStep;
+    }
+
+    //create new colorGradeValues elements
+    for (var i = 0; i < colorGradeValues.length; i++) {
+        colorGradeValues[i] = firstRangeValue + i * roundStep;
+    }
+}
+
+function recalculateColorGradeValuesSimple(minObservationValue, maxObservationValue) {
+    var range = maxObservationValue - minObservationValue;
+    var step = Math.floor(range / colorGradeValues.length);
+    if (step === 0 ) step = 1;
+    //find the largest multiple of roundStep which is lower than minObservationValue
+    var firstRangeValue = 0;
+    while (firstRangeValue + step < minObservationValue) {
+        firstRangeValue += step;
+    }
+
+    //create new colorGradeValues elements
+    for (var i = 0; i < colorGradeValues.length; i++) {
+        colorGradeValues[i] = firstRangeValue + i * step;
+    }
 }
 
 //discover the range that the value belongs to (see colorGradeValues)

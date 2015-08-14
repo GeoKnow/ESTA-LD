@@ -7,7 +7,6 @@
 package rs.pupin.jpo.esta_ld;
 
 import com.vaadin.data.Property;
-import com.vaadin.terminal.ExternalResource;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.ComboBox;
@@ -33,7 +32,6 @@ import rs.pupin.jpo.datacube.DataCubeGraph;
 import rs.pupin.jpo.datacube.DataCubeRepository;
 import rs.pupin.jpo.datacube.DataSet;
 import rs.pupin.jpo.datacube.Dimension;
-import rs.pupin.jpo.datacube.sparql_impl.DummyDCRepository;
 import rs.pupin.jpo.datacube.sparql_impl.SparqlDCRepository;
 
 /**
@@ -60,7 +58,7 @@ public class EstaLdComponent extends CustomComponent {
     private static final String LEVEL_LABEL_CONTENT = 
             "Geo granularity level "
             + "<input id=\"geominus\" type=\"button\" style=\" width:25px; height:25px;\" value=\"-\"></input>"
-            + "<input id=\"geoLevelLabel\" type=\"text\" readonly=\"\" value=\"Level 2\" style=\"width: 140px; height: 25 px; text-align: center;\"></input>"
+            + "<input id=\"geoLevelLabel\" type=\"text\" readonly=\"\" value=\"Level 0\" style=\"width: 140px; height: 25 px; text-align: center;\"></input>"
             + "<input id=\"geoplus\" type=\"button\" style=\" width:25px; height:25px;\" value=\"+\"></input>";
     private static final String GEO_PART_WIDTH = "600px";
     private static final String CONTENT_ELEM_HEIGHT = "25px";
@@ -86,6 +84,7 @@ public class EstaLdComponent extends CustomComponent {
         }
     }
     private Button btnAggregColor;
+    private Dimension timeDimension;
     
     public static class ValueWrapper {
         private final Value value;
@@ -126,7 +125,7 @@ public class EstaLdComponent extends CustomComponent {
 //            dcRepo = new DummyDCRepository();
 //            geoDimension = null;
 //            return;
-            endpoint = "http://localhost:8890/sparql";
+            endpoint = "http://jpo.imp.bg.ac.rs/sparql";
         }
         repository = new SPARQLRepository(endpoint);
         try {
@@ -276,8 +275,8 @@ public class EstaLdComponent extends CustomComponent {
         btnInspect = new Button("Inspect");
         btnInspect.addStyleName("btn-switch-view");
         btnInspect.addStyleName("dim-name");
-        datasetLayout.addComponent(btnInspect);
-        datasetLayout.setExpandRatio(btnInspect, 0.0f);
+//        datasetLayout.addComponent(btnInspect);
+//        datasetLayout.setExpandRatio(btnInspect, 0.0f);
         btnVisualize.addListener(new Button.ClickListener() {
             public void buttonClick(Button.ClickEvent event) {
                 btnVisualize.addStyleName("selected");
@@ -391,7 +390,7 @@ public class EstaLdComponent extends CustomComponent {
         DataCubeGraph demoGraph = null;
         for (DataCubeGraph graph: dcGraphs){
             selectGraph.addItem(graph);
-            if (endpoint.equals("http://jpo2.imp.bg.ac.rs/sparql") && graph.getUri().equals("http://demo/reg-dev/"))
+            if (endpoint.equals("http://jpo.imp.bg.ac.rs/sparql") && graph.getUri().equals("http://demo/reg-dev-polygons/"))
                 demoGraph = graph;
         }
         for (DataSet ds: dcDataSets)
@@ -495,6 +494,7 @@ public class EstaLdComponent extends CustomComponent {
         // clean everything just in case
         dimLayout.removeAllComponents();
         geoDimension = null;
+        timeDimension = null;
         btnGeo = null;
         boxGeo = null;
         dimNames = null;
@@ -516,10 +516,16 @@ public class EstaLdComponent extends CustomComponent {
         
         final DataSet ds = (DataSet) selectDataSet.getValue();
         LinkedList<Dimension> dimsForShow = new LinkedList<Dimension>();
-        for (Dimension dim: ds.getStructure().getDimensions())
-            if (!dim.isGeoDimension())
+        for (Dimension dim: ds.getStructure().getDimensions()){
+            if (dim.isGeoDimension())
+                geoDimension = dim;
+            else if (dim.isTimeDimension()) {
+                timeDimension = dim;
+                dimsForShow.addFirst(dim);
+            }
+            else 
                 dimsForShow.add(dim);
-            else geoDimension = dim;
+        }
         dimNames = new Button[dimsForShow.size()];
         dimValues = new ComboBox[dimsForShow.size()];
         int i=0;
@@ -585,6 +591,12 @@ public class EstaLdComponent extends CustomComponent {
             rLayout.setComponentAlignment(boxValue, Alignment.BOTTOM_LEFT);
             i++;
         }
+        
+        if (timeDimension != null)
+            getWindow().executeJavaScript("javaSetHasTimeDimension(true)");
+        else
+            getWindow().executeJavaScript("javaSetHasTimeDimension(false)");
+        
         if (geoDimension != null){
             btnGeo = new Button(geoDimension.toString());
             btnGeo.setSizeUndefined();

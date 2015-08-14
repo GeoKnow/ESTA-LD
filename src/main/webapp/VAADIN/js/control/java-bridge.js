@@ -12,6 +12,8 @@ var javaGeoPossibleValues = [];
 var javaGeoValue = '';
 var javaGeoFree = false;
 
+var javaHasTimeDimension = false;
+
 var vaadinRedrawsMap = false;
 
 var javaAggregatedColoring = false;
@@ -57,6 +59,10 @@ function javaSetGeoValue(val){
     execSparqlDimensionValueChangedVuk(cbfuncOneFreeVuk,cbfuncTwoFreeVuk);
 }
 
+function javaSetHasTimeDimension(hasTimeDim){
+    javaHasTimeDimension = hasTimeDim;
+}
+
 function javaSetAll(dims,vals,free){
     javaSelectedDimensions = dims;
     javaDimensionValues = vals;
@@ -70,6 +76,7 @@ function javaSetPossibleValues(vals){
 }
 
 function javaSetGraphAndDataSet(graph, ds, endpoint){
+    setVisibleGeoLevel(0);
     javaGraph = graph;
     javaDataSet = ds;
 //    sessionStorage.setItem('endpoint','http://147.91.50.167/sparql');
@@ -78,7 +85,6 @@ function javaSetGraphAndDataSet(graph, ds, endpoint){
 //    sessionStorage.setItem('endpoint','http://localhost:8890/sparql');
 //    sessionStorage.setItem('endpoint','http://jpo.imp.bg.ac.rs/sparql');
     sessionStorage.setItem('graph', javaGraph);
-//    populateGeoLevelsLists();
 }
 
 function javaPrintAll(){
@@ -125,6 +131,11 @@ function javaUnselectAggregColoring(){
         geoForMapAllTimesData.cbFunction(geoForMapAllTimesData.newData, true);
 }
 
+function setVisibleGeoLevel(lvl) {
+    visibleGeoLevel = lvl;
+    $('#geoLevelLabel').val('Level ' + visibleGeoLevel);
+}
+
 function javaInsertPolygons(pairs){
     // add property ogc:hasGeometry and ogc:hasDefaultGeometry to the codes
     // these geometry instances will then have ogc:asWKT properties
@@ -138,8 +149,8 @@ INSERT INTO GRAPH <" + javaGraph + "> {";
     // TODO: this branch could be removed as it serves only our code list for Serbian regions
     if (pairs[0].uri.substr(0,40) ==='http://elpo.stat.gov.rs/lod2/RS-DIC/geo/')
         $(pairs).each(function(index, pair){
-            console.log('Entered into RS branch, exiting...');
-            return;
+//            console.log('Entered into RS branch, exiting...');
+//            return;
             var iteration = 0;
             $(geoData).each(function(index, geoLevel){
                 $(geoLevel.features).each(function(index, feature){

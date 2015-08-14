@@ -11,7 +11,7 @@ var geoForMapAllTimesData = {
 
 var firstRun = true;
 											//var visibleLayer = 'Areas';//Area - Region - Municipality selection
-var visibleGeoLevel = 2;// visible geo layer level
+var visibleGeoLevel = 0;// visible geo layer level
 
 //selected analysis type
 var analysisType;
@@ -659,11 +659,16 @@ function proxyForGeoMapAllTimes(queryUrlEncoded, timeDimensionUri, timeDimension
             };
             $(data.results.bindings).each(function (k, item) {
                 if (item.rstime.value === timeDimensionValueCleaned) dataToPass.results.bindings.push(item);
+                // this will work for both xsd and our URIs
+                // TODO: remove support for our URIs
                 var lastPart = item.rstime.value.substring(item.rstime.value.lastIndexOf('/')+1, 
                     item.rstime.value.length);
-                var year = parseInt(lastPart.substring(1, 5));
+                var dateStartPosition = 0;
+                if (lastPart.substring(0,1) === 'Y') dateStartPosition = 1;
+                
+                var year = parseInt(lastPart.substring(dateStartPosition, dateStartPosition+4));
                 var month = 0;
-                if (lastPart.length > 5) month = parseInt(lastPart.substring(6));
+                if (lastPart.length > dateStartPosition+4) month = parseInt(lastPart.substring(dateStartPosition+5));
                 item.parsedTime = {
                     year: year,
                     month: month,

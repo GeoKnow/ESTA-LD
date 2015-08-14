@@ -37,7 +37,7 @@ public class MyVaadinApplication extends Application
             public void handleParameters(Map<String, String[]> parameters) {
                 if (!first) return;
                 first = false;
-                String[] titleParam = parameters.get("title");
+                String[] titleParam = parameters.get("endpoint");
                 String endpointURL = (titleParam == null)?null:titleParam[0];
                 window.showNotification(endpointURL); // TODO remove when finished with 
                 System.out.println(endpointURL);
