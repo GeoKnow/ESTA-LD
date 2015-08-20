@@ -281,6 +281,7 @@ public class InspectComponent extends CustomComponent {
     }
     
     private String generatePropertiesTable(String uri, String graph){
+        if (uri == null || graph == null) return "<table style=\"border-spacing:7px\"></table>";
         StringBuilder builder = new StringBuilder();
         try {
             RepositoryConnection conn = repository.getConnection();

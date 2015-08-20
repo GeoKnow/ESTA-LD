@@ -189,7 +189,7 @@ function execSparqlForGeoMapVuk(callbackFunction){
                                 'from <' + javaGraph + '> ' +
                                 'where { ?y qb:dataSet <' + javaDataSet + '> . ' + 
                                 '?y <' + javaGeoDimension + '> ?rsgeo . ' + 
-                                '?y sdmx-measure:obsValue ?observation . ';
+                                '?y <' + getMeasureUri() + '> ?observation . ';
     var hasTimeDimension = false;
     var timeDimensionUri = '';
     var timeDimensionValue = '';
@@ -243,7 +243,7 @@ function execSparqlRegionalDevelopment(querySubstring, callbackFunction) {
 				'?y rs:time ?time. ' +
 				'?y apr:incentiveAim ?incentive. ' +
 				querySubstring +
-				'?y sdmx-measure:obsValue ?observation. }';
+				'?y <' + getMeasureUri() + '> ?observation. }';
 	
 	var queryUrlEncoded = endpoint + '?query=' + $.URLEncode(sparqlQuery.replace('gYear','date'))+'&format=json';
 
@@ -268,7 +268,7 @@ function execSparqlRegionalDevelopment(querySubstring, callbackFunction) {
 //	    .where('?y','apr:incentiveAim', '?incentive')
 //	    .where('?y','rs:time', yearUrlString )
 //	    .where('?y','apr:incentiveAim', incentiveUrlString )
-//	    .where('?y','sdmx-measure:obsValue', '?observation')
+//	    .where('?y','<' + getMeasureUri() + '>', '?observation')
 //	    .distinct()
 //	  .execute(callbackFunction);
 	
@@ -307,7 +307,7 @@ function execSparqlGeoSelectedVuk(rsgeoString, callbackFunction) {
                                 'from <' + javaGraph + '> ' +
                                 'where { ?y qb:dataSet <' + javaDataSet + '> . ' + 
                                 '?y <' + javaGeoDimension + '> <' + rsgeoString + '> . ' + 
-                                '?y sdmx-measure:obsValue ?observation . ' + 
+                                '?y <' + getMeasureUri() + '> ?observation . ' + 
                                 '?y <' + javaSelectedDimensions[0] + '> ?dim1 . ' +
                                 '?y <' + javaSelectedDimensions[1] + '> ?dim2 . }' +
                                 'order by ?dim1 ?dim2';
@@ -334,7 +334,7 @@ function execSparqlDimensionValueChangedVuk(cbfuncOneFreeVuk,cbfuncTwoFreeVuk){
 				'select distinct ?observation ?dim1 ?dim2 ' + 
                                 'from <' + javaGraph + '> ' +
                                 'where { ?y qb:dataSet <' + javaDataSet + '> . ' + 
-                                '?y sdmx-measure:obsValue ?observation . ';
+                                '?y <' + getMeasureUri() + '> ?observation . ';
     if (javaGeoValue != null && javaGeoValue != ''){
         if (javaGeoFree){
             if (javaFreeDimensions.length == 0)

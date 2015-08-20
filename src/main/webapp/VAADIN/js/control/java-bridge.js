@@ -6,6 +6,8 @@ var javaPossibleValues = [[]];
 var javaFreeDimensions = [0];
 var javaGraph = '';
 var javaDataSet = '';
+var javaMeasures = [];
+var javaSelectedMeasure = null;
 
 var javaGeoDimension = '';
 var javaGeoPossibleValues = [];
@@ -33,6 +35,22 @@ function javaSetFreeDimensions(dims){
 
 function javaSetGeoFree(isFree){
     javaGeoFree = isFree;
+}
+
+function javaSetMeasures(measures){
+    javaMeasures = measures;
+    if (!javaMeasures || javaMeasures.length < 1) return javaSelectedMeasure = 'sdmx-measure:obsValue';
+//    else if (javaMeasures.length >= 3) return javaSelectedMeasure = javaMeasures[2];
+    else javaSelectedMeasure = javaMeasures[0];
+}
+
+function javaSelectMeasure(measure){
+    javaSelectedMeasure = measure;
+}
+
+function getMeasureUri(){
+    if (!javaSelectedMeasure || javaSelectedMeasure === '') return 'sdmx-measure:obsValue';
+    return javaSelectedMeasure;
 }
 
 function javaSetDimsVals(dims,vals){

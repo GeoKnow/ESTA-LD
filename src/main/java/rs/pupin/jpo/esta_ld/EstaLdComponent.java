@@ -32,6 +32,7 @@ import rs.pupin.jpo.datacube.DataCubeGraph;
 import rs.pupin.jpo.datacube.DataCubeRepository;
 import rs.pupin.jpo.datacube.DataSet;
 import rs.pupin.jpo.datacube.Dimension;
+import rs.pupin.jpo.datacube.Measure;
 import rs.pupin.jpo.datacube.sparql_impl.SparqlDCRepository;
 
 /**
@@ -85,6 +86,9 @@ public class EstaLdComponent extends CustomComponent {
     }
     private Button btnAggregColor;
     private Dimension timeDimension;
+    private Collection<Measure> measures;
+    private Button measName;
+    private ComboBox measValues;
     
     public static class ValueWrapper {
         private final Value value;
@@ -125,7 +129,7 @@ public class EstaLdComponent extends CustomComponent {
 //            dcRepo = new DummyDCRepository();
 //            geoDimension = null;
 //            return;
-            endpoint = "http://jpo.imp.bg.ac.rs/sparql";
+            endpoint = "http://localhost:8890/sparql";
         }
         repository = new SPARQLRepository(endpoint);
         try {
@@ -164,6 +168,10 @@ public class EstaLdComponent extends CustomComponent {
                 if (dimNames == null || dimNames.length == 0){
                     getWindow().executeJavaScript("javaSetAll([],[],[]);");
                     return;
+                }
+                if (measures != null && measures.size() > 1) {
+                    Measure m = (Measure)measValues.getValue();
+                    getWindow().executeJavaScript("javaSelectMeasure('" + m.getUri() + "')");
                 }
                 StringBuilder builderDims = new StringBuilder();
                 StringBuilder builderVals = new StringBuilder();
@@ -275,8 +283,8 @@ public class EstaLdComponent extends CustomComponent {
         btnInspect = new Button("Inspect");
         btnInspect.addStyleName("btn-switch-view");
         btnInspect.addStyleName("dim-name");
-//        datasetLayout.addComponent(btnInspect);
-//        datasetLayout.setExpandRatio(btnInspect, 0.0f);
+        datasetLayout.addComponent(btnInspect);
+        datasetLayout.setExpandRatio(btnInspect, 0.0f);
         btnVisualize.addListener(new Button.ClickListener() {
             public void buttonClick(Button.ClickEvent event) {
                 btnVisualize.addStyleName("selected");
@@ -390,7 +398,7 @@ public class EstaLdComponent extends CustomComponent {
         DataCubeGraph demoGraph = null;
         for (DataCubeGraph graph: dcGraphs){
             selectGraph.addItem(graph);
-            if (endpoint.equals("http://jpo.imp.bg.ac.rs/sparql") && graph.getUri().equals("http://demo/reg-dev-polygons/"))
+            if (endpoint.equals("http://localhost:8890/sparql") && graph.getUri().equals("http://demo/reg-dev-polygons/"))
                 demoGraph = graph;
         }
         for (DataSet ds: dcDataSets)
@@ -466,6 +474,7 @@ public class EstaLdComponent extends CustomComponent {
         contentLayout.addComponent(rightLayout);
         contentLayout.setExpandRatio(rightLayout, 2.0f);
         dimLayout = new HorizontalLayout();
+        dimLayout.setDebugId("dim-layout");
         dimLayout.setSizeFull();
         dimLayout.setWidth("100%");
         dimLayout.setSpacing(true);
@@ -495,6 +504,7 @@ public class EstaLdComponent extends CustomComponent {
         dimLayout.removeAllComponents();
         geoDimension = null;
         timeDimension = null;
+        measures = null;
         btnGeo = null;
         boxGeo = null;
         dimNames = null;
@@ -515,6 +525,40 @@ public class EstaLdComponent extends CustomComponent {
         dimLayout.setExpandRatio(rLayout, 2.0f);
         
         final DataSet ds = (DataSet) selectDataSet.getValue();
+        measures = ds.getStructure().getMeasures();
+        StringBuilder builderMeasures = new StringBuilder();
+        for (Measure m: measures){
+            builderMeasures.append(", '");
+            builderMeasures.append(m.getUri());
+            builderMeasures.append("'");
+        }
+        builderMeasures.replace(0, 2, "javaSetMeasures([");
+        builderMeasures.append("])");
+        getWindow().executeJavaScript(builderMeasures.toString());
+        measName = new Button("Measure");
+        measName.setSizeUndefined();
+        measName.setWidth("100%");
+        measName.setHeight(CONTENT_ELEM_HEIGHT);
+        measName.addStyleName("dim-name");
+        measValues = new ComboBox(null, measures);
+        measValues.setImmediate(true);
+        measValues.setSizeUndefined();
+        measValues.setWidth("100%");
+        measValues.setHeight(CONTENT_ELEM_HEIGHT);
+        measValues.addStyleName("dim-value");
+        measValues.setNullSelectionAllowed(false);
+        measValues.select(measures.iterator().next());
+        measValues.addListener(dimListener);
+//        measValues.addListener(new Property.ValueChangeListener() {
+//            public void valueChange(Property.ValueChangeEvent event) {
+//                Measure m = (Measure)event.getProperty().getValue();
+//                // put measure in
+//            }
+//        });
+        lLayout.addComponent(measName);
+        lLayout.setExpandRatio(measName, 2.0f);
+        rLayout.addComponent(measValues);
+        rLayout.setComponentAlignment(measValues, Alignment.BOTTOM_LEFT);
         LinkedList<Dimension> dimsForShow = new LinkedList<Dimension>();
         for (Dimension dim: ds.getStructure().getDimensions()){
             if (dim.isGeoDimension())
