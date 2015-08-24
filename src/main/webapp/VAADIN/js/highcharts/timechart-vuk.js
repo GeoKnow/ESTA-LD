@@ -294,6 +294,7 @@ function createTimeChart(containerName, chartData, titleText, subtitleText, seri
 	});
 	
 	chart.redraw();
+        currentChart = chart;
 	
 	$('#' + containerName).show('slow', function() {
 	    // Animation complete.

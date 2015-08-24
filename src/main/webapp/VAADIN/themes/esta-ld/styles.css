@@ -16,36 +16,135 @@ and open the template in the editor.
     /*width: 100%;*/
 }
 
-.v-button.v-button-dim-name.dim-name.v-button-selected.selected {
-    background-color: lightblue;
+/*.estald-window .v-margin-left { padding-left: 0}
+.estald-window .v-margin-right { padding-right: 0}
+.estald-window .v-margin-top { padding-top: 0}
+.estald-window .v-margin-bottom { padding-bottom: 0}*/
+
+.estald-window .v-verticallayout-margin {
+    padding: 0;
+}
+
+div#l-settings .v-label.v-label-undef-w {
+    text-transform: uppercase;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+div#l-brand .v-button {
+    text-transform: uppercase;
+}
+
+/*div#l-brand .v-button .v-button-caption {
+    font-size: 13px;
+}*/
+
+#l-settings .v-verticallayout-margin {
+    padding: 18px;
+}
+
+#l-content .v-verticallayout-margin {
+    padding: 18px;
+}
+
+.l-content-inspect .v-verticallayout-margin {
+    padding: 18px;
+}
+
+.inspect-component .v-verticallayout-margin {
+    padding: 0px;
+}
+
+#l-brand {
+    background: #4AA6FF;
+}
+
+#l-content {
+    background: white;
+}
+
+#brand {
+    font-size: 25px;
+    font-weight: bold;
+    color: white;
+    text-shadow: 2px 2px 2px #777979;
+}
+
+.settings-separator hr {
+    border-width: 2px;
+    border-color: #B9B9B9;
+}
+
+/*#l-settings, #l-content {
+    padding: 15px 11px;
+}*/
+
+div#l-settings {
+    border-top: 1px solid #B1B1B1;
+    box-shadow: 0 0 7px 0 #B1B1B1 inset;
+}
+
+#l-geo v-horizontallayout-margin{
+    padding: 0 3px;
+}
+
+.estald-window .v-button {
     background-image: none;
-    border-radius: 50px;
+    border: 1px solid;
+    border-radius: 3px;
+    border-color: grey;
+    background-color: whitesmoke;
+    /*margin-left: 11px;*/
+}
+
+.estald-window .v-button .v-button-wrap {
+    background-image: none;
+}
+
+.v-button.v-button-dim-name.dim-name.v-button-selected.selected {
+    background-color: #B5E0FF;
+    /*background-color: #B7D6FF;*/
+    background-image: none;
+    border-radius: 3px;
+    border: 1px solid;
+    border-color: grey;
+}
+
+.v-button.v-button-dim-name.dim-name.v-button-unselectable.unselectable {
+    background-color: lightgray;
+    background-image: none;
+    border-radius: 3px;
     border: 1px solid;
     border-color: grey;
 }
 
 .v-button.v-button-dim-name.dim-name {
     background-image: none;
-    border-radius: 50px;
+    background: white;
+    text-transform: uppercase;
+    border-radius: 3px;
     border: 1px solid;
     border-color: grey;
 }
 
 .v-button.v-button-dim-name.dim-name .v-button-wrap {
     background-image: none;
+    /*background: white;*/
 }
 
 .v-button.v-button-geo-name.geo-name.v-button-selected.selected {
-    background-color: lightblue;
+    background-color: #B5E0FF;
+    /*background-color: #B7D6FF;*/
     background-image: none;
-    border-radius: 50px;
+    border-radius: 3px;
     border: 1px solid;
     border-color: grey;
 }
 
 .v-button.v-button-geo-name.geo-name {
     background-image: none;
-    border-radius: 50px;
+    background: white;
+    border-radius: 3px;
     border: 1px solid;
     border-color: grey;
 }

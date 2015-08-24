@@ -36,6 +36,16 @@ var geoLevels = [];//geo levels of codes (populated by broader-narrower queries
 var geoPolygons = [];
 
 function domReadyVuk() {
+    
+    new ResizeSensor($('#l-geo'), function(){
+        map.invalidateSize();
+        currentChart.reflow();
+    });
+    
+    $('.v-button.v-button-dim-name.dim-name').each(function(index, elem){
+        $(this).parent().css("width", "100%");
+        $(this).css("width", "100%");
+    });
 	
 	//Setup the ajax indicator ('loading')
 	$('body').append('<div id="ajaxBusy"><p><img src="ESTA-LD/VAADIN/resources/images/loading.gif"></p></div>');
@@ -537,7 +547,7 @@ function runSparqlGeoSelectedVuk(rsgeo) {
     }
     if (isInTheList) {
         // change value of geo-values
-        $('#geoValue .v-filterselect-input').val(value);
+        $('.geo-value .v-filterselect-input').val(value);
     } else {
         alert('not in the list: ' + value + ' \n' + javaGeoPossibleValues.toString());
         return;
@@ -1139,6 +1149,7 @@ cbfuncOneFreeVuk = function(data) {
             createChartBarSingle('', categoriesArray, valuesArray, javaSelectedDimensions[javaFreeDimensions[0]]);
         }
     }
+    expandDimNameButtons();
 }
 
 function getGranularityFromElpoStat(elpoStatArray) {

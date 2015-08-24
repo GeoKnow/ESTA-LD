@@ -25,6 +25,15 @@
             <param-value>rs.pupin.jpo.dsdrepo.DSDRepoApplication</param-value>
         </init-param>
     </servlet>
+    <servlet>
+        <servlet-name>Inspect Servlet</servlet-name>
+        <servlet-class>rs.pupin.jpo.esta_ld.InspectLoadingServlet</servlet-class>
+        <init-param>
+            <description>Vaadin application class to start</description>
+            <param-name>application</param-name>
+            <param-value>rs.pupin.jpo.esta_ld.InspectApplication</param-value>
+        </init-param>
+    </servlet>
     <servlet-mapping>
         <servlet-name>Vaadin Application Servlet</servlet-name>
         <url-pattern>/*</url-pattern>
@@ -32,5 +41,9 @@
     <servlet-mapping>
         <servlet-name>DSD Repo Servlet</servlet-name>
         <url-pattern>/dsdrepo/*</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>Inspect Servlet</servlet-name>
+        <url-pattern>/inspect/*</url-pattern>
     </servlet-mapping>
 </web-app>

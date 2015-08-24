@@ -66,5 +66,18 @@ public abstract class SparqlComponentProperty extends SparqlThing implements Com
         }
         return values;
     }
+
+    @Override
+    public String toString() {
+        if (!hasLabel()) {
+            int hashPosition = getUri().lastIndexOf('#');
+            int slashPosition = getUri().lastIndexOf('/');
+            if (hashPosition > slashPosition) return getUri().substring(hashPosition+1);
+            else if (slashPosition > -1) return getUri().substring(slashPosition+1);
+        } else
+            return getLabel();
+        
+        return super.toString();
+    }
     
 }

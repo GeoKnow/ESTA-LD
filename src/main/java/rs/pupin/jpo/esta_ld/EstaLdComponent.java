@@ -7,11 +7,15 @@
 package rs.pupin.jpo.esta_ld;
 
 import com.vaadin.data.Property;
+import com.vaadin.terminal.ExternalResource;
+import com.vaadin.ui.AbstractSplitPanel;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.ComboBox;
 import com.vaadin.ui.CustomComponent;
+import com.vaadin.ui.GridLayout;
 import com.vaadin.ui.HorizontalLayout;
+import com.vaadin.ui.HorizontalSplitPanel;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window;
@@ -45,12 +49,12 @@ public class EstaLdComponent extends CustomComponent {
     private String endpoint = "http://147.91.50.167/sparql";
     private VerticalLayout mainLayout;
     private VerticalLayout geoLayout;
-    private HorizontalLayout dimLayout;
+    private GridLayout dimLayout;
     private VerticalLayout mapLayout;
     private VerticalLayout rightLayout;
     private VerticalLayout chartLayout;
     private HorizontalLayout datasetLayout;
-    private HorizontalLayout contentLayout;
+    private HorizontalSplitPanel contentLayout;
     private DataCubeRepository dcRepo;
     private ComboBox selectGraph;
     private ComboBox selectDataSet;
@@ -89,6 +93,10 @@ public class EstaLdComponent extends CustomComponent {
     private Collection<Measure> measures;
     private Button measName;
     private ComboBox measValues;
+    private HorizontalLayout brandLayout;
+    private VerticalLayout settingsLayout;
+    private Button btnInvert;
+    private Button btnStack;
     
     public static class ValueWrapper {
         private final Value value;
@@ -107,6 +115,7 @@ public class EstaLdComponent extends CustomComponent {
     public EstaLdComponent(Repository repository){
         this.repository = repository;
         
+        setSizeFull();
         createGUI();
         createDimAndGeoListeners();
         
@@ -116,6 +125,7 @@ public class EstaLdComponent extends CustomComponent {
     public EstaLdComponent(String endpoint){
         this.endpoint = endpoint;
         
+        setSizeFull();
         initializeRepository();
         createGUI();
         createDimAndGeoListeners();
@@ -129,7 +139,7 @@ public class EstaLdComponent extends CustomComponent {
 //            dcRepo = new DummyDCRepository();
 //            geoDimension = null;
 //            return;
-            endpoint = "http://localhost:8890/sparql";
+            endpoint = "http://jpo.imp.bg.ac.rs/sparql";
         }
         repository = new SPARQLRepository(endpoint);
         try {
@@ -143,21 +153,98 @@ public class EstaLdComponent extends CustomComponent {
     
     private void createGUI(){
         mainLayout = new VerticalLayout();
-        mainLayout.setWidth("100%");
-        mainLayout.setSpacing(true);
+        mainLayout.setSizeFull();
+        mainLayout.setSpacing(false);
+        mainLayout.setDebugId("l-main");
+        
+        brandLayout = new HorizontalLayout();
+        brandLayout.setSpacing(true);
+        brandLayout.setMargin(true);
+        brandLayout.setWidth("100%");
+        brandLayout.setDebugId("l-brand");
+        Label brandSpan = new Label("<span id='brand'>ESTA-LD</span>", Label.CONTENT_XHTML);
+        brandLayout.addComponent(brandSpan);
+        brandLayout.setExpandRatio(brandSpan, 2.0f);
+        brandLayout.setComponentAlignment(brandSpan, Alignment.MIDDLE_LEFT);
+        Button btnEndpoint = new Button("Endpoint");
+        brandLayout.addComponent(btnEndpoint);
+        brandLayout.setComponentAlignment(btnEndpoint, Alignment.MIDDLE_RIGHT);
+        btnEndpoint.addListener(new Button.ClickListener() {
+            public void buttonClick(Button.ClickEvent event) {
+                final EndpointWindow.EndpointState state = new EndpointWindow.EndpointState();
+                state.endpoint = endpoint;
+                Window w = new EndpointWindow(state);
+                w.addListener(new Window.CloseListener() {
+                    @Override
+                    public void windowClose(Window.CloseEvent e) {
+                        try {
+                            if (!endpoint.equals(state.endpoint))
+                                repository.shutDown();
+                        } catch (RepositoryException ex) {
+                            Logger.getLogger(EstaLdComponent.class.getName()).log(Level.SEVERE, null, ex);
+                        }
+                        if (state.repository != null && state.repository.isInitialized()) {
+                            repository = state.repository;
+                            endpoint = state.endpoint;
+                            endpointChanged();
+                        }
+                    }
+                });
+                getWindow().addWindow(w);
+            }
+        });
+        btnInspect = new Button("Inspect");
+        brandLayout.addComponent(btnInspect);
+        brandLayout.setExpandRatio(btnInspect, 0.0f);
+        Button btnSettings = new Button("Parameters");
+        brandLayout.addComponent(btnSettings);
+        brandLayout.setComponentAlignment(btnSettings, Alignment.MIDDLE_RIGHT);
+        btnSettings.addListener(new Button.ClickListener() {
+            public void buttonClick(Button.ClickEvent event) {
+//                getWindow().executeJavaScript("$('#l-dataset').parent().parent().slideToggle(function(){ vaadin.forceLayout(); })");
+                getWindow().executeJavaScript("$('#l-settings').parent().parent().slideToggle()");
+                settingsLayout.setVisible(!settingsLayout.isVisible());
+//                getWindow().executeJavaScript("setTimeout(function(){ vaadin.forceSync(); map.invalidateSize(); }, 0)");
+//                getWindow().executeJavaScript("setTimeout(function(){ runSparqlDimensionValueChangedVuk(); map.invalidateSize() }, 200)");
+//                getWindow().executeJavaScript("setTimeout(function(){ currentChart.reflow(); map.invalidateSize() }, 200)");
+            }
+        });
+        
+        settingsLayout = new VerticalLayout();
+        settingsLayout.setDebugId("l-settings");
+        settingsLayout.setSpacing(true);
+        settingsLayout.setMargin(true);
+        settingsLayout.setWidth("100%");
+        
         datasetLayout = new HorizontalLayout();
         datasetLayout.setSpacing(true);
         datasetLayout.setWidth("100%");
+        datasetLayout.setDebugId("l-dataset");
         
-        mainLayout.addComponent(datasetLayout);
+        mainLayout.addComponent(brandLayout);
+        mainLayout.setExpandRatio(brandLayout, 0.0f);
+        settingsLayout.addComponent(datasetLayout);
+        Label lblSettingsSeparator = new Label("<hr/>", Label.CONTENT_XHTML);
+        lblSettingsSeparator.addStyleName("settings-separator");
+        settingsLayout.addComponent(lblSettingsSeparator);
+        mainLayout.addComponent(settingsLayout);
+        mainLayout.setExpandRatio(settingsLayout, 0.0f);
         
-        mainLayout.addComponent(new Label("<hr/>", Label.CONTENT_XHTML));
+        // in place of this divide borders and shadows will be added
+//        Label lblDivider = new Label("<hr/>", Label.CONTENT_XHTML);
+//        mainLayout.addComponent(lblDivider);
+//        mainLayout.setExpandRatio(lblDivider, 0.0f);
         
-        contentLayout = new HorizontalLayout();
+//        contentLayout = new HorizontalLayout();
+        contentLayout = new HorizontalSplitPanel();
+        contentLayout.setMargin(true);
         contentLayout.setSizeFull();
         contentLayout.setWidth("100%");
-        contentLayout.setSpacing(true);
+//        contentLayout.setSpacing(true);
+        contentLayout.setSplitPosition(50, UNITS_PERCENTAGE);
+        contentLayout.setDebugId("l-content");
         mainLayout.addComponent(contentLayout);
+        mainLayout.setExpandRatio(contentLayout, 2.0f);
         
         createDataSetLayout();
     }
@@ -240,12 +327,7 @@ public class EstaLdComponent extends CustomComponent {
     }
     
     private void createDataSetLayout(){
-        Button btnEndpoint = new Button("Endpoint");
-        datasetLayout.addComponent(btnEndpoint);
-        datasetLayout.setExpandRatio(btnEndpoint, 0.0f);
-        datasetLayout.setComponentAlignment(btnEndpoint, Alignment.TOP_LEFT);
-        
-        Label lbl = new Label("Choose graph: ");
+        Label lbl = new Label("Graph: ");
         lbl.setSizeUndefined();
         datasetLayout.addComponent(lbl);
         datasetLayout.setExpandRatio(lbl, 0.0f);
@@ -259,7 +341,7 @@ public class EstaLdComponent extends CustomComponent {
         datasetLayout.setExpandRatio(selectGraph, 2.0f);
         datasetLayout.setComponentAlignment(selectGraph, Alignment.MIDDLE_LEFT);
         
-        lbl = new Label("Choose dataset: ");
+        lbl = new Label(" Dataset: ");
         lbl.setSizeUndefined();
         datasetLayout.addComponent(lbl);
         datasetLayout.setExpandRatio(lbl, 0.0f);
@@ -278,13 +360,13 @@ public class EstaLdComponent extends CustomComponent {
         btnVisualize.addStyleName("btn-switch-view");
         btnVisualize.addStyleName("dim-name");
         btnVisualize.addStyleName("selected");
-        datasetLayout.addComponent(btnVisualize);
-        datasetLayout.setExpandRatio(btnVisualize, 0.0f);
-        btnInspect = new Button("Inspect");
-        btnInspect.addStyleName("btn-switch-view");
-        btnInspect.addStyleName("dim-name");
-        datasetLayout.addComponent(btnInspect);
-        datasetLayout.setExpandRatio(btnInspect, 0.0f);
+//        datasetLayout.addComponent(btnVisualize);
+//        datasetLayout.setExpandRatio(btnVisualize, 0.0f);
+//        btnInspect = new Button("Inspect");
+//        btnInspect.addStyleName("btn-switch-view");
+//        btnInspect.addStyleName("dim-name");
+//        datasetLayout.addComponent(btnInspect);
+//        datasetLayout.setExpandRatio(btnInspect, 0.0f);
         btnVisualize.addListener(new Button.ClickListener() {
             public void buttonClick(Button.ClickEvent event) {
                 btnVisualize.addStyleName("selected");
@@ -297,13 +379,17 @@ public class EstaLdComponent extends CustomComponent {
         });
         btnInspect.addListener(new Button.ClickListener() {
             public void buttonClick(Button.ClickEvent event) {
-                btnInspect.addStyleName("selected");
-                btnVisualize.removeStyleName("selected");
+//                btnInspect.addStyleName("selected");
+//                btnVisualize.removeStyleName("selected");
                 
-                contentLayout.setVisible(false);
-                inspectLayout.setVisible(true);
+//                contentLayout.setVisible(false);
+//                inspectLayout.setVisible(true);
                 
-//                getWindow().open(new ExternalResource("http://localhost:8080/ESTA-LD/dsdrepo"), "_blank");
+                String extForm = getWindow().getURL().toExternalForm();
+                int end = extForm.lastIndexOf("/ESTA-LD") + 8;
+                String targetURL = extForm.substring(0, end) + "/inspect";
+                getWindow().executeJavaScript("window.open('" + targetURL + "','_blank')");
+//                getWindow().open(new ExternalResource(targetURL, "_blank"));
             }
         });
         
@@ -356,31 +442,6 @@ public class EstaLdComponent extends CustomComponent {
             }
         };
         selectDataSet.addListener(datasetListener);
-        
-        btnEndpoint.addListener(new Button.ClickListener() {
-            public void buttonClick(Button.ClickEvent event) {
-                final EndpointWindow.EndpointState state = new EndpointWindow.EndpointState();
-                state.endpoint = endpoint;
-                Window w = new EndpointWindow(state);
-                w.addListener(new Window.CloseListener() {
-                    @Override
-                    public void windowClose(Window.CloseEvent e) {
-                        try {
-                            if (!endpoint.equals(state.endpoint))
-                                repository.shutDown();
-                        } catch (RepositoryException ex) {
-                            Logger.getLogger(EstaLdComponent.class.getName()).log(Level.SEVERE, null, ex);
-                        }
-                        if (state.repository != null && state.repository.isInitialized()) {
-                            repository = state.repository;
-                            endpoint = state.endpoint;
-                            endpointChanged();
-                        }
-                    }
-                });
-                getWindow().addWindow(w);
-            }
-        });
     }
     
     private void endpointChanged(){
@@ -398,7 +459,7 @@ public class EstaLdComponent extends CustomComponent {
         DataCubeGraph demoGraph = null;
         for (DataCubeGraph graph: dcGraphs){
             selectGraph.addItem(graph);
-            if (endpoint.equals("http://localhost:8890/sparql") && graph.getUri().equals("http://demo/reg-dev-polygons/"))
+            if (endpoint.equals("http://jpo.imp.bg.ac.rs/sparql") && graph.getUri().equals("http://demo/reg-dev-polygons/"))
                 demoGraph = graph;
         }
         for (DataSet ds: dcDataSets)
@@ -419,11 +480,14 @@ public class EstaLdComponent extends CustomComponent {
         // create left part where the map goes
         // first create a vertical layout for components
         geoLayout = new VerticalLayout();
+        geoLayout.setDebugId("l-geo");
         geoLayout.setSizeUndefined();
-        geoLayout.setWidth(GEO_PART_WIDTH);
+//        geoLayout.setWidth(GEO_PART_WIDTH);
+//        geoLayout.setHeight("100%");
+        geoLayout.setSizeFull();
         geoLayout.setSpacing(true);
         contentLayout.addComponent(geoLayout);
-        contentLayout.setExpandRatio(geoLayout, 0.0f);
+//        contentLayout.setExpandRatio(geoLayout, 0.0f);
         // create Level and +- controls
         HorizontalLayout hl = new HorizontalLayout();
         hl.setSpacing(true);
@@ -444,6 +508,7 @@ public class EstaLdComponent extends CustomComponent {
         });
         hl.addComponent(btnAggregColor);
         geoLayout.addComponent(hl);
+        geoLayout.setExpandRatio(hl, 0.0f);
         // create a layout for the map
 //        mapLayout = new VerticalLayout();
         mapLayout = new VerticalLayout() {
@@ -460,7 +525,8 @@ public class EstaLdComponent extends CustomComponent {
         });
         mapLayout.setSizeUndefined();
         mapLayout.setWidth("100%");
-        mapLayout.setHeight("620px");
+//        mapLayout.setHeight("620px");
+        mapLayout.setHeight("100%");
         mapLayout.setDebugId("map");
         mapLayout.addStyleName("leaflet-container");
         mapLayout.addStyleName("leaflet-fade-anim");
@@ -470,33 +536,66 @@ public class EstaLdComponent extends CustomComponent {
         rightLayout = new VerticalLayout();
         rightLayout.setSizeUndefined();
         rightLayout.setWidth("100%");
+        rightLayout.setSizeFull();
         rightLayout.setSpacing(true);
         contentLayout.addComponent(rightLayout);
-        contentLayout.setExpandRatio(rightLayout, 2.0f);
-        dimLayout = new HorizontalLayout();
+//        contentLayout.setExpandRatio(rightLayout, 2.0f);
+        dimLayout = new GridLayout(4, 1);
+        dimLayout.setColumnExpandRatio(0, 0.0f);
+        dimLayout.setColumnExpandRatio(1, 2.0f);
+        dimLayout.setColumnExpandRatio(2, 0.0f);
+        dimLayout.setColumnExpandRatio(3, 2.0f);
         dimLayout.setDebugId("dim-layout");
-        dimLayout.setSizeFull();
+//        dimLayout.setSizeFull();
         dimLayout.setWidth("100%");
         dimLayout.setSpacing(true);
-        rightLayout.addComponent(dimLayout);
+//        rightLayout.addComponent(dimLayout);
+        settingsLayout.addComponent(dimLayout);
+        
         refreshDimensions();
+        
+        HorizontalLayout chartControlsLayout = new HorizontalLayout();
+        chartControlsLayout.setDebugId("l-chart-controls");
+        chartControlsLayout.setWidth("100%");
+        chartControlsLayout.setSpacing(true);
+        rightLayout.addComponent(chartControlsLayout);
+        rightLayout.setExpandRatio(chartControlsLayout, 0.0f);
+        btnInvert = new Button("Switch Axes");
+        btnInvert.setDebugId("btn-invert");
+        btnInvert.addListener(new Button.ClickListener() {
+            public void buttonClick(Button.ClickEvent event) {
+                getWindow().executeJavaScript("toggleInvert()");
+            }
+        });
+        chartControlsLayout.addComponent(btnInvert);
+        btnStack = new Button("Stack");
+        btnStack.setDebugId("btn-stack");
+        btnStack.addListener(new Button.ClickListener() {
+            public void buttonClick(Button.ClickEvent event) {
+                getWindow().executeJavaScript("toggleStacking()");
+            }
+        });
+        chartControlsLayout.addComponent(btnStack);
+        Label lblEmpty = new Label(" ");
+        chartControlsLayout.addComponentAsFirst(lblEmpty);
+        chartControlsLayout.setExpandRatio(lblEmpty, 2.0f);
+        
         chartLayout = new VerticalLayout();
         chartLayout.setSizeFull();
-        chartLayout.setWidth("100%");
-        chartLayout.setHeight("600px");
         chartLayout.setDebugId("highchartsbarsingle");
 //        rightLayout.addComponent(chartLayout);
         VerticalLayout chartLayout2 = new VerticalLayout();
         chartLayout2.setSizeFull();
-        chartLayout2.setWidth("100%");
-        chartLayout2.setHeight("500px");
         chartLayout2.setDebugId("highchartsbarmultiple");
         rightLayout.addComponent(chartLayout2);
+        rightLayout.setExpandRatio(chartLayout2, 2.0f);
         
         inspectLayout = new VerticalLayout();
         inspectLayout.setVisible(false);
         inspectLayout.setWidth("100%");
-        mainLayout.addComponent(inspectLayout);
+        inspectLayout.setDebugId("l-inspect");
+//        mainLayout.addComponent(inspectLayout);
+//        mainLayout.setExpandRatio(inspectLayout, 2.0f);
     }
     
     private void refreshDimensions(){
@@ -512,17 +611,17 @@ public class EstaLdComponent extends CustomComponent {
         
         if (selectDataSet.getValue() == null) return;
         
-        VerticalLayout lLayout = new VerticalLayout();
-        lLayout.setSizeUndefined();
-        lLayout.setSpacing(true);
-        lLayout.setDebugId("dim-btn-layout");
-        dimLayout.addComponent(lLayout);
-        VerticalLayout rLayout = new VerticalLayout();
-        rLayout.setSizeUndefined();
-        rLayout.setSpacing(true);
-        rLayout.setWidth("100%");
-        dimLayout.addComponent(rLayout);
-        dimLayout.setExpandRatio(rLayout, 2.0f);
+//        VerticalLayout lLayout = new VerticalLayout();
+//        lLayout.setSizeUndefined();
+//        lLayout.setSpacing(true);
+//        lLayout.setDebugId("dim-btn-layout");
+//        dimLayout.addComponent(lLayout);
+//        VerticalLayout rLayout = new VerticalLayout();
+//        rLayout.setSizeUndefined();
+//        rLayout.setSpacing(true);
+//        rLayout.setWidth("100%");
+//        dimLayout.addComponent(rLayout);
+//        dimLayout.setExpandRatio(rLayout, 2.0f);
         
         final DataSet ds = (DataSet) selectDataSet.getValue();
         measures = ds.getStructure().getMeasures();
@@ -536,10 +635,11 @@ public class EstaLdComponent extends CustomComponent {
         builderMeasures.append("])");
         getWindow().executeJavaScript(builderMeasures.toString());
         measName = new Button("Measure");
-        measName.setSizeUndefined();
-        measName.setWidth("100%");
+//        measName.setSizeUndefined();
+//        measName.setWidth("100%");
         measName.setHeight(CONTENT_ELEM_HEIGHT);
         measName.addStyleName("dim-name");
+        measName.addStyleName("unselectable");
         measValues = new ComboBox(null, measures);
         measValues.setImmediate(true);
         measValues.setSizeUndefined();
@@ -555,10 +655,14 @@ public class EstaLdComponent extends CustomComponent {
 //                // put measure in
 //            }
 //        });
-        lLayout.addComponent(measName);
-        lLayout.setExpandRatio(measName, 2.0f);
-        rLayout.addComponent(measValues);
-        rLayout.setComponentAlignment(measValues, Alignment.BOTTOM_LEFT);
+        int rowIndex = 0;
+        int columnIndex = 0;
+        dimLayout.addComponent(measName, columnIndex, rowIndex);
+        columnIndex++;
+//        dimLayout.setExpandRatio(measName, 2.0f);
+        dimLayout.addComponent(measValues, columnIndex, rowIndex);
+        columnIndex++;
+//        dimLayout.setComponentAlignment(measValues, Alignment.BOTTOM_LEFT);
         LinkedList<Dimension> dimsForShow = new LinkedList<Dimension>();
         for (Dimension dim: ds.getStructure().getDimensions()){
             if (dim.isGeoDimension())
@@ -581,8 +685,8 @@ public class EstaLdComponent extends CustomComponent {
             // add dimension pick
             // first create a button to represent dimension name
             final Button btnName = new Button(dim.toString());
-            btnName.setSizeUndefined();
-            btnName.setWidth("100%");
+//            btnName.setSizeUndefined();
+//            btnName.setWidth("100%");
             btnName.setHeight(CONTENT_ELEM_HEIGHT);
             btnName.setData(dim);
             btnName.addStyleName("dim-name");
@@ -629,10 +733,23 @@ public class EstaLdComponent extends CustomComponent {
 //            layout.addComponent(btnName);
 //            layout.addComponent(boxValue);
 //            layout.setExpandRatio(boxValue, 2.0f);
-            lLayout.addComponent(btnName);
-            lLayout.setExpandRatio(btnName, 2.0f);
-            rLayout.addComponent(boxValue);
-            rLayout.setComponentAlignment(boxValue, Alignment.BOTTOM_LEFT);
+            
+//            lLayout.addComponent(btnName);
+//            lLayout.setExpandRatio(btnName, 2.0f);
+//            rLayout.addComponent(boxValue);
+//            rLayout.setComponentAlignment(boxValue, Alignment.BOTTOM_LEFT);
+            dimLayout.addComponent(btnName, columnIndex, rowIndex);
+            if (++columnIndex == 4) {
+                columnIndex = 0;
+                rowIndex++;
+                dimLayout.setRows(rowIndex+1);
+            }
+            dimLayout.addComponent(boxValue, columnIndex, rowIndex);
+            if (++columnIndex == 4) {
+                columnIndex = 0;
+                rowIndex++;
+                dimLayout.setRows(rowIndex+1);
+            }
             i++;
         }
         
@@ -643,10 +760,11 @@ public class EstaLdComponent extends CustomComponent {
         
         if (geoDimension != null){
             btnGeo = new Button(geoDimension.toString());
-            btnGeo.setSizeUndefined();
-            btnGeo.setWidth("100%");
+//            btnGeo.setSizeUndefined();
+//            btnGeo.setWidth("100%");
             btnGeo.setHeight(CONTENT_ELEM_HEIGHT);
             btnGeo.setData(geoDimension);
+            btnGeo.addStyleName("dim-name");
             btnGeo.addStyleName("geo-name");
             btnGeo.addListener(new Button.ClickListener() {
                 public void buttonClick(Button.ClickEvent event) {
@@ -678,7 +796,6 @@ public class EstaLdComponent extends CustomComponent {
             builder.append("',").append(stringifyCollection(posVals));
             builder.append(",'").append(selectedValString).append("')");
             boxGeo = new ComboBox(null, posValsWrapped);
-            boxGeo.setDebugId("geoValue");
             boxGeo.setData(posVals);
             boxGeo.setImmediate(true);
             boxGeo.setNullSelectionAllowed(false);
@@ -688,11 +805,14 @@ public class EstaLdComponent extends CustomComponent {
             boxGeo.setHeight(CONTENT_ELEM_HEIGHT);
             boxGeo.addStyleName("geo-value");
             boxGeo.addListener(geoListener);
-            
-            lLayout.addComponent(btnGeo);
-            lLayout.setExpandRatio(btnGeo, 2.0f);
-            rLayout.addComponent(boxGeo);
-            rLayout.setComponentAlignment(boxGeo, Alignment.BOTTOM_LEFT);
+//            lLayout.addComponent(btnGeo);
+//            lLayout.setExpandRatio(btnGeo, 2.0f);
+//            rLayout.addComponent(boxGeo);
+//            rLayout.setComponentAlignment(boxGeo, Alignment.BOTTOM_LEFT);
+            dimLayout.addComponent(btnGeo, columnIndex, rowIndex);
+            columnIndex++;
+            dimLayout.addComponent(boxGeo, columnIndex, rowIndex);
+            columnIndex++;
             
             getWindow().executeJavaScript(builder.toString());
         } else {
@@ -703,7 +823,16 @@ public class EstaLdComponent extends CustomComponent {
         builderPossibleValues.replace(0, 1, "javaSetPossibleValues([");
         builderPossibleValues.append("])");
         getWindow().executeJavaScript(builderPossibleValues.toString());
+        if (dimsForShow.isEmpty()) {
+            getWindow().executeJavaScript("javaSetFreeDimensions([])");
+            if (geoDimension != null) getWindow().executeJavaScript("javaSetGeoFree(true)");
+            else getWindow().executeJavaScript("javaSetGeoFree(false)");
+        } else {
+            getWindow().executeJavaScript("javaSetFreeDimensions([0])");
+            getWindow().executeJavaScript("javaSetGeoFree(false)");
+        }
         dimListener.valueChange(null);
+        getWindow().executeJavaScript("setTimeout(expandDimNameButtons(),200)");
     }
 
     @Override

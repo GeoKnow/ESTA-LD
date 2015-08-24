@@ -4,6 +4,10 @@ var chartBarSingleOptions;
 var chartBarMultipleOptions;
 var chartBarMultiple;
 
+var currentChart = {
+    redraw: function(){ console.warn('Called redraw on chart before it got creaed!'); }
+}
+
 function hideCharts() {
 //	$('#highchartsbarsingle').hide();
 //	$('#highchartsbarmultiple').hide();
@@ -31,7 +35,7 @@ function createChartBarMultiple(chartSubtitle, arrayMultiple, chartCategories, s
     
     chartBarMultiple.redraw();
     $('#highchartsbarmultiple').show();
-    
+    currentChart = chartBarMultiple;
 }
 
 function createChartBarSingle(chartSubtitle, chartCategories, chartValues, seriesName) {
@@ -42,6 +46,7 @@ function createChartBarSingle(chartSubtitle, chartCategories, chartValues, serie
 	chartBarSingle.series[0].name=seriesName;
 	chartBarSingle.redraw();
         $('#highchartsbarmultiple').show();
+        currentChart = chartBarSingle;
 //        $('#highchartsbarmultiple').show('slow', function() {
             // Animation complete.
 //        });
@@ -121,51 +126,51 @@ chartBarMultipleOptions = {
 	        type: 'column',
             margin: [50, 70, 70, 130]
 	    },
-            exporting: {
-                buttons: {
-                    stackButton: {
-                        text: 'Stack', 
-//                        symbol: 'square', 
-                        onclick: function () {
-                            if (chartBarMultiple.options.plotOptions.column.stacking)
-                                delete chartBarMultiple.options.plotOptions.column.stacking;
-                            else {
-                                var plotOptionsObject = {
-                                    column: {
-                                        stacking: 'normal'
-                                    }
-                                };
-                                $.extend(true, chartBarMultiple.options.plotOptions, plotOptionsObject);
-                            }
-                            
-                            chartBarMultiple.xAxis[0].update({}, false);
-                            chartBarMultiple.yAxis[0].update({}, false);
-                            $(chartBarMultiple.series).each(function (k,v) {
-                                v.update({}, false);
-                            });
-            
-                            chartBarMultiple.redraw();
-                        }
-                    }, 
-                    invertButton: {
-                        text: 'Invert', 
-                        onclick: function () {
-                            if (chartBarMultiple.inverted)
-                                chartBarMultiple.inverted = false;
-                            else
-                                chartBarMultiple.inverted = true;
-                            
-                            chartBarMultiple.xAxis[0].update({}, false);
-                            chartBarMultiple.yAxis[0].update({}, false);
-                            $(chartBarMultiple.series).each(function (k,v) {
-                                v.update({}, false);
-                            });
-            
-                            chartBarMultiple.redraw();
-                        }
-                    }
-                }
-            }, 
+//            exporting: {
+//                buttons: {
+//                    stackButton: {
+//                        text: 'Stack', 
+////                        symbol: 'square', 
+//                        onclick: function () {
+//                            if (chartBarMultiple.options.plotOptions.column.stacking)
+//                                delete chartBarMultiple.options.plotOptions.column.stacking;
+//                            else {
+//                                var plotOptionsObject = {
+//                                    column: {
+//                                        stacking: 'normal'
+//                                    }
+//                                };
+//                                $.extend(true, chartBarMultiple.options.plotOptions, plotOptionsObject);
+//                            }
+//                            
+//                            chartBarMultiple.xAxis[0].update({}, false);
+//                            chartBarMultiple.yAxis[0].update({}, false);
+//                            $(chartBarMultiple.series).each(function (k,v) {
+//                                v.update({}, false);
+//                            });
+//            
+//                            chartBarMultiple.redraw();
+//                        }
+//                    }, 
+//                    invertButton: {
+//                        text: 'Invert', 
+//                        onclick: function () {
+//                            if (chartBarMultiple.inverted)
+//                                chartBarMultiple.inverted = false;
+//                            else
+//                                chartBarMultiple.inverted = true;
+//                            
+//                            chartBarMultiple.xAxis[0].update({}, false);
+//                            chartBarMultiple.yAxis[0].update({}, false);
+//                            $(chartBarMultiple.series).each(function (k,v) {
+//                                v.update({}, false);
+//                            });
+//            
+//                            chartBarMultiple.redraw();
+//                        }
+//                    }
+//                }
+//            }, 
 	    title: {
 	    	margin: 30,
 	        text: 'Regional development incentives'

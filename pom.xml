@@ -160,6 +160,7 @@
                                 <groupId>rs.pupin.jpo</groupId>
                                 <artifactId>esta-ld</artifactId>
                                 <type>war</type>
+                                <location>${project.build.directory}/${warName}.war</location>
                             </deployable>
                         </deployables>
                     </deployer>

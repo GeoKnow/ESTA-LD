@@ -8,6 +8,7 @@ package rs.pupin.jpo.esta_ld;
 
 import com.vaadin.data.Property;
 import com.vaadin.event.Action;
+import com.vaadin.event.ItemClickEvent;
 import com.vaadin.terminal.ThemeResource;
 import com.vaadin.ui.AbstractSelect;
 import com.vaadin.ui.Button;
@@ -100,7 +101,7 @@ public class InspectComponent extends CustomComponent {
     
     private static final Action ACTION_STORE = new Action("Store DSD in repository");
     
-    private static final Action ACTION_TRANSFORM_DIM = new Action("Transform Dimension");
+    private static final Action ACTION_TRANSFORM_DIM = new Action("Manage as Temporal Dimension");
     private static final Action ACTION_MANAGE_GEO = new Action("Manage as Spatial Dimension");
 
     private static final Action [] ACTIONS = new Action[] { 
@@ -229,10 +230,12 @@ public class InspectComponent extends CustomComponent {
         VerticalLayout rootLayout = new VerticalLayout();
         rootLayout.setWidth("100%");
         rootLayout.setSpacing(true);
+        rootLayout.setMargin(false);
         
         mainLayout = new VerticalLayout();
         mainLayout.setWidth("100%");
         mainLayout.setSpacing(true);
+        mainLayout.setMargin(false);
         
         rootLayout.addComponent(mainLayout);
         
@@ -441,11 +444,27 @@ public class InspectComponent extends CustomComponent {
                 }
             }
         });
+        dataTree.addListener(new ItemClickEvent.ItemClickListener() {
+            public void itemClick(ItemClickEvent event) {
+                Object target = event.getItemId();
+                if (target instanceof Dimension) {
+                    showDetailsView("Dimension", ((Dimension)target).getUri());
+                } else if (target instanceof Attribute) {
+                    showDetailsView("Attribute", ((Attribute)target).getUri());
+                } else if (target instanceof Measure) {
+                    showDetailsView("Measure", ((Measure)target).getUri());
+                } else if (target instanceof Structure) {
+                    showDetailsView("Structure", ((Structure)target).getUri());
+                } 
+                System.out.println(target.toString());
+            }
+        });
     }
     
     private void showTransformDimensionView(Dimension dim) {
         dimTransformLayout.removeAllComponents();
-        dimTransformLayout.addComponent(new Label("<h1>Dimension: " + dim.getUri() + "</h1>", Label.CONTENT_XHTML));
+        dimTransformLayout.addComponent(new Label("<h1>Manage Temporal Dimension</h1>", Label.CONTENT_XHTML));
+        dimTransformLayout.addComponent(new Label("<h2>Dimension: " + dim.getUri() + "</h2>", Label.CONTENT_XHTML));
         
         // show properties table
         final Table propertiesTable = new Table("Properties");
@@ -552,7 +571,8 @@ public class InspectComponent extends CustomComponent {
     
     private void showManageGeoView(Dimension dim) {
         dimTransformLayout.removeAllComponents();
-        dimTransformLayout.addComponent(new Label("<h1>Dimension: " + dim.getUri() + "</h1>", Label.CONTENT_XHTML));
+        dimTransformLayout.addComponent(new Label("<h1>Manage Spatial Dimension</h1>", Label.CONTENT_XHTML));
+        dimTransformLayout.addComponent(new Label("<h2>Dimension: " + dim.getUri() + "</h2>", Label.CONTENT_XHTML));
         
         // show properties table
         final Table propertiesTable = new Table("Properties");
@@ -612,6 +632,40 @@ public class InspectComponent extends CustomComponent {
                 getWindow().executeJavaScript(jsCall);
             }
         });
+    }
+    
+    private void showDetailsView(String type, String uri) {
+        dimTransformLayout.removeAllComponents();
+        dimTransformLayout.addComponent(new Label("<h1>Details View</h1>", Label.CONTENT_XHTML));
+        dimTransformLayout.addComponent(new Label("<h2>" + type + ": " + uri + "</h2>", Label.CONTENT_XHTML));
+        
+        // show properties table
+        final Table propertiesTable = new Table("Properties");
+        propertiesTable.setHeight("250px");
+        propertiesTable.setWidth("100%");
+        propertiesTable.addContainerProperty("Property", String.class, null);
+        propertiesTable.addContainerProperty("Value", String.class, null);
+        dimTransformLayout.addComponent(propertiesTable);
+        try {
+            RepositoryConnection conn = repository.getConnection();
+            TupleQuery query = conn.prepareTupleQuery(QueryLanguage.SPARQL, DSDRepoUtils.qResourcePorperties(uri, dataGraph));
+            TupleQueryResult res = query.evaluate();
+            int i = 0;
+            while (res.hasNext()) {
+                BindingSet set = res.next();
+                Object [] row = new Object [] {
+                    set.getValue("p").stringValue(), 
+                    set.getValue("o").stringValue()
+                };
+                propertiesTable.addItem(row, i++);
+            }
+        } catch (RepositoryException ex) {
+            logger.log(Level.SEVERE, null, ex);
+        } catch (MalformedQueryException ex) {
+            logger.log(Level.SEVERE, null, ex);
+        } catch (QueryEvaluationException ex) {
+            logger.log(Level.SEVERE, null, ex);
+        }
     }
     
     private void addDataTreeListenersFind(){

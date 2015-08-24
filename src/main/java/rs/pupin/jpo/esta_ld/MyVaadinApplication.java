@@ -17,6 +17,8 @@ package rs.pupin.jpo.esta_ld;
 
 import com.vaadin.Application;
 import com.vaadin.terminal.ParameterHandler;
+import com.vaadin.ui.Label;
+import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window;
 import java.util.Map;
 
@@ -33,18 +35,23 @@ public class MyVaadinApplication extends Application
     public void init()
     {
         window = new Window("ESTA-LD");
+        window.getContent().setSizeFull();
+        window.addStyleName("estald-window");
         window.addParameterHandler(new ParameterHandler() {
             public void handleParameters(Map<String, String[]> parameters) {
                 if (!first) return;
                 first = false;
                 String[] titleParam = parameters.get("endpoint");
                 String endpointURL = (titleParam == null)?null:titleParam[0];
-                window.showNotification(endpointURL); // TODO remove when finished with 
                 System.out.println(endpointURL);
                 
                 EstaLdComponent component = new EstaLdComponent(endpointURL);
         
                 window.addComponent(component);
+                
+                // TODO: add Loading gif
+                
+                // execute JS part
                 window.executeJavaScript("estamainInitVuk()");
                 window.executeJavaScript("sparqlqueryInitVuk()");
                 window.executeJavaScript("rammapInitVuk()");

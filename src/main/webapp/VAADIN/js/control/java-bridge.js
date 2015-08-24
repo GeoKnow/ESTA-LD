@@ -1,4 +1,4 @@
-/* global geoForMapAllTimesData, cbfuncTwoFreeVuk, cbfuncOneFreeVuk, geoData */
+/* global geoForMapAllTimesData, cbfuncTwoFreeVuk, cbfuncOneFreeVuk, geoData, currentChart, chartBarMultiple */
 
 var javaSelectedDimensions = [];
 var javaDimensionValues = [];
@@ -19,6 +19,55 @@ var javaHasTimeDimension = false;
 var vaadinRedrawsMap = false;
 
 var javaAggregatedColoring = false;
+
+function toggleStacking() {
+    if (currentChart === chartBarMultiple) {
+        if (chartBarMultiple.options.plotOptions.column.stacking)
+            delete chartBarMultiple.options.plotOptions.column.stacking;
+        else {
+            var plotOptionsObject = {
+                column: {
+                    stacking: 'normal'
+                }
+            };
+            $.extend(true, chartBarMultiple.options.plotOptions, plotOptionsObject);
+        }
+
+        chartBarMultiple.xAxis[0].update({}, false);
+        chartBarMultiple.yAxis[0].update({}, false);
+        $(chartBarMultiple.series).each(function (k,v) {
+            v.update({}, false);
+        });
+
+        chartBarMultiple.redraw();
+    }
+}
+
+function toggleInvert() {
+    console.log('Current chart: ');
+    console.log(currentChart);
+    if (currentChart !== undefined && currentChart !== null) {
+        if (currentChart.inverted)
+            currentChart.inverted = false;
+        else
+            currentChart.inverted = true;
+
+        currentChart.xAxis[0].update({}, false);
+        currentChart.yAxis[0].update({}, false);
+        $(currentChart.series).each(function (k,v) {
+            v.update({}, false);
+        });
+
+        currentChart.redraw();
+    }
+}
+
+function expandDimNameButtons(){
+    $('.v-button.v-button-dim-name.dim-name').each(function(index, elem){
+        $(this).parent().css("width", "100%");
+        $(this).css("width", "100%");
+    });
+}
 
 function javaSetSelectedDimensions(dims){
     javaSelectedDimensions = dims;
