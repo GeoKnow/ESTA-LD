@@ -936,10 +936,12 @@ public class InspectComponent extends CustomComponent {
                     } else {
                         CountingTreeHeader datatypes = createCountingTreeHeader(dataTree, "Datatypes");
                         dataTree.setParent(datatypes, id);
-                        CodeDatatypeTreeElement elem = new CodeDatatypeTreeElement(prop.getRange(), false, 0);
-                        dataTree.addItem(elem);
-                        dataTree.setParent(elem, datatypes);
-                        dataTree.setChildrenAllowed(elem, false);
+                        for (String range: prop.getRanges()){
+                            CodeDatatypeTreeElement elem = new CodeDatatypeTreeElement(range, false, 0);
+                            dataTree.addItem(elem);
+                            dataTree.setParent(elem, datatypes);
+                            dataTree.setChildrenAllowed(elem, false);
+                        }
                         
                         CountingTreeHeader values = createCountingTreeHeader(dataTree, "Values");
                         dataTree.setParent(values, id);

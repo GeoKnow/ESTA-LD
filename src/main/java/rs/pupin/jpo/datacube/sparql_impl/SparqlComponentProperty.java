@@ -33,13 +33,27 @@ public abstract class SparqlComponentProperty extends SparqlThing implements Com
             + "  ?obs qb:dataSet ?ds . \n"
             + "  ?obs <@dim> ?val . \n"
             + "}";
+    private static final String QUERY_CONCEPTS = "SELECT ?c \n"
+            + "FROM <@graph> \n"
+            + "WHERE { \n"
+            + "  <@dim> qb:concept ?c . \n"
+            + "}";
+    private static final String QUERY_RANGE = "SELECT ?t \n"
+            + "FROM <@graph> \n"
+            + "WHERE { \n"
+            + "  <@dim> rdfs:range ?t . \n"
+            + "}";
     
     private Collection<String> values;
+    private Collection<String> concepts;
+    private Collection<String> ranges;
 
     public SparqlComponentProperty(Repository repository, String uri, String graph) {
         super(repository, uri, graph);
         
         this.values = null;
+        this.concepts = null;
+        this.ranges = null;
     }
 
     public Collection<String> getValues() {
@@ -65,6 +79,55 @@ public abstract class SparqlComponentProperty extends SparqlThing implements Com
             Logger.getLogger(SparqlDimension.class.getName()).log(Level.SEVERE, null, ex);
         }
         return values;
+    }
+
+    public Collection<String> getConcepts() {
+        if (concepts != null) return concepts;
+        
+        try {
+            RepositoryConnection conn = repository.getConnection();
+            String query = SparqlUtils.PREFIXES + QUERY_CONCEPTS;
+            query = query.replace("@graph", graph).replace("@dim", uri);
+            TupleQuery q = conn.prepareTupleQuery(QueryLanguage.SPARQL, query);
+            TupleQueryResult results = q.evaluate();
+            concepts = new LinkedList<String>();
+            while (results.hasNext()) {
+                BindingSet set = results.next();
+                concepts.add(set.getValue("c").stringValue());
+            }
+            results.close();
+        } catch (RepositoryException ex) {
+            Logger.getLogger(SparqlComponentProperty.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (MalformedQueryException ex) {
+            Logger.getLogger(SparqlComponentProperty.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (QueryEvaluationException ex) {
+            Logger.getLogger(SparqlComponentProperty.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+        return concepts;
+    }
+
+    public Collection<String> getRanges() {
+        if (ranges != null) return ranges;
+        
+        try {
+            RepositoryConnection conn = repository.getConnection();
+            String query = SparqlUtils.PREFIXES + QUERY_RANGE;
+            query = query.replace("@graph", graph).replace("@dim", uri);
+            TupleQuery q = conn.prepareTupleQuery(QueryLanguage.SPARQL, query);
+            TupleQueryResult results = q.evaluate();
+            ranges = new LinkedList<String>();
+            if (results.hasNext()){
+                ranges.add(results.next().getValue("t").stringValue());
+            }
+        } catch (RepositoryException ex) {
+            Logger.getLogger(SparqlDimension.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (MalformedQueryException ex) {
+            Logger.getLogger(SparqlDimension.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (QueryEvaluationException ex) {
+            Logger.getLogger(SparqlDimension.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return ranges;
     }
 
     @Override

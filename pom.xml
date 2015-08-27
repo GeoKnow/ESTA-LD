@@ -10,6 +10,9 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <warName>ESTA-LD</warName>
+        <vaadin.version>6.7.5</vaadin.version>
+        <gwt.version>2.3.0</gwt.version>
+        <gwt.plugin.version>2.2.0</gwt.plugin.version>
     </properties>
 
     <build>
@@ -17,6 +20,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.3</version>
                 <configuration>
                     <source>1.5</source>
                     <target>1.5</target>
@@ -38,7 +42,7 @@
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>gwt-maven-plugin</artifactId>
-                <version>1.2-SNAPSHOT</version>
+                <version>${gwt.plugin.version}</version>
                 <executions>
                     <execution>
                         <configuration>
@@ -56,11 +60,23 @@
                         </goals>
                     </execution>
                 </executions>
+                <dependencies>
+                    <dependency>
+                        <groupId>com.google.gwt</groupId>
+                        <artifactId>gwt-dev</artifactId>
+                        <version>${gwt.version}</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>com.google.gwt</groupId>
+                        <artifactId>gwt-user</artifactId>
+                        <version>${gwt.version}</version>
+                    </dependency>
+                </dependencies>
             </plugin>
             <plugin>
                 <groupId>com.vaadin</groupId>
                 <artifactId>vaadin-maven-plugin</artifactId>
-                <version>1.0.0</version>
+                <version>1.0.2</version>
                 <executions>
                     <execution>
                         <configuration>
@@ -151,6 +167,7 @@
                             <cargo.remote.username>${esta-ld.remote.username}</cargo.remote.username>
                             <cargo.remote.password>${esta-ld.remote.password}</cargo.remote.password>
                             <cargo.remote.uri>http://147.91.50.167/t7man/text</cargo.remote.uri>
+                            <!--<cargo.remote.uri>http://147.91.50.169/t7man/text</cargo.remote.uri>-->
                         </properties>
                     </configuration>
                     <deployer>
@@ -170,6 +187,10 @@
     </build>
 
     <repositories>
+        <repository>
+            <id>vaadin-addons</id>
+            <url>http://maven.vaadin.com/vaadin-addons</url>
+        </repository>
       <repository>
         <id>vaadin-snapshots</id>
         <url>http://oss.sonatype.org/content/repositories/vaadin-snapshots/</url>
@@ -182,8 +203,19 @@
       </repository>
     </repositories>
     
-    <!--
+    
     <pluginRepositories>
+        <pluginRepository>
+            <id>codehaus-snapshots</id>
+            <url>http://nexus.codehaus.org/snapshots</url>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+            <releases>
+                <enabled>false</enabled>
+            </releases>
+        </pluginRepository>
+        <!--
         <pluginRepository>
             <id>mojo-snapshots</id>
             <url>http://snapshots.repository.codehaus.org/</url>
@@ -194,6 +226,7 @@
                 <enabled>false</enabled>
             </releases>
         </pluginRepository>
+        -->
         <pluginRepository>
             <id>vaadin-snapshots</id>
             <url>http://oss.sonatype.org/content/repositories/vaadin-snapshots/</url>
@@ -204,8 +237,9 @@
                 <enabled>false</enabled>
             </releases>
         </pluginRepository>
+        
     </pluginRepositories>
-    -->
+    
 
     <dependencies>
         <dependency>
@@ -213,15 +247,42 @@
             <artifactId>vaadin</artifactId>
             <version>6.7.5</version>
         </dependency>
+        <dependency>
+            <groupId>org.vaadin.addons</groupId>
+            <artifactId>animator</artifactId>
+            <version>1.6</version>
+        </dependency>
         <!-- This is also used by gwt-maven-plugin to deduce GWT version number. -->
         <!--
         <dependency>
             <groupId>com.google.gwt</groupId>
             <artifactId>gwt-user</artifactId>
-            <version>2.0.0</version>
+            <version>${gwt.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>javax.validation</groupId>
+            <artifactId>validation-api</artifactId>
+            <version>1.0.0.GA</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>javax.validation</groupId>
+            <artifactId>validation-api</artifactId>
+            <version>1.0.0.GA</version>
+            <classifier>sources</classifier>
             <scope>provided</scope>
         </dependency>
         -->
+        <!--
+        <dependency>
+            <groupId>com.google.gwt</groupId>
+            <artifactId>gwt-dev</artifactId>
+            <version>2.3.0</version>
+            <scope>provided</scope>
+        </dependency>
+        -->
+        
         <dependency>
             <groupId>org.openrdf.sesame</groupId>
             <artifactId>sesame-repository-sparql</artifactId>

@@ -17,7 +17,8 @@ public interface ComponentProperty extends Thing {
     public boolean hasCodeList();
     public CodeList getCodeList();
     public Structure getStructure();
-    public String getRange();
+    public Collection<String> getRanges();
     public Collection<String> getValues();
+    public Collection<String> getConcepts();
     
 }

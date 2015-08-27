@@ -7,8 +7,6 @@
 package rs.pupin.jpo.esta_ld;
 
 import com.vaadin.data.Property;
-import com.vaadin.terminal.ExternalResource;
-import com.vaadin.ui.AbstractSplitPanel;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.ComboBox;
@@ -32,11 +30,14 @@ import org.openrdf.model.Value;
 import org.openrdf.repository.Repository;
 import org.openrdf.repository.RepositoryException;
 import org.openrdf.repository.sparql.SPARQLRepository;
+import org.vaadin.jouni.animator.AnimatorProxy;
+import org.vaadin.jouni.animator.client.ui.VAnimatorProxy;
 import rs.pupin.jpo.datacube.DataCubeGraph;
 import rs.pupin.jpo.datacube.DataCubeRepository;
 import rs.pupin.jpo.datacube.DataSet;
 import rs.pupin.jpo.datacube.Dimension;
 import rs.pupin.jpo.datacube.Measure;
+import rs.pupin.jpo.datacube.sparql_impl.DummyDCRepository;
 import rs.pupin.jpo.datacube.sparql_impl.SparqlDCRepository;
 
 /**
@@ -97,6 +98,10 @@ public class EstaLdComponent extends CustomComponent {
     private VerticalLayout settingsLayout;
     private Button btnInvert;
     private Button btnStack;
+    private AnimatorProxy animator;
+    private boolean indSettingsVisible;
+    private boolean indAnimatorEnabled = false;
+    private boolean indShowInspect = false;
     
     public static class ValueWrapper {
         private final Value value;
@@ -142,12 +147,22 @@ public class EstaLdComponent extends CustomComponent {
             endpoint = "http://jpo.imp.bg.ac.rs/sparql";
         }
         repository = new SPARQLRepository(endpoint);
+        dcRepo = null;
         try {
             repository.initialize();
         } catch (RepositoryException ex) {
             Logger.getLogger(EstaLdComponent.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(EstaLdComponent.class.getName()).log(Level.WARNING, "Couldn't connect to the endpoint, setting dummy DC repo");
+            dcRepo = new DummyDCRepository();
         }
-        dcRepo = new SparqlDCRepository(repository);
+        if (dcRepo == null) {
+            Logger.getLogger(EstaLdComponent.class.getName()).log(Level.FINE, "Creating DC repo");
+            dcRepo = new SparqlDCRepository(repository);
+            if (dcRepo.getDataCubeGraphs() == null) {
+                Logger.getLogger(EstaLdComponent.class.getName()).log(Level.WARNING, "There was an error connecting to the endpoint, setting dummy DC repo");
+                dcRepo = new DummyDCRepository();
+            }
+        }
         geoDimension = null;
     }
     
@@ -156,6 +171,12 @@ public class EstaLdComponent extends CustomComponent {
         mainLayout.setSizeFull();
         mainLayout.setSpacing(false);
         mainLayout.setDebugId("l-main");
+        
+        if (indAnimatorEnabled) {
+            animator = new AnimatorProxy();
+            mainLayout.addComponent(animator);
+            indSettingsVisible = true;
+        }
         
         brandLayout = new HorizontalLayout();
         brandLayout.setSpacing(true);
@@ -194,16 +215,29 @@ public class EstaLdComponent extends CustomComponent {
             }
         });
         btnInspect = new Button("Inspect");
-        brandLayout.addComponent(btnInspect);
-        brandLayout.setExpandRatio(btnInspect, 0.0f);
+        if (indShowInspect) {
+            brandLayout.addComponent(btnInspect);
+            brandLayout.setExpandRatio(btnInspect, 0.0f);
+        }
         Button btnSettings = new Button("Parameters");
         brandLayout.addComponent(btnSettings);
         brandLayout.setComponentAlignment(btnSettings, Alignment.MIDDLE_RIGHT);
         btnSettings.addListener(new Button.ClickListener() {
             public void buttonClick(Button.ClickEvent event) {
 //                getWindow().executeJavaScript("$('#l-dataset').parent().parent().slideToggle(function(){ vaadin.forceLayout(); })");
-                getWindow().executeJavaScript("$('#l-settings').parent().parent().slideToggle()");
-                settingsLayout.setVisible(!settingsLayout.isVisible());
+                
+                if (!indAnimatorEnabled) {
+                    getWindow().executeJavaScript("$('#l-settings').parent().parent().slideToggle()");
+                    settingsLayout.setVisible(!settingsLayout.isVisible());
+                } else {
+                    if (indSettingsVisible) {
+                        animator.animate(settingsLayout, VAnimatorProxy.AnimType.ROLL_UP_CLOSE);
+                    } else {
+                        animator.animate(settingsLayout, VAnimatorProxy.AnimType.ROLL_DOWN_OPEN_POP);
+                    }
+                    indSettingsVisible = !indSettingsVisible;
+                }
+                
 //                getWindow().executeJavaScript("setTimeout(function(){ vaadin.forceSync(); map.invalidateSize(); }, 0)");
 //                getWindow().executeJavaScript("setTimeout(function(){ runSparqlDimensionValueChangedVuk(); map.invalidateSize() }, 200)");
 //                getWindow().executeJavaScript("setTimeout(function(){ currentChart.reflow(); map.invalidateSize() }, 200)");
