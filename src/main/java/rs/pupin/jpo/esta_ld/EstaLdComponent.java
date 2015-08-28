@@ -144,7 +144,7 @@ public class EstaLdComponent extends CustomComponent {
 //            dcRepo = new DummyDCRepository();
 //            geoDimension = null;
 //            return;
-            endpoint = "http://jpo.imp.bg.ac.rs/sparql";
+            endpoint = "http://geoknow.imp.bg.ac.rs/sparql";
         }
         repository = new SPARQLRepository(endpoint);
         dcRepo = null;
@@ -493,7 +493,7 @@ public class EstaLdComponent extends CustomComponent {
         DataCubeGraph demoGraph = null;
         for (DataCubeGraph graph: dcGraphs){
             selectGraph.addItem(graph);
-            if (endpoint.equals("http://jpo.imp.bg.ac.rs/sparql") && graph.getUri().equals("http://demo/reg-dev-polygons/"))
+            if (endpoint.equals("http://geoknow.imp.bg.ac.rs/sparql") && graph.getUri().equals("http://demo/reg-dev-polygons/"))
                 demoGraph = graph;
         }
         for (DataSet ds: dcDataSets)

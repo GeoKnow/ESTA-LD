@@ -166,7 +166,8 @@ function createTimeChart(containerName, chartData, titleText, subtitleText, seri
 	    },
 	    xAxis: {
 	    	type: 'datetime',
-                minRange: 7516800000, 
+//                minRange: 7516800000, 
+                minRange: 259200000, 
                 events: {
 //                    setExtremes: function(event){
 //                        var s = new Date().getTime();
@@ -245,23 +246,23 @@ function createTimeChart(containerName, chartData, titleText, subtitleText, seri
                     afterSetExtremes: function(event) {
                         //console.log('Extremes set: ' + event.min + '\t' + event.max);
                     }
-                }, 
-	    	dateTimeLabelFormats: {
-	    		day : labelFormatD,
-	    		week: labelFormatW,
-	    		month: labelFormatM,
-	            year: '%Y'
-	            
-//		            	second: '%Y-%m-%d<br/>%H:%M:%S',
-//						minute: '%Y-%m-%d<br/>%H:%M',
-//						hour: '%Y-%m-%d<br/>%H:%M',
-//						day: '%Y<br/>%m-%d',
-//						week: '%Y<br/>%m-%d',
-//						month: '%Y-%m',
-//						year: '%Y'
-					
-					
-            }
+                } 
+//	    	dateTimeLabelFormats: {
+//	    		day : labelFormatD,
+//	    		week: labelFormatW,
+//	    		month: labelFormatM,
+//	            year: '%Y'
+//	            
+////		            	second: '%Y-%m-%d<br/>%H:%M:%S',
+////						minute: '%Y-%m-%d<br/>%H:%M',
+////						hour: '%Y-%m-%d<br/>%H:%M',
+////						day: '%Y<br/>%m-%d',
+////						week: '%Y<br/>%m-%d',
+////						month: '%Y-%m',
+////						year: '%Y'
+//					
+//					
+//            }
 	    },
 	    rangeSelector: {
 			inputEnabled: false,

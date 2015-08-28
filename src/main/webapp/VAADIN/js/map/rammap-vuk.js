@@ -425,7 +425,7 @@ function rammapInitVuk() {
 //	});
 //}
 
-geojson = L.geoJson(geoData[2], {//areas
+geojson = L.geoJson(countryData, {//areas
 	style: getStyleHash,
 	onEachFeature: onEachFeature,
 }).addTo(map);

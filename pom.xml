@@ -4,7 +4,7 @@
     <groupId>rs.pupin.jpo</groupId>
     <artifactId>esta-ld</artifactId>
     <packaging>war</packaging>
-    <version>1.0.1</version>
+    <version>1.0.2</version>
     <name>ESTA-LD</name>
 
     <properties>

@@ -1141,7 +1141,7 @@ cbfuncOneFreeVuk = function(data) {
     //    sortArrays(chartBarValues, chartBarCategories, false);
         $('body').css('cursor', 'default');
 
-        if (timeTitle !== '') {//show Highstock chart
+        if (javaHasTimeDimension && javaFreeDimensions[0] === 0/*timeTitle !== ''*/) {//show Highstock chart
             var chartData = createHighstockDataFromElpoStat(categoriesArray, valuesArray);
             var granularity = getGranularityFromElpoStat(categoriesArray);
             createTimeChart('highchartsbarmultiple', chartData, timeTitle, '', javaSelectedDimensions[javaFreeDimensions[0]], 'column', granularity);
@@ -1154,9 +1154,11 @@ cbfuncOneFreeVuk = function(data) {
 
 function getGranularityFromElpoStat(elpoStatArray) {
     for (var i = 0; i < elpoStatArray.length; i++) {
-        if (elpoStatArray[i].indexOf('M') > -1) {
-            return 'M';
-        }
+        if (elpoStatArray[i].lastIndexOf('-') > 2) return 'D';
+        else if (elpoStatArray[i].lastIndexOf('-') > -1) return 'M';
+//        if (elpoStatArray[i].indexOf('M') > -1) {
+//            return 'M';
+//        }
     }
     return 'Y';
 }
@@ -1166,18 +1168,31 @@ function createHighstockDataFromElpoStat(elpoStatArray, valuesArray) {
     var chartDataValues = [];
     for (var i = 0; i < elpoStatArray.length; i++) {
             
-            var year = elpoStatArray[i].substring(0, 4);
-            var month = 0;
-            if (elpoStatArray[i].length > 4) {
-                if (elpoStatArray[i].length === 6)
-                    month = elpoStatArray[i].substring(5, 6);
-                else
-                    month = elpoStatArray[i].substring(5, 7);
-//                month = elpoStatArray[i].substring(5, elpoStatArray[i].length);
+            var cleanedDate = elpoStatArray[i].replace('Y','').replace('M','-');
+            var plusPos = cleanedDate.indexOf('+');
+            var tPos = cleanedDate.indexOf('T');
+            if (tPos === -1 && plusPos > -1) {
+                cleanedDate = cleanedDate.substring(0,plusPos);
+//                cleanedDate = cleanedDate.substring(0,plusPos) + 'T00:00:00' + cleanedDate.substring(plusPos, cleanedDate.length);
+//                cleanedDate = cleanedDate.replace('+','T00:00:00+');
             }
+            var time = Date.parse(cleanedDate);
             
-            chartDataNames.push(Date.UTC(year, month));
-            chartDataValues.push(valuesArray[i]);
+//            var year = elpoStatArray[i].substring(0, 4);
+//            var month = 0;
+//            if (elpoStatArray[i].length > 4) {
+//                if (elpoStatArray[i].length === 6)
+//                    month = elpoStatArray[i].substring(5, 6);
+//                else
+//                    month = elpoStatArray[i].substring(5, 7);
+////                month = elpoStatArray[i].substring(5, elpoStatArray[i].length);
+//            }
+            
+//            chartDataNames.push(Date.UTC(year, month));
+            if (!isNaN(time)) {
+                chartDataNames.push(time);
+                chartDataValues.push(valuesArray[i]);
+            }
     }
     
     sortArrays(chartDataNames, chartDataValues, true);//sort by names (dates)
