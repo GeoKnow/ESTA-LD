@@ -1,5 +1,4 @@
 ESTA-LD
-
 =======
 
 Exploratory Spatio-Temporal Analysis of Linked Data
