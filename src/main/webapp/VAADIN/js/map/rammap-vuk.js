@@ -402,6 +402,7 @@ function redrawMap(data, minObservationValue, maxObservationValue, updateStyle) 
     }
     else {
         geojson.clearLayers();
+        // TODO: should check if data contains layers and add only if there are some
         geojson.addData(data);
     } 
 

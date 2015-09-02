@@ -52,7 +52,7 @@ function createTimeChart(containerName, chartData, titleText, subtitleText, seri
                         var s = new Date().getTime();
                         var minInt = event.target.xAxis[0].min;
                         var maxInt = event.target.xAxis[0].max;
-                        if (geoForMapAllTimesData.active){
+                        if (geoForMapAllTimesData.active && geoForMapAllTimesData.dataAllTimes.results.bindings.length > 0){
                             var newData = {
                                 results: {
                                     bindings: []
