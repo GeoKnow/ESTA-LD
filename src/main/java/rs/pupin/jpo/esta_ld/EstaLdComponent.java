@@ -62,10 +62,14 @@ public class EstaLdComponent extends CustomComponent {
     private Button[] dimNames;
     private ComboBox[] dimValues;
     private static final String LEVEL_LABEL_CONTENT = 
-            "Geo granularity level "
+//            "<span>Geo granularity level  </span>"
+//            + "<input id=\"geominus\" type=\"button\" style=\"height:100%;\" value=\"-\"></input>"
+//            + "<input id=\"geoLevelLabel\" type=\"text\" readonly=\"\" value=\"Level 0\" style=\"width: 140px; text-align: center;\"></input>"
+//            + "<input id=\"geoplus\" type=\"button\" style=\"height:100%;\" value=\"+\"></input> ";
+            "Geo granularity level  "
             + "<input id=\"geominus\" type=\"button\" style=\" width:25px; height:25px;\" value=\"-\"></input>"
             + "<input id=\"geoLevelLabel\" type=\"text\" readonly=\"\" value=\"Level 0\" style=\"width: 140px; height: 25 px; text-align: center;\"></input>"
-            + "<input id=\"geoplus\" type=\"button\" style=\" width:25px; height:25px;\" value=\"+\"></input>";
+            + "<input id=\"geoplus\" type=\"button\" style=\" width:25px; height:25px;\" value=\"+\"></input> ";
     private static final String GEO_PART_WIDTH = "600px";
     private static final String CONTENT_ELEM_HEIGHT = "25px";
     private Property.ValueChangeListener dimListener;
@@ -102,6 +106,7 @@ public class EstaLdComponent extends CustomComponent {
     private boolean indSettingsVisible;
     private boolean indAnimatorEnabled = false;
     private boolean indShowInspect = false;
+    private String graph;
     
     public static class ValueWrapper {
         private final Value value;
@@ -127,8 +132,9 @@ public class EstaLdComponent extends CustomComponent {
         setCompositionRoot(mainLayout);
     }
     
-    public EstaLdComponent(String endpoint){
+    public EstaLdComponent(String endpoint, String graph){
         this.endpoint = endpoint;
+        this.graph = graph;
         
         setSizeFull();
         initializeRepository();
@@ -527,6 +533,7 @@ public class EstaLdComponent extends CustomComponent {
         hl.setSpacing(true);
         final Label levelLabel = new Label(LEVEL_LABEL_CONTENT, Label.CONTENT_XHTML);
         hl.addComponent(levelLabel);
+        hl.setComponentAlignment(levelLabel, Alignment.MIDDLE_LEFT);
         btnAggregColor = new Button("Aggregated Coloring");
         btnAggregColor.addStyleName("dim-name");
         btnAggregColor.addListener(new Button.ClickListener() {
@@ -880,9 +887,11 @@ public class EstaLdComponent extends CustomComponent {
         refresh();
         Iterator<DataCubeGraph> iter = dcRepo.getDataCubeGraphs().iterator();
         DataCubeGraph g = null;
+        String targetGraph = "http://demo/reg-dev-polygons/";
+        if (graph != null) targetGraph = graph;
         while (iter.hasNext()){
             g = iter.next();
-            if (g.getUri().equalsIgnoreCase("http://demo/reg-dev-polygons/")){
+            if (g.getUri().equalsIgnoreCase(targetGraph)){
                 break;
             }
         }

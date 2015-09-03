@@ -42,10 +42,13 @@ public class MyVaadinApplication extends Application
                 if (!first) return;
                 first = false;
                 String[] titleParam = parameters.get("endpoint");
+                String[] graphParam = parameters.get("graph");
                 String endpointURL = (titleParam == null)?null:titleParam[0];
-                System.out.println(endpointURL);
+                String graphURL = (graphParam == null)?null:graphParam[0];
+                System.out.println("Endpoint: " + endpointURL);
+                System.out.println("Graph: " + graphURL);
                 
-                EstaLdComponent component = new EstaLdComponent(endpointURL);
+                EstaLdComponent component = new EstaLdComponent(endpointURL, graphURL);
         
                 window.addComponent(component);
                 
@@ -58,6 +61,11 @@ public class MyVaadinApplication extends Application
                 window.executeJavaScript("chartsInitVuk()");
                 window.executeJavaScript("timechartInitVuk()");
                 component.refreshJS();
+            }
+        });
+        window.addListener(new Window.CloseListener() {
+            public void windowClose(Window.CloseEvent e) {
+                window.getApplication().close();
             }
         });
         setMainWindow(window);

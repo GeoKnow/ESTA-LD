@@ -147,6 +147,7 @@ function javaSetGraphAndDataSet(graph, ds, endpoint){
     javaGraph = graph;
     javaDataSet = ds;
 //    sessionStorage.setItem('endpoint','http://147.91.50.167/sparql');
+    endpoint = endpoint.replace('localhost', document.location.hostname);
     sessionStorage.setItem('endpoint', endpoint);
     window.endpoint = endpoint;
 //    sessionStorage.setItem('endpoint','http://localhost:8890/sparql');

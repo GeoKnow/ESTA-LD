@@ -12,6 +12,10 @@ and open the template in the editor.
 
 @import "../reindeer/styles.css";
 
+input#geominus, input#geoplus, input#geoLevelLabel {
+    vertical-align: middle;
+}
+
 #dim-btn-layout > div > div > div {
     /*width: 100%;*/
 }
