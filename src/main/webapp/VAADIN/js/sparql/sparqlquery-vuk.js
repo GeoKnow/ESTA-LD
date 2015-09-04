@@ -345,19 +345,41 @@ function execSparqlDimensionValueChangedVuk(cbfuncOneFreeVuk,cbfuncTwoFreeVuk){
             sparqlQuery += '?y <' + javaGeoDimension + '> ' + javaGeoValue + ' . ';
         }
     }
+    var dateValue = null;
     for (var i=0; i<javaSelectedDimensions.length; i++){
         var freeIndex = javaFreeDimensions.indexOf(i);
         if (freeIndex == -1){
-            sparqlQuery += '?y <' + javaSelectedDimensions[i] + '> ' + javaDimensionValues[i] + ' . ';
+            if (i === 0 && javaHasTimeDimension) {
+                // workaround for date values
+                sparqlQuery += '?y <' + javaSelectedDimensions[i] + '> ?date . ';
+                // now augment the dateValue
+                // first remove type information if it is literal
+                dateValue = javaDimensionValues[i];
+                var caretsIndex = dateValue.indexOf('^^');
+                if (caretsIndex > -1) dateValue = dateValue.slice(0, caretsIndex);
+                // ending with Z bothers Virtuoso
+                dateValue = dateValue.replace('Z"','"');
+                // ending with +HH:MM also bother virtuoso
+                var plusIndex = dateValue.lastIndexOf('+');
+                if (plusIndex > -1 && caretsIndex > -1) {
+                    dateValue = dateValue.slice(0, plusIndex) + '"';
+                }
+            } else {
+                sparqlQuery += '?y <' + javaSelectedDimensions[i] + '> ' + javaDimensionValues[i] + ' . ';
+            }
         } else {
             var dim = '?dim' + (freeIndex+1).toString();
             sparqlQuery += '?y <' + javaSelectedDimensions[i] + '> ' + dim + ' . ';
         }
     }
+    if (dateValue !== null) {
+        sparqlQuery += 'FILTER(STRSTARTS(STR(?date), STR(' + dateValue + '))) ';
+    }
     sparqlQuery += '} order by ?dim1';
     var numFree = javaFreeDimensions.length;
     if (javaGeoValue != null && javaGeoValue != '' && javaGeoFree) numFree++;
     if (numFree == 2) sparqlQuery += ' ?dim2';
+    else if (numFree === 1) sparqlQuery = sparqlQuery.replace('?dim2','');
     
     var queryUrlEncoded = endpoint + '?query=' + $.URLEncode(sparqlQuery.replace('gYear','date'))+'&format=json';
     
