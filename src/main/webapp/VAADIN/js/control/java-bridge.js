@@ -20,6 +20,63 @@ var vaadinRedrawsMap = false;
 
 var javaAggregatedColoring = false;
 
+function toggleSwap(){
+    if (currentChart === chartBarMultiple){
+        // iterate through all series
+        var newCategories = [];
+        var newSeries = [];
+        var newSeriesNames = chartBarMultiple.xAxis[0].categories;
+        for (var i=0; i<newSeriesNames.length; i++) {
+            newSeries.push([]);
+        }
+        console.log(chartBarMultiple);
+        while (chartBarMultiple.series.length > 0) {
+            var curSeries = chartBarMultiple.series[chartBarMultiple.series.length - 1];
+            newCategories.push(curSeries.name);
+            // push each value into appropriate series
+            console.log(curSeries.data);
+            $(curSeries.data).each(function(index, value){
+                console.log('Adding value ' + value.y + ' to series ' + index);
+                newSeries[index].push(value.y);
+            });
+            // remove the series but do not redraw afterwards (false)
+            curSeries.remove(false);
+        }
+        var moreThanFiveSeries = (newSeries.length > 5);
+        console.log(newCategories);
+        console.log(newSeries);
+        console.log(newSeriesNames);
+        
+        chartBarMultiple.setTitle({text: ''}, {text: ''});
+        chartBarMultiple.xAxis[0].setCategories(newCategories, false);
+        for (var i=newSeries.length-1; i >= 0; i--){
+            var s = chartBarMultiple.addSeries({
+                name: newSeriesNames[i],
+                legendIndex: i+1,
+                data: newSeries[i],
+                visible: true
+//                visible: (moreThanFiveSeries) ? (i === 0) : true
+            }, false);
+        }
+        chartBarMultiple.xAxis[0].update({}, false);
+        chartBarMultiple.yAxis[0].update({}, false);
+        $(chartBarMultiple.series).each(function (k,v) {
+            v.update({}, false);
+        });
+//        $(newSeries).each(function(index, series){
+//            chartBarMultiple.addSeries({
+//                name: newSeriesNames[index],
+//                legendIndex: index+1,
+//                data: series,
+//                visible: (moreThanFiveSeries) ? (index === 0) : true
+//            }, false);
+//        });
+        console.log('Finished Swap');
+        console.log(chartBarMultiple);
+        chartBarMultiple.redraw();
+    }
+}
+
 function toggleStacking() {
     if (currentChart === chartBarMultiple) {
         if (chartBarMultiple.options.plotOptions.column.stacking)

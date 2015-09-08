@@ -107,6 +107,7 @@ public class EstaLdComponent extends CustomComponent {
     private boolean indAnimatorEnabled = false;
     private boolean indShowInspect = false;
     private String graph;
+    private Button btnSwap;
     
     public static class ValueWrapper {
         private final Value value;
@@ -601,6 +602,14 @@ public class EstaLdComponent extends CustomComponent {
         chartControlsLayout.setSpacing(true);
         rightLayout.addComponent(chartControlsLayout);
         rightLayout.setExpandRatio(chartControlsLayout, 0.0f);
+        btnSwap = new Button("Swap");
+        btnSwap.setDebugId("btn-swap");
+        btnSwap.addListener(new Button.ClickListener() {
+            public void buttonClick(Button.ClickEvent event) {
+                getWindow().executeJavaScript("toggleSwap()");
+            }
+        });
+        chartControlsLayout.addComponent(btnSwap);
         btnInvert = new Button("Switch Axes");
         btnInvert.setDebugId("btn-invert");
         btnInvert.addListener(new Button.ClickListener() {

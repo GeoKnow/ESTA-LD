@@ -17,7 +17,7 @@ function hideCharts() {
 function createChartBarMultiple(chartSubtitle, arrayMultiple, chartCategories, seriesNames ) {
 	
 	chartBarMultiple = new Highcharts.Chart(chartBarMultipleOptions);
-    chartBarMultiple.setTitle({text: 'Regional development incentives'}, {text: chartSubtitle});
+    chartBarMultiple.setTitle({text: ''}, {text: chartSubtitle});
     chartBarMultiple.xAxis[0].setCategories(chartCategories, false);
     var numberOfSeries = seriesNames.length;
     for (var i = numberOfSeries - 1; i >= 0; i--) {
@@ -201,11 +201,14 @@ chartBarMultipleOptions = {
 //	        valueSuffix: ' millions'
 //	    },
 	    plotOptions: {
-	        bar: {
-	            dataLabels: {
-	                enabled: false
-	            }
-	        }
+//	        bar: {
+//	            dataLabels: {
+//	                enabled: false
+//	            }
+//	        }
+                column: {
+                    grouping: true
+                }
 	    },
         legend: {
             layout: 'vertical',

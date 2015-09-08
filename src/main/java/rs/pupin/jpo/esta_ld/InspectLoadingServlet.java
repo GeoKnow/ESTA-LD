@@ -31,10 +31,10 @@ public class InspectLoadingServlet extends ApplicationServlet {
         page.write("<script src=\"/ESTA-LD/VAADIN/resources/libs/wellknown.js\"></script>\n");
 //        page.write("<script src=\"/ESTA-LD/VAADIN/resources/libs/resize/ElementQueries.js\"></script>\n");
 //        page.write("<script src=\"/ESTA-LD/VAADIN/resources/libs/resize/ResizeSensor.js\"></script>\n");
-        page.write("<script src=\"/ESTA-LD/VAADIN/js/geojson/geojson-data.js\" ></script>\n");
-        page.write("<script src=\"/ESTA-LD/VAADIN/js/geojson/geojson-area.js\" ></script>\n");
-        page.write("<script src=\"/ESTA-LD/VAADIN/js/geojson/geojson-region.js\" ></script>\n");
-        page.write("<script src=\"/ESTA-LD/VAADIN/js/geojson/geojson-municipality.js\" ></script>\n");
+//        page.write("<script src=\"/ESTA-LD/VAADIN/js/geojson/geojson-data.js\" ></script>\n");
+//        page.write("<script src=\"/ESTA-LD/VAADIN/js/geojson/geojson-area.js\" ></script>\n");
+//        page.write("<script src=\"/ESTA-LD/VAADIN/js/geojson/geojson-region.js\" ></script>\n");
+//        page.write("<script src=\"/ESTA-LD/VAADIN/js/geojson/geojson-municipality.js\" ></script>\n");
         page.write("<script src=\"/ESTA-LD/VAADIN/js/geojson/geojson-country.js\" ></script>\n");
     }
     

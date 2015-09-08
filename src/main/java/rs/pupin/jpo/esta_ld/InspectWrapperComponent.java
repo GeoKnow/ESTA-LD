@@ -62,7 +62,7 @@ public class InspectWrapperComponent extends CustomComponent {
 //            dcRepo = new DummyDCRepository();
 //            geoDimension = null;
 //            return;
-            endpoint = "http://jpo.imp.bg.ac.rs/sparql";
+            endpoint = "http://geoknow.imp.bg.ac.rs/sparql";
         }
         repository = new SPARQLRepository(endpoint);
         try {

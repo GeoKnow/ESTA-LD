@@ -36,6 +36,13 @@ public class InspectApplication extends Application {
                 window.addComponent(component);
             }
         });
+        
+        window.addListener(new Window.CloseListener() {
+            public void windowClose(Window.CloseEvent e) {
+                window.getApplication().close();
+            }
+        });
+        
         setMainWindow(window);
         setTheme("esta-ld");
         

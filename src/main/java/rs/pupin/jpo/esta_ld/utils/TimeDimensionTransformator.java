@@ -136,7 +136,7 @@ public class TimeDimensionTransformator {
                 + "WHERE { graph <" + graph + "> { \n"
                 + "  <" + timeDimension + "> ?p ?o . \n"
                 + "} } \n";
-        GraphQueryResult res = conn.prepareGraphQuery(QueryLanguage.SPARQL, query)
+        conn.prepareTupleQuery(QueryLanguage.SPARQL, query)
                 .evaluate();
     }
     
@@ -196,7 +196,7 @@ public class TimeDimensionTransformator {
                 + "  ?obs qb:dataSet ?ds . \n"
                 + "  ?obs <" + timeDimension + "> ?val . \n"
                 + "} } \n";
-        GraphQueryResult res = conn.prepareGraphQuery(QueryLanguage.SPARQL, query)
+        conn.prepareTupleQuery(QueryLanguage.SPARQL, query)
                 .evaluate();
     }
     
@@ -215,7 +215,7 @@ public class TimeDimensionTransformator {
                 logger.fine("Sending query, counter is " + counter);
                 // close the query and evaluate
                 builder.append("} } \n");
-                conn.prepareGraphQuery(QueryLanguage.SPARQL, builder.toString())
+                conn.prepareTupleQuery(QueryLanguage.SPARQL, builder.toString())
                         .evaluate();
                 // start a new query
                 builder = new StringBuilder();
@@ -227,7 +227,7 @@ public class TimeDimensionTransformator {
         if (counter % limit != 0){
             logger.fine("Sending query, counter is " + counter);
             builder.append("} } \n");
-            conn.prepareGraphQuery(QueryLanguage.SPARQL, builder.toString())
+            conn.prepareTupleQuery(QueryLanguage.SPARQL, builder.toString())
                     .evaluate();
         }
         logger.fine("Finished inserting!!!");
