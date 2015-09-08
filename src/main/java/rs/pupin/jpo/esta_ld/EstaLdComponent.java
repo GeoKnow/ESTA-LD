@@ -237,12 +237,12 @@ public class EstaLdComponent extends CustomComponent {
                     getWindow().executeJavaScript("$('#l-settings').parent().parent().slideToggle()");
                     settingsLayout.setVisible(!settingsLayout.isVisible());
                 } else {
-                    if (indSettingsVisible) {
-                        animator.animate(settingsLayout, VAnimatorProxy.AnimType.ROLL_UP_CLOSE);
-                    } else {
-                        animator.animate(settingsLayout, VAnimatorProxy.AnimType.ROLL_DOWN_OPEN_POP);
-                    }
-                    indSettingsVisible = !indSettingsVisible;
+//                    if (indSettingsVisible) {
+//                        animator.animate(settingsLayout, VAnimatorProxy.AnimType.ROLL_UP_CLOSE);
+//                    } else {
+//                        animator.animate(settingsLayout, VAnimatorProxy.AnimType.ROLL_DOWN_OPEN_POP);
+//                    }
+//                    indSettingsVisible = !indSettingsVisible;
                 }
                 
 //                getWindow().executeJavaScript("setTimeout(function(){ vaadin.forceSync(); map.invalidateSize(); }, 0)");
