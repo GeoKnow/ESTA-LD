@@ -17,8 +17,6 @@ package rs.pupin.jpo.esta_ld;
 
 import com.vaadin.Application;
 import com.vaadin.terminal.ParameterHandler;
-import com.vaadin.ui.Label;
-import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window;
 import java.util.Map;
 

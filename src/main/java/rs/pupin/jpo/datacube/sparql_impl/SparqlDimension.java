@@ -75,6 +75,14 @@ public class SparqlDimension extends SparqlComponentProperty implements Dimensio
             + "  ?val ogc:hasDefaultGeometry ?geo . \n"
             + "  ?geo ogc:asWKT ?geoWKT . \n"
             + "}";
+    private static final String QUERY_HAS_GEOMETRIES_TUPLE = "SELECT ?geo \n"
+            + "FROM <@graph> \n"
+            + "WHERE { \n"
+            + "  ?obs qb:dataSet <@ds> . \n"
+            + "  ?obs <@dim> ?val . \n"
+            + "  ?val ogc:hasDefaultGeometry ?geo . \n"
+            + "  ?geo ogc:asWKT ?geoWKT . \n"
+            + "}";
     
     public SparqlDimension(Repository repository, String uri, String graph){
         super(repository, uri, graph);
@@ -125,7 +133,8 @@ public class SparqlDimension extends SparqlComponentProperty implements Dimensio
 //        }
 //        if (noGeoConceptPresent) return indGeoDimension = Boolean.FALSE;
         
-        if (hasGeometries()) return indGeoDimension = Boolean.TRUE;
+        Boolean hasGeoms = hasGeometries();
+        if (hasGeoms != null && hasGeoms) return indGeoDimension = Boolean.TRUE;
         
         for (String r: GEO_URIS){
             if (r.equals(uri)) 
@@ -195,10 +204,11 @@ public class SparqlDimension extends SparqlComponentProperty implements Dimensio
         
         try {
             RepositoryConnection conn = repository.getConnection();
-            String query = SparqlUtils.PREFIXES + QUERY_HAS_GEOMETRIES;
+            String query = SparqlUtils.PREFIXES + QUERY_HAS_GEOMETRIES_TUPLE;
             query = query.replace("@graph", graph).replace("@dim", uri);
-            BooleanQuery q = conn.prepareBooleanQuery(QueryLanguage.SPARQL, query);
-            return indHasGeometries = q.evaluate();
+//            BooleanQuery q = conn.prepareBooleanQuery(QueryLanguage.SPARQL, query);
+            TupleQuery q = conn.prepareTupleQuery(QueryLanguage.SPARQL, query);
+            return indHasGeometries = q.evaluate().hasNext();
         } catch (RepositoryException ex) {
             Logger.getLogger(SparqlDimension.class.getName()).log(Level.SEVERE, null, ex);
         } catch (QueryEvaluationException ex) {

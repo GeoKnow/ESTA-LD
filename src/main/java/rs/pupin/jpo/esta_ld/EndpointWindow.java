@@ -121,7 +121,10 @@ public class EndpointWindow extends Window {
                     System.out.println(r.isWritable());
                     String qString = "PREFIX qb: <http://purl.org/linked-data/cube#> \n"
                             + "ASK {graph ?g { ?ds qb:structure ?dsd . } }";
-                    boolean graphExists = r.getConnection().prepareBooleanQuery(QueryLanguage.SPARQL, qString).evaluate();
+                    String qStringTuple = "PREFIX qb: <http://purl.org/linked-data/cube#> \n"
+                            + "SELECT ?g WHERE {graph ?g { ?ds qb:structure ?dsd . } }";
+//                    boolean graphExists = r.getConnection().prepareBooleanQuery(QueryLanguage.SPARQL, qString).evaluate();
+                    boolean graphExists = r.getConnection().prepareTupleQuery(QueryLanguage.SPARQL, qStringTuple).evaluate().hasNext();
                     if (!graphExists) {
                         getWindow().showNotification("Selected endpoint doesn't contain data cubes", Notification.TYPE_ERROR_MESSAGE);
                         return;

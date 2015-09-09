@@ -29,23 +29,21 @@ function toggleSwap(){
         for (var i=0; i<newSeriesNames.length; i++) {
             newSeries.push([]);
         }
-        console.log(chartBarMultiple);
+        $.each(chartBarMultiple.series, function (index, series){
+            series.setVisible(true, false);
+        });
+        chartBarMultiple.redraw(false);
         while (chartBarMultiple.series.length > 0) {
             var curSeries = chartBarMultiple.series[chartBarMultiple.series.length - 1];
             newCategories.push(curSeries.name);
             // push each value into appropriate series
-            console.log(curSeries.data);
             $(curSeries.data).each(function(index, value){
-                console.log('Adding value ' + value.y + ' to series ' + index);
                 newSeries[index].push(value.y);
             });
             // remove the series but do not redraw afterwards (false)
             curSeries.remove(false);
         }
         var moreThanFiveSeries = (newSeries.length > 5);
-        console.log(newCategories);
-        console.log(newSeries);
-        console.log(newSeriesNames);
         
         chartBarMultiple.setTitle({text: ''}, {text: ''});
         chartBarMultiple.xAxis[0].setCategories(newCategories, false);
@@ -58,21 +56,16 @@ function toggleSwap(){
 //                visible: (moreThanFiveSeries) ? (i === 0) : true
             }, false);
         }
-        chartBarMultiple.xAxis[0].update({}, false);
-        chartBarMultiple.yAxis[0].update({}, false);
-        $(chartBarMultiple.series).each(function (k,v) {
-            v.update({}, false);
-        });
-//        $(newSeries).each(function(index, series){
-//            chartBarMultiple.addSeries({
-//                name: newSeriesNames[index],
-//                legendIndex: index+1,
-//                data: series,
-//                visible: (moreThanFiveSeries) ? (index === 0) : true
-//            }, false);
+//        chartBarMultiple.xAxis[0].update({}, false);
+//        chartBarMultiple.yAxis[0].update({}, false);
+//        $(chartBarMultiple.series).each(function (k,v) {
+//            v.update({}, false);
 //        });
-        console.log('Finished Swap');
-        console.log(chartBarMultiple);
+        chartBarMultiple.redraw(false);
+        $(chartBarMultiple.series).each(function(index, series){
+            if (moreThanFiveSeries && index < newSeries.length - 1) 
+                series.setVisible(false,false);
+        });
         chartBarMultiple.redraw();
     }
 }

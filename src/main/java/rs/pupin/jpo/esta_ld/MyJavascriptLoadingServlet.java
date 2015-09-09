@@ -12,7 +12,10 @@ import com.vaadin.ui.Window;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import javax.servlet.ServletException;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 /**
  *
@@ -59,6 +62,79 @@ public class MyJavascriptLoadingServlet extends ApplicationServlet {
     @Override
     protected void writeAjaxPageHtmlVaadinScripts(Window window, String themeName, Application application, BufferedWriter page, String appUrl, String themeUri, String appId, HttpServletRequest request) throws ServletException, IOException {
         super.writeAjaxPageHtmlVaadinScripts(window, themeName, application, page, appUrl, themeUri, appId, request); //To change body of generated methods, choose Tools | Templates.
+    }
+    
+    private void appendRestart(HttpServletRequest req, HttpServletResponse resp) throws IOException, ServletException{
+        System.out.println("Entered append");
+        String queryStr = req.getQueryString();
+        if (queryStr == null) {
+            System.out.println("Setting restartApplication...");
+            resp.sendRedirect(req.getRequestURI() + "?restartApplication");
+        } else if (!queryStr.contains("restartApplication")) {
+            System.out.println("Appending restartApplication...");
+            resp.sendRedirect(req.getRequestURI() + "&restartApplication");
+        }
+    }
+    private void appendRestart(ServletRequest req, ServletResponse resp) throws IOException{
+        System.out.println("Entered append new");
+        
+    }
+
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        appendRestart(req, resp);
+        super.doGet(req, resp); //To change body of generated methods, choose Tools | Templates.
+    }
+
+//    @Override
+//    protected URL getApplicationUrl(HttpServletRequest request) throws MalformedURLException {
+//        System.out.println("Entered getApplicationUrl");
+//        URL origURL = super.getApplicationUrl(request);
+//        String urlString = origURL.toExternalForm();
+//        String q = origURL.getQuery();
+//        if (q == null) {
+//            urlString += "?restartApplication";
+//        } else if (!q.contains("restartApplication")) {
+//            urlString += "&restartApplication";
+//        }
+//        System.out.println("Returning " + urlString);
+//        return new URL(urlString);
+//    }
+
+    @Override
+    protected void doTrace(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        System.out.println("Entered doTrace");
+        super.doTrace(req, resp); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    protected void doOptions(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        System.out.println("Entered doOptions");
+        super.doOptions(req, resp); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        System.out.println("Entered doDelete");
+        super.doDelete(req, resp); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        System.out.println("Entered doPut");
+        super.doPut(req, resp); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        System.out.println("Entered doPost");
+        super.doPost(req, resp); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    protected void doHead(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        System.out.println("Entered doHead");
+        super.doHead(req, resp); //To change body of generated methods, choose Tools | Templates.
     }
     
 }

@@ -6,7 +6,7 @@ var chartBarMultiple;
 
 var currentChart = {
     redraw: function(){ console.warn('Called redraw on chart before it got creaed!'); }
-}
+};
 
 function hideCharts() {
 //	$('#highchartsbarsingle').hide();
