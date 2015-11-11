@@ -26,6 +26,7 @@ public class MyJavascriptLoadingServlet extends ApplicationServlet {
     private void writeStuff(BufferedWriter page) throws IOException{
         page.write("<link rel=\"stylesheet\" href=\"/ESTA-LD/VAADIN/resources/css/leaflet.css\" />\n");
         page.write("<link rel=\"stylesheet\" href=\"/ESTA-LD/VAADIN/resources/css/geoknow.css\" />\n");
+        page.write("<link rel=\"stylesheet\" href=\"https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css\">");
         page.write("<script src=\"/ESTA-LD/VAADIN/resources/libs/jquery/1.9.1/jquery.js\"></script>\n");
 //        page.write("<script src=\"/ESTA-LD/VAADIN/resources/libs/highcharts/4.1.8/highcharts.js\"></script>\n");
         page.write("<script src=\"/ESTA-LD/VAADIN/resources/libs/highstock/2.1.8/highstock.js\"></script>\n");

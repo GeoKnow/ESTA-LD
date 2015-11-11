@@ -75,13 +75,17 @@ public class SparqlDimension extends SparqlComponentProperty implements Dimensio
             + "  ?val ogc:hasDefaultGeometry ?geo . \n"
             + "  ?geo ogc:asWKT ?geoWKT . \n"
             + "}";
-    private static final String QUERY_HAS_GEOMETRIES_TUPLE = "SELECT ?geo \n"
+    private static final String QUERY_HAS_GEOMETRIES_TUPLE = "SELECT ?ds \n"
             + "FROM <@graph> \n"
             + "WHERE { \n"
-            + "  ?obs qb:dataSet <@ds> . \n"
+            + "  ?ds qb:structure <@dsd> ."
+//            + "  ?obs qb:dataSet ?ds . \n"
+            + "  FILTER EXISTS { \n"
+            + "  ?obs qb:dataSet ?ds . \n"
             + "  ?obs <@dim> ?val . \n"
             + "  ?val ogc:hasDefaultGeometry ?geo . \n"
             + "  ?geo ogc:asWKT ?geoWKT . \n"
+            + "  } \n"
             + "}";
     
     public SparqlDimension(Repository repository, String uri, String graph){
@@ -124,14 +128,14 @@ public class SparqlDimension extends SparqlComponentProperty implements Dimensio
     public boolean isGeoDimension() {
         if (indGeoDimension != null) return indGeoDimension;
         
-//        boolean noGeoConceptPresent = true;
-//        for (String c: getConcepts()) {
-//            if (c.equalsIgnoreCase(GEO_CONCEPT)){
-//                noGeoConceptPresent = false;
-//                break;
-//            }
-//        }
-//        if (noGeoConceptPresent) return indGeoDimension = Boolean.FALSE;
+        boolean isGeoConceptPresent = false;
+        for (String c: getConcepts()) {
+            if (c.equalsIgnoreCase(GEO_CONCEPT)){
+                isGeoConceptPresent = true;
+                break;
+            }
+        }
+        if (isGeoConceptPresent) return indGeoDimension = Boolean.TRUE;
         
         Boolean hasGeoms = hasGeometries();
         if (hasGeoms != null && hasGeoms) return indGeoDimension = Boolean.TRUE;
@@ -205,7 +209,7 @@ public class SparqlDimension extends SparqlComponentProperty implements Dimensio
         try {
             RepositoryConnection conn = repository.getConnection();
             String query = SparqlUtils.PREFIXES + QUERY_HAS_GEOMETRIES_TUPLE;
-            query = query.replace("@graph", graph).replace("@dim", uri);
+            query = query.replace("@graph", graph).replace("@dim", uri).replace("@dsd", structure.getUri());
 //            BooleanQuery q = conn.prepareBooleanQuery(QueryLanguage.SPARQL, query);
             TupleQuery q = conn.prepareTupleQuery(QueryLanguage.SPARQL, query);
             return indHasGeometries = q.evaluate().hasNext();

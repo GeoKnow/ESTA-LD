@@ -1,5 +1,9 @@
 /* global geoForMapAllTimesData, cbfuncTwoFreeVuk, cbfuncOneFreeVuk, geoData, currentChart, chartBarMultiple */
 
+$(document).ready(function() {
+    $('body').append('<div id="esta-modal"><i class="fa fa-spinner fa-pulse"></i></div>');
+});
+
 var javaSelectedDimensions = [];
 var javaDimensionValues = [];
 var javaPossibleValues = [[]];

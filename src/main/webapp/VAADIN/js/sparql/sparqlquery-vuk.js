@@ -223,11 +223,18 @@ function execSparqlForGeoMapVuk(callbackFunction){
 //            error: function() { alert("There was an error during communication with the sparql endpoint");}
 //        });
     } else {
+//        $('#esta-modal').show();
         $.ajax({
             url: queryUrlEncoded,
             dataType: 'jsonp',
-            success: callbackFunction,
-            error: function() { alert("There was an error during communication with the sparql endpoint");}
+            success: function(data, status, xhr) {
+                $('#esta-modal').hide();
+                callbackFunction(data, status, xhr);
+            },
+            error: function() { 
+                $('#esta-modal').hide();
+                alert("There was an error during communication with the sparql endpoint");
+            }
         });
     }
 }
@@ -385,20 +392,38 @@ function execSparqlDimensionValueChangedVuk(cbfuncOneFreeVuk,cbfuncTwoFreeVuk){
     
     if (numFree == 2){
 //        $.getJSON(queryUrlEncoded, cbfuncTwoFreeVuk).error(function() { alert("There was an error during communication with the sparql endpoint\n"+sparqlQuery); });
+        
+//        $('#esta-modal').show();
         $.ajax({
 	    url: queryUrlEncoded,
 		dataType: 'jsonp',
-	    success: cbfuncTwoFreeVuk,
-	    error: function() { alert("There was an error during communication with the sparql endpoint");}
+	    success: function(data, status, xhr) {
+                $('#esta-modal').hide();
+                cbfuncTwoFreeVuk(data, status, xhr);
+            },
+	    error: function() { 
+                $('#esta-modal').hide(); 
+                alert("There was an error during communication with the sparql endpoint");
+            }
 	});
     } else if (numFree == 1){
 //        $.getJSON(queryUrlEncoded, cbfuncOneFreeVuk).error(function() { alert("There was an error during communication with the sparql endpoint\n"+sparqlQuery); });
+        
+//        $('#esta-modal').show();
         $.ajax({
 	    url: queryUrlEncoded,
 		dataType: 'jsonp',
-	    success: cbfuncOneFreeVuk,
-	    error: function() { alert("There was an error during communication with the sparql endpoint");}
+	    success: function(data, status, xhr) {
+                $('#esta-modal').hide();
+                cbfuncOneFreeVuk(data, status, xhr);
+            },
+	    error: function() { 
+                $('#esta-modal').hide();
+                alert("There was an error during communication with the sparql endpoint");
+            }
 	});
+    } else {
+        $('#esta-modal').hide();
     }
 }
 

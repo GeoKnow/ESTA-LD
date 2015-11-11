@@ -154,11 +154,13 @@ public class TimeDimensionTransformator {
             ObsValPair p = new ObsValPair();
             p.observation = pair.observation;
             String parsed = null;
+            boolean noErrors = true;
             try {
                 parsed = outputFormatter.format(inputFormatter.parse(pair.value));
             } catch (ParseException e) {
                 if (strict) throw e;
                 else {
+                    noErrors = false;
                     Calendar cal = Calendar.getInstance();
                     cal.set(0, 0, 1);
                     parsed = outputFormatter.format(cal.getTime());
@@ -166,11 +168,15 @@ public class TimeDimensionTransformator {
             }
             p.value = "\""
                     + parsed
-                    + "\"^^" + type.typeTag;
+                    + "\"";
+                    // + "\"^^" + type.typeTag; // Type.XSD_DATE.typeTag; //type.typeTag;
             p.literal = parsed;
             p.type = type.longType;
-            parsedPairs.add(p);
-            logger.finest(p.value);
+            if (noErrors) {
+                parsedPairs.add(p);
+                logger.finest(p.value);
+            }
+            else logger.finest("Bad value: p.value");
         }
     }
     

@@ -561,6 +561,7 @@ function runSparqlGeoSelectedVuk(rsgeo) {
 }
 
 function runSparqlDimensionValueChangedVuk(){
+    $('#esta-modal').show();
     runSparqlForGeoMapVuk();
     if (javaFreeDimensions.length >2){
         alert('Cannot show more than 2 dimensions');
@@ -570,6 +571,7 @@ function runSparqlDimensionValueChangedVuk(){
 }
 
 function runSparqlFreeDimensionsChangedVuk(){
+    $('#esta-modal').show();
     var numFree = javaFreeDimensions.length;
     if (javaGeoValue != null && javaGeoValue != '' && javaGeoFree) numFree++;
     
@@ -650,10 +652,12 @@ function cleanValue(value) {
 }
 
 function proxyForGeoMapAllTimes(queryUrlEncoded, timeDimensionUri, timeDimensionValue, callbackFunction){
+//    $('#esta-modal').show();
     $.ajax({
         url: queryUrlEncoded,
         dataType: 'jsonp',
         success: function (data) {
+            $('#esta-modal').hide();
             geoForMapAllTimesData.cbFunction = callbackFunction;
             geoForMapAllTimesData.dataAllTimes = data;
             geoForMapAllTimesData.selectedTimeUri = timeDimensionUri;
@@ -701,7 +705,10 @@ function proxyForGeoMapAllTimes(queryUrlEncoded, timeDimensionUri, timeDimension
             
             if (callbackFunction) callbackFunction(dataToPass);
         },
-        error: function() { alert("There was an error during communication with the sparql endpoint");}
+        error: function() { 
+            $('#esta-modal').hide();
+            alert("There was an error during communication with the sparql endpoint");
+        }
     });
 }
 

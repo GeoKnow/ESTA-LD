@@ -539,9 +539,11 @@ public class InspectComponent extends CustomComponent {
                     getWindow().showNotification("Come on, you need to provide the transformation pattern");
                 }
                 try {
+                    // set type according to the value in the combo box
+                    timeTransformator.setType((TimeDimensionTransformator.Type)comboType.getValue());
                     // first check if the values can be parsed
                     logger.fine("Parsing...");
-                    timeTransformator.parse(fieldPattern.getValue().toString());
+                    timeTransformator.parseLean(fieldPattern.getValue().toString());
                     // if parsing went fine fire away
                     logger.fine("Modifying dimension...");
                     timeTransformator.modifyDimension();
@@ -551,10 +553,10 @@ public class InspectComponent extends CustomComponent {
                     timeTransformator.insertNew();
                     logger.fine("Finished transformation!!!");
                     getWindow().showNotification("Dimension transformed");
-                } catch (ParseException ex) {
-                    logger.log(Level.SEVERE, null, ex);
-                    String msg = "Could not parse values \n";
-                    getWindow().showNotification(msg + ex.getMessage(), Window.Notification.TYPE_ERROR_MESSAGE);
+//                } catch (ParseException ex) {
+//                    logger.log(Level.SEVERE, null, ex);
+//                    String msg = "Could not parse values \n";
+//                    getWindow().showNotification(msg + ex.getMessage(), Window.Notification.TYPE_ERROR_MESSAGE);
                 } catch (RepositoryException ex) {
                     logger.log(Level.SEVERE, null, ex);
                     getWindow().showNotification(ex.getMessage(), Window.Notification.TYPE_ERROR_MESSAGE);
