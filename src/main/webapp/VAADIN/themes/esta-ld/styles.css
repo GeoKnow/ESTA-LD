@@ -211,3 +211,18 @@ div#l-settings {
     color: #4AA6FF;
     z-index: 900001;
 }
+
+.v-label.dim-name.dim-aggreg span {
+    line-height: 25px;
+}
+
+.v-label.dim-name.dim-aggreg {
+    text-align: center;
+    border: 1px solid grey;
+    border-radius: 3px;
+    background: white;
+}
+
+.v-label.dim-name.dim-aggreg.selected {
+    background-color: #B5E0FF;
+}

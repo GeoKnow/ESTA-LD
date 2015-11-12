@@ -8,6 +8,7 @@ var javaSelectedDimensions = [];
 var javaDimensionValues = [];
 var javaPossibleValues = [[]];
 var javaFreeDimensions = [0];
+var javaAggregDimensions = [];
 var javaGraph = '';
 var javaDataSet = '';
 var javaMeasures = [];
@@ -17,6 +18,7 @@ var javaGeoDimension = '';
 var javaGeoPossibleValues = [];
 var javaGeoValue = '';
 var javaGeoFree = false;
+var javaGeoAggregated = false;
 
 var javaHasTimeDimension = false;
 
@@ -117,10 +119,11 @@ function toggleInvert() {
 }
 
 function expandDimNameButtons(){
-    $('.v-button.v-button-dim-name.dim-name').each(function(index, elem){
-        $(this).parent().css("width", "100%");
-        $(this).css("width", "100%");
-    });
+    // TODO better remove this function completely and any calls to it :)
+//    $('.v-button.v-button-dim-name.dim-name').each(function(index, elem){
+//        $(this).parent().css("width", "100%");
+//        $(this).css("width", "100%");
+//    });
 }
 
 function javaSetSelectedDimensions(dims){
@@ -134,6 +137,12 @@ function javaSetDimensionValues(vals){
 function javaSetFreeDimensions(dims){
     javaFreeDimensions = dims;
     runSparqlFreeDimensionsChangedVuk();
+}
+
+function javaSetAggregDimensions(dims, isGeoAggregated) {
+    javaAggregDimensions = dims;
+    javaGeoAggregated = isGeoAggregated;
+    runSparqlDimensionValueChangedVuk();
 }
 
 function javaSetGeoFree(isFree){
@@ -197,6 +206,8 @@ function javaSetPossibleValues(vals){
 }
 
 function javaSetGraphAndDataSet(graph, ds, endpoint){
+    javaAggregDimensions = [];
+    javaFreeDimensions = [0];
     setVisibleGeoLevel(0);
     javaGraph = graph;
     javaDataSet = ds;

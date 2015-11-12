@@ -7,9 +7,11 @@
 package rs.pupin.jpo.esta_ld;
 
 import com.vaadin.data.Property;
+import com.vaadin.event.LayoutEvents;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.ComboBox;
+import com.vaadin.ui.Component;
 import com.vaadin.ui.CustomComponent;
 import com.vaadin.ui.GridLayout;
 import com.vaadin.ui.HorizontalLayout;
@@ -66,12 +68,13 @@ public class EstaLdComponent extends CustomComponent {
 //            + "<input id=\"geominus\" type=\"button\" style=\"height:100%;\" value=\"-\"></input>"
 //            + "<input id=\"geoLevelLabel\" type=\"text\" readonly=\"\" value=\"Level 0\" style=\"width: 140px; text-align: center;\"></input>"
 //            + "<input id=\"geoplus\" type=\"button\" style=\"height:100%;\" value=\"+\"></input> ";
-            "Geo granularity level  "
+            "Geo granularity level &nbsp; "
             + "<input id=\"geominus\" type=\"button\" style=\" width:25px; height:25px;\" value=\"-\"></input>"
             + "<input id=\"geoLevelLabel\" type=\"text\" readonly=\"\" value=\"Level 0\" style=\"width: 140px; height: 25 px; text-align: center;\"></input>"
             + "<input id=\"geoplus\" type=\"button\" style=\" width:25px; height:25px;\" value=\"+\"></input> ";
     private static final String GEO_PART_WIDTH = "600px";
     private static final String CONTENT_ELEM_HEIGHT = "25px";
+    private static final String CONTENT_ELEM_WIDTH = "150px";
     private Property.ValueChangeListener dimListener;
     private Property.ValueChangeListener geoListener;
     private Dimension geoDimension;
@@ -108,6 +111,8 @@ public class EstaLdComponent extends CustomComponent {
     private boolean indShowInspect = false;
     private String graph;
     private Button btnSwap;
+    private Label[] dimAggregIndicators;
+    private Label btnAggregGeo;
     
     public static class ValueWrapper {
         private final Value value;
@@ -582,17 +587,32 @@ public class EstaLdComponent extends CustomComponent {
         rightLayout.setSpacing(true);
         contentLayout.addComponent(rightLayout);
 //        contentLayout.setExpandRatio(rightLayout, 2.0f);
-        dimLayout = new GridLayout(4, 1);
+        dimLayout = new GridLayout(6, 1);
         dimLayout.setColumnExpandRatio(0, 0.0f);
-        dimLayout.setColumnExpandRatio(1, 2.0f);
-        dimLayout.setColumnExpandRatio(2, 0.0f);
-        dimLayout.setColumnExpandRatio(3, 2.0f);
+        dimLayout.setColumnExpandRatio(1, 0.0f);
+        dimLayout.setColumnExpandRatio(2, 2.0f);
+        dimLayout.setColumnExpandRatio(3, 0.0f);
+        dimLayout.setColumnExpandRatio(4, 0.0f);
+        dimLayout.setColumnExpandRatio(5, 2.0f);
         dimLayout.setDebugId("dim-layout");
 //        dimLayout.setSizeFull();
         dimLayout.setWidth("100%");
         dimLayout.setSpacing(true);
 //        rightLayout.addComponent(dimLayout);
         settingsLayout.addComponent(dimLayout);
+        
+        dimLayout.addListener(new LayoutEvents.LayoutClickListener() {
+            public void layoutClick(LayoutEvents.LayoutClickEvent event) {
+                Component btnAggreg = event.getClickedComponent();
+                if (!(btnAggreg instanceof Label)) return;
+                if (btnAggreg.getStyleName().contains("selected")) {
+                    btnAggreg.removeStyleName("selected");
+                } else {
+                    btnAggreg.addStyleName("selected");
+                }
+                aggregDimensionsChanged();
+            }
+        });
         
         refreshDimensions();
         
@@ -688,6 +708,7 @@ public class EstaLdComponent extends CustomComponent {
 //        measName.setSizeUndefined();
 //        measName.setWidth("100%");
         measName.setHeight(CONTENT_ELEM_HEIGHT);
+        measName.setWidth(CONTENT_ELEM_WIDTH);
         measName.addStyleName("dim-name");
         measName.addStyleName("unselectable");
         measValues = new ComboBox(null, measures);
@@ -710,8 +731,8 @@ public class EstaLdComponent extends CustomComponent {
         dimLayout.addComponent(measName, columnIndex, rowIndex);
         columnIndex++;
 //        dimLayout.setExpandRatio(measName, 2.0f);
-        dimLayout.addComponent(measValues, columnIndex, rowIndex);
-        columnIndex++;
+        dimLayout.addComponent(measValues, columnIndex, rowIndex, columnIndex+1, rowIndex);
+        columnIndex+=2;
 //        dimLayout.setComponentAlignment(measValues, Alignment.BOTTOM_LEFT);
         LinkedList<Dimension> dimsForShow = new LinkedList<Dimension>();
         for (Dimension dim: ds.getStructure().getDimensions()){
@@ -725,6 +746,7 @@ public class EstaLdComponent extends CustomComponent {
                 dimsForShow.add(dim);
         }
         dimNames = new Button[dimsForShow.size()];
+        dimAggregIndicators = new Label[dimsForShow.size()];
         dimValues = new ComboBox[dimsForShow.size()];
         int i=0;
         
@@ -738,6 +760,7 @@ public class EstaLdComponent extends CustomComponent {
 //            btnName.setSizeUndefined();
 //            btnName.setWidth("100%");
             btnName.setHeight(CONTENT_ELEM_HEIGHT);
+            btnName.setWidth(CONTENT_ELEM_WIDTH);
             btnName.setData(dim);
             btnName.addStyleName("dim-name");
             if (firstPass){
@@ -755,6 +778,25 @@ public class EstaLdComponent extends CustomComponent {
                 }
             });
             dimNames[i] = btnName;
+            
+            final Label btnAggreg = new Label("<span>&Sigma;</span>", Label.CONTENT_XHTML);
+            btnAggreg.setWidth("30px");
+            btnAggreg.setHeight(CONTENT_ELEM_HEIGHT);
+            btnAggreg.setData(dim);
+            btnAggreg.addStyleName("dim-name");
+            btnAggreg.addStyleName("dim-aggreg");
+            // this will have to go to the layout listener
+//            btnAggreg.addListener(new Button.ClickListener() {
+//                public void buttonClick(Button.ClickEvent event) {
+//                    if (btnAggreg.getStyleName().contains("selected")) {
+//                        btnAggreg.removeStyleName("selected");
+//                    } else {
+//                        btnAggreg.addStyleName("selected");
+//                        aggregDimensionsChanged();
+//                    }
+//                }
+//            });
+            dimAggregIndicators[i] = btnAggreg;
             
             // create a combo box for picking dimension value
             Collection<Value> vals = ds.getValuesForDimension(dim);
@@ -789,13 +831,19 @@ public class EstaLdComponent extends CustomComponent {
 //            rLayout.addComponent(boxValue);
 //            rLayout.setComponentAlignment(boxValue, Alignment.BOTTOM_LEFT);
             dimLayout.addComponent(btnName, columnIndex, rowIndex);
-            if (++columnIndex == 4) {
+            if (++columnIndex == 6) {
+                columnIndex = 0;
+                rowIndex++;
+                dimLayout.setRows(rowIndex+1);
+            }
+            dimLayout.addComponent(btnAggreg, columnIndex, rowIndex);
+            if (++columnIndex == 6) {
                 columnIndex = 0;
                 rowIndex++;
                 dimLayout.setRows(rowIndex+1);
             }
             dimLayout.addComponent(boxValue, columnIndex, rowIndex);
-            if (++columnIndex == 4) {
+            if (++columnIndex == 6) {
                 columnIndex = 0;
                 rowIndex++;
                 dimLayout.setRows(rowIndex+1);
@@ -813,6 +861,7 @@ public class EstaLdComponent extends CustomComponent {
 //            btnGeo.setSizeUndefined();
 //            btnGeo.setWidth("100%");
             btnGeo.setHeight(CONTENT_ELEM_HEIGHT);
+            btnGeo.setWidth(CONTENT_ELEM_WIDTH);
             btnGeo.setData(geoDimension);
             btnGeo.addStyleName("dim-name");
             btnGeo.addStyleName("geo-name");
@@ -826,6 +875,12 @@ public class EstaLdComponent extends CustomComponent {
                     freeDimensionsChanged();
                 }
             });
+            
+            btnAggregGeo = new Label("<span>&Sigma;</span>", Label.CONTENT_XHTML);
+            btnAggregGeo.setHeight(CONTENT_ELEM_HEIGHT);
+            btnAggregGeo.setData(geoDimension);
+            btnAggregGeo.addStyleName("dim-name");
+            btnAggregGeo.addStyleName("dim-aggreg");
             
             StringBuilder builder = new StringBuilder();
             Collection<Value> posVals = ds.getValuesForDimension(geoDimension);
@@ -860,6 +915,8 @@ public class EstaLdComponent extends CustomComponent {
 //            rLayout.addComponent(boxGeo);
 //            rLayout.setComponentAlignment(boxGeo, Alignment.BOTTOM_LEFT);
             dimLayout.addComponent(btnGeo, columnIndex, rowIndex);
+            columnIndex++;
+            dimLayout.addComponent(btnAggregGeo, columnIndex, rowIndex);
             columnIndex++;
             dimLayout.addComponent(boxGeo, columnIndex, rowIndex);
             columnIndex++;
@@ -952,6 +1009,23 @@ public class EstaLdComponent extends CustomComponent {
             builder.replace(0, 1, "javaSetFreeDimensions([").append("])");
         else 
             builder.append("javaSetFreeDimensions([])");
+        getWindow().executeJavaScript(builder.toString());
+    }
+    
+    private void aggregDimensionsChanged() {
+        StringBuilder builder = new StringBuilder();
+        for (int i=0; i<dimAggregIndicators.length; i++) {
+            if (dimAggregIndicators[i].getStyleName().contains("selected"))
+                builder.append(",").append(i);
+        }
+        String isGeoAggregated = "false";
+        if (geoDimension != null && btnAggregGeo.getStyleName().contains("selected")) {
+            isGeoAggregated = "true";
+        }
+        if (builder.length() > 0)
+            builder.replace(0, 1, "javaSetAggregDimensions([").append("],").append(isGeoAggregated).append(")");
+        else 
+            builder.append("javaSetAggregDimensions([],").append(isGeoAggregated).append(")");
         getWindow().executeJavaScript(builder.toString());
     }
     

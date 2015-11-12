@@ -273,7 +273,7 @@ function loadGeoNamesAndValues(updateStyle) {
                     var uri = selectedGeoLevelCodes[i];
                     var value = hashCodeToObservationValues[uri];
 
-                    var intValue = parseInt(value);
+                    var intValue = parseFloat(value);
                     if (!isNaN(intValue)) {
                         if (maxObservationValue === 0 || intValue > maxObservationValue) {
                                 maxObservationValue = intValue;
@@ -564,6 +564,7 @@ function runSparqlDimensionValueChangedVuk(){
     $('#esta-modal').show();
     runSparqlForGeoMapVuk();
     if (javaFreeDimensions.length >2){
+        $('#esta-modal').hide();
         alert('Cannot show more than 2 dimensions');
         return;
     }
@@ -576,6 +577,7 @@ function runSparqlFreeDimensionsChangedVuk(){
     if (javaGeoValue != null && javaGeoValue != '' && javaGeoFree) numFree++;
     
     if (numFree > 2){
+        $('#esta-modal').hide();
         alert('Cannot show more than 2 dimensions');
         return;
     }
@@ -652,7 +654,7 @@ function cleanValue(value) {
 }
 
 function proxyForGeoMapAllTimes(queryUrlEncoded, timeDimensionUri, timeDimensionValue, callbackFunction){
-//    $('#esta-modal').show();
+    $('#esta-modal').show();
     $.ajax({
         url: queryUrlEncoded,
         dataType: 'jsonp',
@@ -1098,7 +1100,7 @@ cbfuncOneFreeVuk = function(data) {
                 var dim1Uri = val.dim1.value;
                 var code = uriLastPart(dim1Uri);
                 var value = val.observation.value;
-                var intValue = parseInt(value);
+                var intValue = parseFloat(value);
                 var indexI = findIndexForGeoDimension(dim1Uri);
                 valuesArray[indexI] = intValue;
         });
@@ -1134,7 +1136,7 @@ cbfuncOneFreeVuk = function(data) {
                 
                 var code = uriLastPart(dim1Uri);
                 var value = val.observation.value;
-                var intValue = parseInt(value);
+                var intValue = parseFloat(value);
                 var indexI = findIndexForDimension(categoriesIndex,dim1Uri);
                 valuesArray[indexI] = intValue;
         });

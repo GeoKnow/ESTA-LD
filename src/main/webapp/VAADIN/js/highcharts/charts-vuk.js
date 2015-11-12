@@ -23,7 +23,7 @@ function createChartBarMultiple(chartSubtitle, arrayMultiple, chartCategories, s
     for (var i = numberOfSeries - 1; i >= 0; i--) {
     	var array = new Array();
     	for (var j = 0; j < arrayMultiple[i].length; j++) {
-			array.push(parseInt(arrayMultiple[i][j]));
+			array.push(parseFloat(arrayMultiple[i][j]));
 		}
     	chartBarMultiple.addSeries({                        
 		    name: seriesNames[i],
