@@ -186,7 +186,7 @@ function isAggregatedDim(index) {
     return false;
 }
 
-function execSparqlForGeoMapVuk(callbackFunction){
+function execSparqlForGeoMapVuk(callbackFunction, execAfterFun){
     var sparqlQuery = 'prefix rs: <http://elpo.stat.gov.rs/lod2/RS-DIC/rs/> \n' +
 				'prefix geo: <http://elpo.stat.gov.rs/lod2/RS-DIC/geo/> \n' +
 				'prefix apr: <http://stat.apr.gov.rs/lod2/> \n' +
@@ -240,7 +240,7 @@ function execSparqlForGeoMapVuk(callbackFunction){
 //    $.getJSON(queryUrlEncoded, callbackFunction).error(function() { alert("There was an error during communication with the sparql endpoint\n"+sparqlQuery); });
     
     if (hasTimeDimension) {
-        proxyForGeoMapAllTimes(queryUrlEncoded, timeDimensionUri, timeDimensionValue, callbackFunction);
+        proxyForGeoMapAllTimes(queryUrlEncoded, timeDimensionUri, timeDimensionValue, callbackFunction, execAfterFun);
 //        $.ajax({
 //            url: queryUrlEncoded,
 //            dataType: 'jsonp',
@@ -255,10 +255,12 @@ function execSparqlForGeoMapVuk(callbackFunction){
             success: function(data, status, xhr) {
                 $('#esta-modal').hide();
                 callbackFunction(data, status, xhr);
+                execAfterFun();
             },
             error: function() { 
                 $('#esta-modal').hide();
                 alert("There was an error during communication with the sparql endpoint");
+                execAfterFun();
             }
         });
     }

@@ -461,7 +461,7 @@ function getRangesLabelsForChart() {
 }
 
 //run sparql query with year and incentive parameters (execute cbfuncYearIncentive in the end)
-function runSparqlForGeoMapVuk() {
+function runSparqlForGeoMapVuk(execAfterFun) {
 	hideCharts();
 //	loading = true;
 	
@@ -470,7 +470,7 @@ function runSparqlForGeoMapVuk() {
 //	
 	$('body').css('cursor', 'wait');
 	
-	execSparqlForGeoMapVuk(cbfuncForGeoMap);
+	execSparqlForGeoMapVuk(cbfuncForGeoMap, execAfterFun);
 }
 
 
@@ -562,13 +562,13 @@ function runSparqlGeoSelectedVuk(rsgeo) {
 
 function runSparqlDimensionValueChangedVuk(){
     $('#esta-modal').show();
-    runSparqlForGeoMapVuk();
+    runSparqlForGeoMapVuk(execSparqlDimensionValueChangedVuk.bind(window, cbfuncOneFreeVuk, cbfuncTwoFreeVuk));
     if (javaFreeDimensions.length >2){
         $('#esta-modal').hide();
         alert('Cannot show more than 2 dimensions');
         return;
     }
-    execSparqlDimensionValueChangedVuk(cbfuncOneFreeVuk,cbfuncTwoFreeVuk);
+//    execSparqlDimensionValueChangedVuk(cbfuncOneFreeVuk,cbfuncTwoFreeVuk);
 }
 
 function runSparqlFreeDimensionsChangedVuk(){
@@ -653,7 +653,7 @@ function cleanValue(value) {
     );
 }
 
-function proxyForGeoMapAllTimes(queryUrlEncoded, timeDimensionUri, timeDimensionValue, callbackFunction){
+function proxyForGeoMapAllTimes(queryUrlEncoded, timeDimensionUri, timeDimensionValue, callbackFunction, execAfterFun){
     $('#esta-modal').show();
     $.ajax({
         url: queryUrlEncoded,
@@ -675,21 +675,36 @@ function proxyForGeoMapAllTimes(queryUrlEncoded, timeDimensionUri, timeDimension
             };
             $(data.results.bindings).each(function (k, item) {
                 if (item.rstime.value === timeDimensionValueCleaned) dataToPass.results.bindings.push(item);
-                // this will work for both xsd and our URIs
-                // TODO: remove support for our URIs
-                var lastPart = item.rstime.value.substring(item.rstime.value.lastIndexOf('/')+1, 
-                    item.rstime.value.length);
-                var dateStartPosition = 0;
-                if (lastPart.substring(0,1) === 'Y') dateStartPosition = 1;
                 
-                var year = parseInt(lastPart.substring(dateStartPosition, dateStartPosition+4));
-                var month = 0;
-                if (lastPart.length > dateStartPosition+4) month = parseInt(lastPart.substring(dateStartPosition+5));
-                item.parsedTime = {
-                    year: year,
-                    month: month,
-                    millis: Date.UTC(year,month)
-                };
+                var curDate = new Date(item.rstime.value);
+                var curMillis = curDate.getTime();
+                
+                if (isNaN(curMillis)){
+                    // this will work for both xsd and our URIs
+                    // TODO: remove support for our URIs
+                    var lastPart = item.rstime.value.substring(item.rstime.value.lastIndexOf('/')+1, 
+                        item.rstime.value.length);
+                    var dateStartPosition = 0;
+                    if (lastPart.substring(0,1) === 'Y') dateStartPosition = 1;
+
+                    var year = parseInt(lastPart.substring(dateStartPosition, dateStartPosition+4));
+                    var month = 0;
+                    if (lastPart.length > dateStartPosition+4) month = parseInt(lastPart.substring(dateStartPosition+5));
+                    item.parsedTime = {
+                        year: year,
+                        month: month,
+                        date: null,
+                        millis: Date.UTC(year,month)
+                    };
+                } else {
+                    // if it is a proper date do this
+                    item.parsedTime = {
+                        year: curDate.getFullYear(),
+                        month: curDate.getMonth() + 1,
+                        date: curDate.getDate(),
+                        millis: curMillis
+                    };
+                }
             });
             
             
@@ -706,10 +721,12 @@ function proxyForGeoMapAllTimes(queryUrlEncoded, timeDimensionUri, timeDimension
             });
             
             if (callbackFunction) callbackFunction(dataToPass);
+            execAfterFun();
         },
         error: function() { 
             $('#esta-modal').hide();
             alert("There was an error during communication with the sparql endpoint");
+            execAfterFun();
         }
     });
 }
