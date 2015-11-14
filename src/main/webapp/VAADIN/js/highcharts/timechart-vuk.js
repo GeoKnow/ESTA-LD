@@ -18,6 +18,14 @@ function calculateAggreg() {
     
 }
 
+var lastNewData = {
+    results: {
+        bindings: []
+    }
+};
+var lastMinIndex = -1;
+var lastMaxIndex = -1;
+
 function onTimeWindowChange(event) {
     var s = new Date().getTime();
     var minInt = event.target.xAxis[0].min;
@@ -34,9 +42,68 @@ function onTimeWindowChange(event) {
         var timeSpan = maxInt - minInt;
         var lastItemTime = geoForMapAllTimesData.dataAllTimes.results.bindings[geoForMapAllTimesData.dataAllTimes.results.bindings.length - 1].parsedTime.millis;
         var previousTime = -1;
-        var beforeTime = -1
-        $(geoForMapAllTimesData.dataAllTimes.results.bindings).each(function (index, item) {
+        var beforeTime = -1;
+        var allBindings = geoForMapAllTimesData.dataAllTimes.results.bindings;
+        var weird = (minInt > lastMaxIndex || maxInt < lastMinIndex);
+        if (!geoForMapAllTimesData.firstPass && !weird) {
+            newData = lastNewData;
+            var newBindings = newData.results.bindings;
+            $(newBindings).each(function(index, item) {
+                var rsgeo = item.rsgeo.value;
+                var sumToAdd = 0;
+                var sumToSubtract = 0;
+                var sumCurrent = parseFloat(item.observation.value);
+                var i = item.minIndex-1;
+                // go left of min and add any new values to the sum
+                while (i>0 && allBindings[i].parsedTime.millis >= minInt && allBindings[i].rsgeo.value===rsgeo) {
+                    var curBinding = allBindings[i];
+                    item.minIndex = i;
+                    if (curBinding.observation.value && !isNaN(curBinding.observation.value))
+                        sumToAdd += parseFloat(curBinding.observation.value);
+                    i--;
+                }
+                // go right of min and deduct values that dropped out
+                i = item.minIndex;
+                while (i<allBindings.length && allBindings[i].parsedTime.millis<minInt && allBindings[i].rsgeo.value===rsgeo) {
+                    var curBinding = allBindings[i];
+                    if (curBinding.observation.value && !isNaN(curBinding.observation.value))
+                        sumToSubtract += parseFloat(curBinding.observation.value);
+                    i++;
+                }
+                if (i<allBindings.length && allBindings[i].rsgeo.value === rsgeo)
+                    item.minIndex = i;
+                else 
+                    item.minIndex = i-1;
+                // go left of max and subtract values that dropped out
+                i = item.maxIndex;
+                while (i>0 && allBindings[i].parsedTime.millis>maxInt && allBindings[i].rsgeo.value===rsgeo) {
+                    var curBinding = allBindings[i];
+                    item.maxIndex = i;
+                    if (curBinding.observation.value && !isNaN(curBinding.observation.value))
+                        sumToSubtract += parseFloat(curBinding.observation.value);
+                    i--;
+                }
+                if (i>0 && allBindings[i].rsgeo.value === rsgeo)
+                    item.maxIndex = i;
+                else
+                    item.maxIndex = i+1;
+                // go right of max and add values that got in
+                i = item.maxIndex+1;
+                while (i<allBindings.length && allBindings[i].parsedTime.millis<=maxInt && allBindings[i].rsgeo.value===rsgeo) {
+                    var curBinding = allBindings[i];
+                    item.maxIndex = i;
+                    if (curBinding.observation.value && !isNaN(curBinding.observation.value))
+                        sumToAdd += parseFloat(curBinding.observation.value);
+                    i++;
+                }
+                sumCurrent += sumToAdd;
+                sumCurrent -= sumToSubtract;
+                item.observation.value = sumCurrent.toString();
+                // TODO do the calculations for aggregated coloring
+            });
+        } else $(geoForMapAllTimesData.dataAllTimes.results.bindings).each(function (index, item) {
 //            var currentDate = Date.UTC(item.parsedTime.year, item.parsedTime.month);
+            geoForMapAllTimesData.firstPass = false;
             var currentDate = item.parsedTime.millis;
             if (currentDate !== beforeTime) {
                 previousTime = beforeTime;
@@ -47,6 +114,8 @@ function onTimeWindowChange(event) {
                 var itemToIncrease = getItemToIncrease(newData.results.bindings, item);
                 if (itemToIncrease === null) {
                     var itemAdd = $.extend(true, {}, item);
+                    itemAdd.minIndex = index;
+                    itemAdd.maxIndex = index;
                     itemAdd.rstime.value = "Aggregated";
                     if (!itemAdd.observation.value)
                         itemAdd.observation.value = 0;
@@ -56,6 +125,7 @@ function onTimeWindowChange(event) {
                     if (item.observation.value && !isNaN(item.observation.value))
                         sum += parseFloat(item.observation.value);
                     itemToIncrease.observation.value = sum.toString();
+                    itemToIncrease.maxIndex = index;
                 }
             }
 
@@ -109,6 +179,9 @@ function onTimeWindowChange(event) {
         });
         console.log('Min: ' + minObservationValueAggregated);
         console.log('Max: ' + maxObservationValueAggregated);
+        lastNewData = newData;
+        lastMinIndex = minInt;
+        lastMaxIndex = maxInt;
         if (geoForMapAllTimesData.cbFunction)
             geoForMapAllTimesData.cbFunction(newData, true);
     }

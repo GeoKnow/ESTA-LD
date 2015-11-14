@@ -57,7 +57,7 @@ var sessionGraph;
 
 
 
-function execSparqlTopGeoBroaderNarrower(callbackFunction) {//FIND TOP ELEMENT (BROADER/NARROWER)
+function execSparqlTopGeoBroaderNarrower(callbackFunction, funExecAfter) {//FIND TOP ELEMENT (BROADER/NARROWER)
 	var sparqlQuery = 'prefix skos: <http://www.w3.org/2004/02/skos/core#> ' +
 		'prefix rs: <http://elpo.stat.gov.rs/lod2/RS-DIC/rs/> ' +
                 'prefix ogc: <http://www.opengis.net/ont/geosparql#> ' +
@@ -85,12 +85,22 @@ function execSparqlTopGeoBroaderNarrower(callbackFunction) {//FIND TOP ELEMENT (
 //	$.getJSON(queryUrlEncoded, callbackFunction).error(function() { alert("There was an error during communication with the sparql endpoint"); });
 	
 	//needs to be synchronous
+        $('#esta-modal').show();
 	$.ajax({
 	    async: false,
 	    url: queryUrlEncoded,
             dataType: 'jsonp',
-	    success: callbackFunction,
-	    error: function(msg) { alert("There was an error during communication with the sparql endpoint"); console.error(msg); }
+	    success: function(data) {
+                if (!funExecAfter) $('#esta-modal').hide();
+                funExecAfter();
+                callbackFunction(data);
+            },
+	    error: function(msg) { 
+                if (!funExecAfter) $('#esta-modal').hide();
+                alert("There was an error during communication with the sparql endpoint"); 
+                console.error(msg); 
+                funExecAfter();
+            }
 	});
 }
 

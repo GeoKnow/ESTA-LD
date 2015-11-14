@@ -336,7 +336,9 @@ public class EstaLdComponent extends CustomComponent {
                 String javaDims = (builderDims.length()==0)?"[]":"[" + builderDims.substring(1) + "]";
                 String javaVals = (builderVals.length()==0)?"[]":"[" + builderVals.substring(1) + "]";
                 String javaFree = (builderFree.length()==0)?"[]":"[" + builderFree.substring(1) + "]"; // This is unused!!!
-                String function = "javaSetDimsVals(" + javaDims + "," + javaVals + ");";
+                String execPopulate = "";
+                if (event == null) execPopulate = ", true";
+                String function = "javaSetDimsVals(" + javaDims + "," + javaVals + execPopulate + ");";
                 getWindow().executeJavaScript(function);
 //                getWindow().executeJavaScript("javaPrintAll()");
             }
@@ -344,7 +346,7 @@ public class EstaLdComponent extends CustomComponent {
         geoListener = new Property.ValueChangeListener() {
             public void valueChange(Property.ValueChangeEvent event) {
                 if (geoDimension == null){
-                    getWindow().executeJavaScript("javaSetGeoAll(null,[],null);");
+                    getWindow().executeJavaScript("javaSetGeoAll(null,[],null,true);");
                     return;
                 }
                 StringBuilder builder = new StringBuilder();
@@ -533,6 +535,7 @@ public class EstaLdComponent extends CustomComponent {
         geoLayout.setSizeFull();
         geoLayout.setSpacing(true);
         contentLayout.addComponent(geoLayout);
+        getWindow().executeJavaScript("$('div#l-geo').append('<div id=\"esta-map-popup\"><p></p></div>')");
 //        contentLayout.setExpandRatio(geoLayout, 0.0f);
         // create Level and +- controls
         HorizontalLayout hl = new HorizontalLayout();
@@ -899,7 +902,7 @@ public class EstaLdComponent extends CustomComponent {
             }
             builder.append("javaSetGeoAll('").append(geoDimension.getUri());
             builder.append("',").append(stringifyCollection(posVals));
-            builder.append(",'").append(selectedValString).append("')");
+            builder.append(",'").append(selectedValString).append("',true)");
             boxGeo = new ComboBox(null, posValsWrapped);
             boxGeo.setData(posVals);
             boxGeo.setImmediate(true);
@@ -923,7 +926,7 @@ public class EstaLdComponent extends CustomComponent {
             
             getWindow().executeJavaScript(builder.toString());
         } else {
-            getWindow().executeJavaScript("javaSetGeoAll('',[],'')");
+            getWindow().executeJavaScript("javaSetGeoAll('',[],'',true)");
         }
         // TODO cover the case where there is more than 1 geo dimension
         
@@ -931,12 +934,12 @@ public class EstaLdComponent extends CustomComponent {
         builderPossibleValues.append("])");
         getWindow().executeJavaScript(builderPossibleValues.toString());
         if (dimsForShow.isEmpty()) {
-            getWindow().executeJavaScript("javaSetFreeDimensions([])");
             if (geoDimension != null) getWindow().executeJavaScript("javaSetGeoFree(true)");
             else getWindow().executeJavaScript("javaSetGeoFree(false)");
+            getWindow().executeJavaScript("javaSetFreeDimensions([], true)");
         } else {
-            getWindow().executeJavaScript("javaSetFreeDimensions([0])");
             getWindow().executeJavaScript("javaSetGeoFree(false)");
+            getWindow().executeJavaScript("javaSetFreeDimensions([0], true)");
         }
         dimListener.valueChange(null);
         getWindow().executeJavaScript("setTimeout(expandDimNameButtons(),200)");

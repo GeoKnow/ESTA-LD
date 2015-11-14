@@ -165,13 +165,20 @@ function highlightFeature(e) {
   });
   console.log(layer);
   var regionURI = layer.feature.properties.URI;
-  var information = "Region: " + regionURI + "<br>Value: " + addThousandsSeparators(hashCodeToObservationValues[regionURI]);
+  var lastSlash = regionURI.lastIndexOf("/");
+  if (lastSlash === regionURI.length-1) {
+      lastSlash = regionURI.substring(0, lastSlash-1).lastIndexOf("/");
+  }
+  var lastHash = regionURI.lastIndexOf("#");
+  if (lastHash === regionURI.length-1) {
+      lastHash = regionURI.substring(0, lastHash-1).lastIndexOf("/");
+  }
+  var startIndex = 0;
+  if (lastSlash > startIndex) startIndex = lastSlash+1;
+  if (lastHash > startIndex) startIndex = lastHash+1;
+  var information = "Region: " + regionURI.substring(startIndex) + "<br>Value: " + addThousandsSeparators(hashCodeToObservationValues[regionURI]);
   $('#esta-map-popup p').html(information);
-  $('#esta-map-popup').css({
-      display: 'block',
-      bottom: '90%',
-      left: '500px'
-  });
+  $('#esta-map-popup').show();
 
   if (!L.Browser.ie && !L.Browser.opera) {
       layer.bringToFront();
@@ -183,7 +190,7 @@ function highlightFeature(e) {
 function resetHighlight(e) {
     var layer = e.target;
   geojson.resetStyle(e.target);
-  $('#esta-map-popup').css("display", "none");
+  $('#esta-map-popup').hide();
   
   info.update();
 }

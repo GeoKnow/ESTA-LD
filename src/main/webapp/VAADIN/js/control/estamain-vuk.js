@@ -619,7 +619,7 @@ function getSelectedRsgeoData(e) {
         runSparqlGeoSelectedVuk(rsgeoSelected);
 }
 
-function populateGeoLevelsLists() {
+function populateGeoLevelsLists(funExecAfter) {
 //    geoLevels.length = 0;
 	while(geoLevels.length > 0) {
             geoLevels.pop();
@@ -628,7 +628,7 @@ function populateGeoLevelsLists() {
             geoPolygons.pop();
         }
 	//Find top geo level
-	execSparqlTopGeoBroaderNarrower(cbfuncGetGeoCodes);
+	execSparqlTopGeoBroaderNarrower(cbfuncGetGeoCodes, funExecAfter);
         
         geojson.clearLayers();
         geojson.addData(geoPolygons[visibleGeoLevel]);
@@ -667,6 +667,7 @@ function proxyForGeoMapAllTimes(queryUrlEncoded, timeDimensionUri, timeDimension
                 
             geoForMapAllTimesData.selectedTimeValue = timeDimensionValueCleaned;
             geoForMapAllTimesData.active = true;
+            geoForMapAllTimesData.firstPass = true;
             
             var dataToPass = {
                 results: {

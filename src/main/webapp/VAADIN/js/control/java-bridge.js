@@ -2,7 +2,6 @@
 
 $(document).ready(function() {
     $('body').append('<div id="esta-modal"><i class="fa fa-spinner fa-pulse"></i></div>');
-    $('body').append('<div id="esta-map-popup"><p></p></div>')
 });
 
 var javaSelectedDimensions = [];
@@ -135,8 +134,10 @@ function javaSetDimensionValues(vals){
     javaDimensionValues = vals;
 }
 
-function javaSetFreeDimensions(dims){
+function javaSetFreeDimensions(dims, doNotUpdateCharts){
     javaFreeDimensions = dims;
+    if (doNotUpdateCharts) return;
+    
     if (javaHasTimeDimension && javaFreeDimensions.indexOf(0)>=0 && javaFreeDimensions.length===1)
         runSparqlDimensionValueChangedVuk();
     else
@@ -169,17 +170,21 @@ function getMeasureUri(){
     return javaSelectedMeasure;
 }
 
-function javaSetDimsVals(dims,vals){
+function javaSetDimsVals(dims,vals,execPopulateFirst){
     javaSelectedDimensions = dims;
     javaDimensionValues = vals;
 //    runSparqlForGeoMapVuk();
-    runSparqlDimensionValueChangedVuk();
+    if (execPopulateFirst)
+        populateGeoLevelsLists(runSparqlDimensionValueChangedVuk);
+    else
+        runSparqlDimensionValueChangedVuk();
 }
 
-function javaSetGeoAll(geo,vals,selectedVal){
+function javaSetGeoAll(geo,vals,selectedVal, doNotQuery){
     javaGeoDimension = geo;
     javaGeoPossibleValues = vals;
     javaGeoValue = selectedVal;
+    if (doNotQuery) return;
     populateGeoLevelsLists();
 }
 
