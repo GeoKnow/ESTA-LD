@@ -2,6 +2,7 @@
 
 $(document).ready(function() {
     $('body').append('<div id="esta-modal"><i class="fa fa-spinner fa-pulse"></i></div>');
+    $('body').append('<div id="esta-map-popup"><p></p></div>')
 });
 
 var javaSelectedDimensions = [];
@@ -136,7 +137,10 @@ function javaSetDimensionValues(vals){
 
 function javaSetFreeDimensions(dims){
     javaFreeDimensions = dims;
-    runSparqlFreeDimensionsChangedVuk();
+    if (javaHasTimeDimension && javaFreeDimensions.indexOf(0)>=0 && javaFreeDimensions.length===1)
+        runSparqlDimensionValueChangedVuk();
+    else
+        runSparqlFreeDimensionsChangedVuk();
 }
 
 function javaSetAggregDimensions(dims, isGeoAggregated) {

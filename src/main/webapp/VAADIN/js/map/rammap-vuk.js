@@ -163,6 +163,15 @@ function highlightFeature(e) {
       dashArray: '',
       fillOpacity: 0.7
   });
+  console.log(layer);
+  var regionURI = layer.feature.properties.URI;
+  var information = "Region: " + regionURI + "<br>Value: " + addThousandsSeparators(hashCodeToObservationValues[regionURI]);
+  $('#esta-map-popup p').html(information);
+  $('#esta-map-popup').css({
+      display: 'block',
+      bottom: '90%',
+      left: '500px'
+  });
 
   if (!L.Browser.ie && !L.Browser.opera) {
       layer.bringToFront();
@@ -172,7 +181,9 @@ function highlightFeature(e) {
 }
 
 function resetHighlight(e) {
+    var layer = e.target;
   geojson.resetStyle(e.target);
+  $('#esta-map-popup').css("display", "none");
   
   info.update();
 }
@@ -189,6 +200,7 @@ var info;
 
 //add thousands separators to the value number
 function addThousandsSeparators(value) {
+    if (typeof value === 'undefined') return 'undefined';
 	if (value != null) {
 		var parts = value.toString().split('.');
 	    parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');

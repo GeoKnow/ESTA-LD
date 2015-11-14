@@ -198,13 +198,15 @@ function execSparqlForGeoMapVuk(callbackFunction, execAfterFun){
                                 '  ?y <' + javaGeoDimension + '> ?rsgeo . \n' + 
                                 '  ?y <' + getMeasureUri() + '> ?observation . \n';
     var hasTimeDimension = false;
+    var isTimeChartVisualized = javaHasTimeDimension && (javaFreeDimensions.indexOf(0) >= 0) && (javaFreeDimensions.length===1);
     var timeDimensionUri = '';
     var timeDimensionValue = '';
     var numGrouped = 0;
     for (i=0; i<javaSelectedDimensions.length; i++){
-        if (javaHasTimeDimension && i === 0) {
+        if (i === 0 && isTimeChartVisualized) {
             // if it is a time dimension make it a free variable
             sparqlQuery += '  ?y <' + javaSelectedDimensions[i] + '> ?rstime . \n';
+            // hasTimeDimension is now essentially the same as isTimeChartVisualized :)
             hasTimeDimension = true;
             timeDimensionUri = javaSelectedDimensions[i];
             timeDimensionValue = javaDimensionValues[i];
@@ -223,7 +225,7 @@ function execSparqlForGeoMapVuk(callbackFunction, execAfterFun){
     }
     if (numGrouped > 0) {
         sparqlQuery = sparqlQuery.replace('?observation', '?obsVal');
-        sparqlQuery = sparqlQuery.replace('?rsgeo ?obsVal', '?rsgeo (sum(?obsVal) as ?observation)');
+        sparqlQuery = sparqlQuery.replace('?rsgeo ?obsVal', '?rsgeo (sum(if(isNumeric(?obsVal),?obsVal,xsd:double(?obsVal))) as ?observation)');
         sparqlQuery = sparqlQuery.replace('> ?observation .', '> ?obsVal .');
         sparqlQuery += ' group by ?rsgeo';
         if (hasTimeDimension) sparqlQuery += ' ?rstime';
