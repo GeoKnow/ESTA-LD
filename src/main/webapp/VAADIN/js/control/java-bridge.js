@@ -135,10 +135,12 @@ function javaSetDimensionValues(vals){
 }
 
 function javaSetFreeDimensions(dims, doNotUpdateCharts){
+    var wasTimeGraph = javaHasTimeDimension && javaFreeDimensions.indexOf(0)>=0 && javaFreeDimensions.length===1;
     javaFreeDimensions = dims;
     if (doNotUpdateCharts) return;
     
-    if (javaHasTimeDimension && javaFreeDimensions.indexOf(0)>=0 && javaFreeDimensions.length===1)
+    var isTimeGraph = javaHasTimeDimension && javaFreeDimensions.indexOf(0)>=0 && javaFreeDimensions.length===1;
+    if (wasTimeGraph || isTimeGraph)
         runSparqlDimensionValueChangedVuk();
     else
         runSparqlFreeDimensionsChangedVuk();
