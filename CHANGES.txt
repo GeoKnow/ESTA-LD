@@ -1,0 +1,2 @@
+release date=12:24 13.02.2015,version=1.0.6,urgency=low,by=Vuk Mijovic <vuk.mijovic@pupin.rs>,distribution=ldstack-nightly
+ * bug fix for recognizing geo dimension, added spinner

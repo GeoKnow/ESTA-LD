@@ -1,0 +1,24 @@
+Package: esta-ld
+Version: 1.0.6
+Section: misc
+Priority: optional
+Architecture: all
+Depends: tomcat7
+Maintainer: Vuk Mijovic <vuk.mijovic@pupin.rs>
+Homepage: https://github.com/GeoKnow/ESTA-LD
+Description: Exploratory Spatio-Temporal Analysis for Linked Data
+ ESTA-LD (Exploratory Spatio-Temporal Analysis for Linked Data)
+ is a software tool that enables exploration and analysis of spatio-temporal
+ linked statistical data modeled using the W3C recommended vocabularies such as
+ RDF Data Cube vocabulary, SKOS (Simple Knowledge Organization System), etc.
+ Spatial dimension is visualized on the choropleth map that supports
+ hierarchical topologies, while the temporal dimension is shown on a chart that
+ allows to select a period in time to be visualized. Changing the selected time
+ interval also updates the choropleth map, thus enabling combined spatio-
+ temporal analysis. All other dimensions are visualized on a chart that
+ supports visualizing up to two dimensions, switching axes, as well as stacking
+ (in case two dimensions are visualized).
+ .
+ After installation, the application is deployed on Tomcat under the context
+ path ESTA-LD.
+Distribution: ldstack-nightly
