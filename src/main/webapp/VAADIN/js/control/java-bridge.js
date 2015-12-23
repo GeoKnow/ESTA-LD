@@ -12,6 +12,7 @@ var javaAggregDimensions = [];
 var javaGraph = '';
 var javaDataSet = '';
 var javaMeasures = [];
+var javaMeasureNames = [];
 var javaSelectedMeasure = null;
 
 var javaGeoDimension = '';
@@ -25,6 +26,26 @@ var javaHasTimeDimension = false;
 var vaadinRedrawsMap = false;
 
 var javaAggregatedColoring = false;
+
+function toggleCompare() {
+    // get position of #btn-compare and calculate position of the popup
+    var btnCompareElem = $('#btn-compare').parent();
+    var btnComparePos = btnCompareElem.offset();
+    var posTop = btnComparePos.top + btnCompareElem.height() + 5;
+    var posRight = $(document).width() - btnComparePos.left - btnCompareElem.width();
+    // open popup just under #btn-compare
+    $("#popup-mask").css("display", "block");
+    var popupElem = $("#popup-measures");
+    popupElem.css({
+        top: posTop,
+        right: posRight
+    });
+    popupElem.slideDown();
+//    popupElem.animate({
+//        transform: "none"
+//    }, 1000);
+    // TODO: CSS animation, aka transform: "translate(50%, -50%) scale(0,0)" then "transform: none;"
+}
 
 function toggleSwap(){
     if (currentChart === chartBarMultiple){
@@ -156,11 +177,25 @@ function javaSetGeoFree(isFree){
     javaGeoFree = isFree;
 }
 
-function javaSetMeasures(measures){
+function populateMeasuresPopup() {
+    var listElem = $("#popup-measures .list-measures ul.choices");
+    listElem.empty();
+    for (var i = 0; i<javaMeasures.length; i++) {
+        var measureUri = javaMeasures[i];
+        var measureName = measureUri;
+        if (javaMeasureNames && javaMeasureNames[i]) measureName = javaMeasureNames[i];
+        listElem.append('<li measure="' + measureUri + '">' + measureName + '</li>');
+    }
+    $("#popup-measures ul.none li").addClass("selected-measure");
+}
+
+function javaSetMeasures(measures, measureNames){
     javaMeasures = measures;
+    javaMeasureNames = measureNames;
     if (!javaMeasures || javaMeasures.length < 1) return javaSelectedMeasure = 'sdmx-measure:obsValue';
 //    else if (javaMeasures.length >= 3) return javaSelectedMeasure = javaMeasures[2];
     else javaSelectedMeasure = javaMeasures[0];
+    populateMeasuresPopup();
 }
 
 function javaSelectMeasure(measure){

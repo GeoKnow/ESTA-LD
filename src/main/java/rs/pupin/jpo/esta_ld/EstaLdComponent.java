@@ -113,6 +113,7 @@ public class EstaLdComponent extends CustomComponent {
     private Button btnSwap;
     private Label[] dimAggregIndicators;
     private Label btnAggregGeo;
+    private Button btnCompare;
     
     public static class ValueWrapper {
         private final Value value;
@@ -625,6 +626,14 @@ public class EstaLdComponent extends CustomComponent {
         chartControlsLayout.setSpacing(true);
         rightLayout.addComponent(chartControlsLayout);
         rightLayout.setExpandRatio(chartControlsLayout, 0.0f);
+        btnCompare = new Button("Compare");
+        btnCompare.setDebugId("btn-compare");
+        btnCompare.addListener(new Button.ClickListener() {
+            public void buttonClick(Button.ClickEvent event) {
+                getWindow().executeJavaScript("toggleCompare()");
+            }
+        });
+        chartControlsLayout.addComponent(btnCompare);
         btnSwap = new Button("Swap");
         btnSwap.setDebugId("btn-swap");
         btnSwap.addListener(new Button.ClickListener() {

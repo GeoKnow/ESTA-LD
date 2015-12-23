@@ -35,7 +35,34 @@ var rsgeoSelected = 'http://elpo.stat.gov.rs/lod2/RS-DIC/geo/RS';
 var geoLevels = [];//geo levels of codes (populated by broader-narrower queries
 var geoPolygons = [];
 
+function hidePopupAndMask() {
+    $("#popup-mask").css("display", "none");
+    $("#popup-measures").css("display", "none");
+}
+
+function compare(event) {
+    $("#popup-measures .list-measures li").removeClass("selected-measure");
+    var target = $(event.target);
+    var selectedMeasure = target.attr("measure");
+    target.addClass("selected-measure");
+    hidePopupAndMask();
+    console.log("User selected: " + selectedMeasure);
+}
+
 function domReadyVuk() {
+    
+    $(".estald-window").append('<div id="popup-measures">\n\
+  <div class="list-measures">\n\
+    <ul class="choices"></ul>\n\
+    <ul class="none"><li class="selected-measure" measure="">None</li></ul>\n\
+  </div>\n\
+</div>');
+    $(".estald-window").append('<div id="popup-mask"></div>');
+    
+    $("#popup-mask").on("click", hidePopupAndMask);
+    $("#popup-measures .list-measures").on("click", "li", compare);
+    
+    populateMeasuresPopup();
     
     new ResizeSensor($('#l-geo'), function(){
         map.invalidateSize();

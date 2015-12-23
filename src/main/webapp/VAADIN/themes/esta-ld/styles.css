@@ -247,3 +247,54 @@ div#esta-map-popup p {
     margin: 25px 0;
     line-height: 25px;
 }
+
+body, html {
+    position: relative;
+    height: 100%;
+}
+
+div#popup-mask {
+    position: absolute;
+    height: 100%;
+    width: 100%;
+    top: 0;
+    left: 0;
+    opacity: 0;
+    background: gray;
+    display: none;
+    z-index: 50000;
+}
+
+div#popup-measures {
+    position: absolute;
+    top: 0;
+    right: 0;
+    display: none;
+    z-index: 50001;
+    background: white;
+    border: 1px solid gray;
+    border-radius: 3px;
+    box-shadow: 0 0 10px lightgray;
+}
+
+#popup-measures ul {
+    padding: 5px 0;
+    margin: 0;
+}
+
+#popup-measures ul.choices {
+    border-bottom: 1px solid #B1B1B1;
+}
+
+#popup-measures li {
+    list-style: none;
+    padding: 5px 15px;
+}
+
+#popup-measures li:hover {
+    background: #E2E2E2;
+}
+
+.selected-measure {
+    background: #B5E0FF;
+}
