@@ -708,13 +708,24 @@ public class EstaLdComponent extends CustomComponent {
         final DataSet ds = (DataSet) selectDataSet.getValue();
         measures = ds.getStructure().getMeasures();
         StringBuilder builderMeasures = new StringBuilder();
+        StringBuilder builderMeasureNames = new StringBuilder();
         for (Measure m: measures){
             builderMeasures.append(", '");
             builderMeasures.append(m.getUri());
             builderMeasures.append("'");
+            if (m.getLabel() != null) {
+                builderMeasureNames.append(", '");
+                builderMeasureNames.append(m.getLabel());
+                builderMeasureNames.append("'");
+            }else {
+                builderMeasureNames.append(", undefined");
+            }
         }
+        builderMeasureNames.replace(0, 2, "[").append("]");
         builderMeasures.replace(0, 2, "javaSetMeasures([");
-        builderMeasures.append("])");
+        builderMeasures.append("], ")
+                .append(builderMeasureNames.toString())
+                .append(")");
         getWindow().executeJavaScript(builderMeasures.toString());
         measName = new Button("Measure");
 //        measName.setSizeUndefined();
