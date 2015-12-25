@@ -207,6 +207,19 @@ function getMeasureUri(){
     return javaSelectedMeasure;
 }
 
+function measurePrettyName(measure) {
+    var type = typeof measure;
+    if (type === "string") {
+        var index = javaMeasures.indexOf(measure);
+        if (index < 0) return measure;
+        var name = javaMeasureNames[index];
+        if (name && name !== "") return name;
+        else return measure;
+    } else if (type === "number") {
+        return measure;
+    } else return measure;
+}
+
 function javaSetDimsVals(dims,vals,execPopulateFirst){
     javaSelectedDimensions = dims;
     javaDimensionValues = vals;

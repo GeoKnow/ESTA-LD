@@ -47,11 +47,30 @@ function compare(event) {
     target.addClass("selected-measure");
     hidePopupAndMask();
     console.log("User selected: " + selectedMeasure);
+    if (selectedMeasure != javaSelectedMeasure) {
+        var q = generateQuery(selectedMeasure);
+        $('#esta-modal').show();
+        $.ajax({
+	    url: q.queryEncoded,
+            dataType: 'jsonp',
+	    success: function(data, status, xhr) {
+                $('#esta-modal').hide();
+                if (q.numFreeDimensions === 1) cbfuncOneFreeVuk(data, status,xhr, selectedMeasure);
+                else if (q.numFreeDimensions === 2) cbfuncTwoFreeVuk(data, status, xhr, selectedMeasure);
+            },
+	    error: function() { 
+                $('#esta-modal').hide(); 
+                alert("There was an error during communication with the sparql endpoint");
+            }
+	});
+        
+    }
 }
 
 function domReadyVuk() {
     
-    $(".estald-window").append('<div id="popup-measures">\n\
+    $(".estald-window").append(
+'<div id="popup-measures">\n\
   <div class="list-measures">\n\
     <ul class="choices"></ul>\n\
     <ul class="none"><li class="selected-measure" measure="">None</li></ul>\n\
@@ -1057,7 +1076,7 @@ cbfuncGeoSelectedVuk = function(data) {
     createChartBarMultiple(chartSubtitle, doubleArray, categoriesArray, seriesArray);
 };
 
-cbfuncTwoFreeVuk = function(data) {
+cbfuncTwoFreeVuk = function(data, status, xhr, isCompareChart) {
     if (javaGeoValue != null && javaGeoValue != '' && javaGeoFree){
         var seriesIndex = javaFreeDimensions[0];
         var doubleArray = new Array(javaPossibleValues[seriesIndex].length);
@@ -1093,7 +1112,7 @@ cbfuncTwoFreeVuk = function(data) {
 //        var chartSubtitle = 'Area: ' + hashCodeToNames[rsgeoSelected];
         var chartSubtitle = '';
 
-        createChartBarMultiple(chartSubtitle, doubleArray, categoriesArray, seriesArray);
+        createChartBarMultiple(chartSubtitle, doubleArray, categoriesArray, seriesArray, isCompareChart);
     } else {
         var seriesIndex = javaFreeDimensions[0];
         var doubleArray = new Array(javaPossibleValues[seriesIndex].length);
@@ -1128,11 +1147,11 @@ cbfuncTwoFreeVuk = function(data) {
         $('body').css('cursor', 'default');
 //        var chartSubtitle = 'Area: ' + hashCodeToNames[rsgeoSelected];
         var chartSubtitle = '';
-        createChartBarMultiple(chartSubtitle, doubleArray, categoriesArray, seriesArray);
+        createChartBarMultiple(chartSubtitle, doubleArray, categoriesArray, seriesArray, isCompareChart);
     }
 }
 
-cbfuncOneFreeVuk = function(data) {
+cbfuncOneFreeVuk = function(data, status, xhr, compareMeasure) {
     if (javaGeoValue != null && javaGeoValue != '' && javaGeoFree){
         var categoriesArray = new Array(javaGeoPossibleValues.length);
         for (var i=0; i<categoriesArray.length; i++)
@@ -1151,7 +1170,7 @@ cbfuncOneFreeVuk = function(data) {
         });
         $('body').css('cursor', 'default');
 
-        createChartBarSingle('', categoriesArray, valuesArray, javaGeoDimension);
+        createChartBarSingle('', categoriesArray, valuesArray, javaGeoDimension, compareMeasure);
     } else {
         var categoriesIndex = javaFreeDimensions[0];
         var categoriesArray = new Array(javaPossibleValues[categoriesIndex].length);
@@ -1198,9 +1217,9 @@ cbfuncOneFreeVuk = function(data) {
         if (javaHasTimeDimension && javaFreeDimensions[0] === 0/*timeTitle !== ''*/) {//show Highstock chart
             var chartData = createHighstockDataFromElpoStat(categoriesArray, valuesArray);
             var granularity = getGranularityFromElpoStat(categoriesArray);
-            createTimeChart('highchartsbarmultiple', chartData, timeTitle, '', javaSelectedDimensions[javaFreeDimensions[0]], 'column', granularity);
+            createTimeChart('highchartsbarmultiple', chartData, timeTitle, '', measurePrettyName(javaSelectedMeasure), 'column', granularity, compareMeasure);
         } else {
-            createChartBarSingle('', categoriesArray, valuesArray, javaSelectedDimensions[javaFreeDimensions[0]]);
+            createChartBarSingle('', categoriesArray, valuesArray, javaSelectedDimensions[javaFreeDimensions[0]], compareMeasure);
         }
     }
     expandDimNameButtons();

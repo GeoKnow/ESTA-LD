@@ -1,3 +1,5 @@
+/* global javaSelectedMeasure */
+
 var endpoint = 'http://147.91.50.167/sparql';
 //var endpoint = 'http://jpo.imp.bg.ac.rs/sparql';
 //var endpoint = 'http://localhost:8890/sparql';
@@ -369,6 +371,92 @@ function execSparqlGeoSelectedVuk(rsgeoString, callbackFunction) {
         success: callbackFunction,
         error: function() { alert("There was an error during communication with the sparql endpoint");}
     });
+}
+
+function generateQuery(measureUri) {
+    if (!measureUri) measureUri = getMeasureUri();
+    var sparqlQuery = 'prefix rs: <http://elpo.stat.gov.rs/lod2/RS-DIC/rs/> \n' +
+				'prefix geo: <http://elpo.stat.gov.rs/lod2/RS-DIC/geo/> \n' +
+				'prefix apr: <http://stat.apr.gov.rs/lod2/> \n' +
+                                'prefix qb: <http://purl.org/linked-data/cube#> \n' + 
+				'prefix sdmx-measure: <http://purl.org/linked-data/sdmx/2009/measure#> \n' +
+				'select distinct ?observation ?dim1 ?dim2 \n' + 
+                                'from <' + javaGraph + '> \n' +
+                                'where { ?y qb:dataSet <' + javaDataSet + '> . \n' + 
+                                '  ?y <' + measureUri + '> ?observation . \n';
+    var numGrouped = 0;
+    if (javaGeoValue != null && javaGeoValue != ''){
+        if (javaGeoFree){
+            if (javaFreeDimensions.length == 0)
+                sparqlQuery += '  ?y <' + javaGeoDimension + '> ?dim1 . \n';
+            else
+                sparqlQuery += '  ?y <' + javaGeoDimension + '> ?dim2 . \n';
+        } else {
+            if (javaGeoAggregated) {
+                sparqlQuery += '  ?y <' + javaGeoDimension + '> ?free' + numGrouped + ' . \n';
+                numGrouped++;
+            } else {
+                sparqlQuery += '  ?y <' + javaGeoDimension + '> ' + javaGeoValue + ' . \n';
+            }
+        }
+    }
+    var dateValue = null;
+    for (var i=0; i<javaSelectedDimensions.length; i++){
+        var freeIndex = javaFreeDimensions.indexOf(i);
+        if (freeIndex == -1){
+            if (isAggregatedDim(i)) {
+                sparqlQuery += '  ?y <' + javaSelectedDimensions[i] + '> ?free' + numGrouped + ' . \n';
+                numGrouped++;
+            } else { 
+                if (i === 0 && javaHasTimeDimension) {
+                    // workaround for date values
+                    sparqlQuery += '?y <' + javaSelectedDimensions[i] + '> ?date . \n';
+                    // now augment the dateValue
+                    // first remove type information if it is literal
+                    dateValue = javaDimensionValues[i];
+                    var caretsIndex = dateValue.indexOf('^^');
+                    if (caretsIndex > -1) dateValue = dateValue.slice(0, caretsIndex);
+                    // ending with Z bothers Virtuoso
+                    dateValue = dateValue.replace('Z"','"');
+                    // ending with +HH:MM also bother virtuoso
+                    var plusIndex = dateValue.lastIndexOf('+');
+                    if (plusIndex > -1 && caretsIndex > -1) {
+                        dateValue = dateValue.slice(0, plusIndex) + '"';
+                    }
+                } else {
+                    sparqlQuery += '  ?y <' + javaSelectedDimensions[i] + '> ' + javaDimensionValues[i] + ' . \n';
+                }
+            }
+        } else {
+            var dim = '?dim' + (freeIndex+1).toString();
+            sparqlQuery += '  ?y <' + javaSelectedDimensions[i] + '> ' + dim + ' . \n';
+        }
+    }
+    if (dateValue !== null) {
+        sparqlQuery += 'FILTER(STRSTARTS(STR(?date), STR(' + dateValue + '))) ';
+    }
+    if (numGrouped > 0) {
+        sparqlQuery = sparqlQuery.replace('?observation', '?obsVal');
+        sparqlQuery = sparqlQuery.replace('?obsVal ?dim1', '(sum(if(isNumeric(?obsVal),?obsVal,xsd:double(?obsVal))) as ?observation) ?dim1');
+        sparqlQuery = sparqlQuery.replace('> ?observation', '> ?obsVal');
+    }
+//    sparqlQuery += '} order by ?dim1';
+    var numFree = javaFreeDimensions.length;
+    if (javaGeoValue != null && javaGeoValue != '' && javaGeoFree) numFree++;
+    var groupOrderBy = '?dim1';
+    if (numFree === 2) groupOrderBy = '?dim1 ?dim2';
+    if (numGrouped > 0) sparqlQuery += '} group by ' + groupOrderBy + ' order by ' + groupOrderBy;
+    else sparqlQuery += '} order by '  + groupOrderBy;
+    if (numFree === 1) sparqlQuery = sparqlQuery.replace('?dim2','');
+    sparqlQuery = sparqlQuery.replace('gYear','date');
+    console.log('Generated query: ');
+    console.log(sparqlQuery);
+    var queryUrlEncoded = endpoint + '?query=' + $.URLEncode(sparqlQuery)+'&format=json';
+    return {
+        numFreeDimensions: numFree,
+        query: sparqlQuery,
+        queryEncoded: queryUrlEncoded
+    };
 }
 
 function execSparqlDimensionValueChangedVuk(cbfuncOneFreeVuk,cbfuncTwoFreeVuk){
