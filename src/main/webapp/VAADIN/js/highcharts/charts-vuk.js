@@ -38,19 +38,74 @@ function createChartBarMultiple(chartSubtitle, arrayMultiple, chartCategories, s
     currentChart = chartBarMultiple;
 }
 
-function createChartBarSingle(chartSubtitle, chartCategories, chartValues, seriesName) {
-	var chartBarSingle = new Highcharts.Chart(chartBarSingleOptions);
+function createChartBarSingle(chartSubtitle, chartCategories, chartValues, seriesName, compareMeasure) {
+    if (!compareMeasure) {
+        var chartBarSingle = new Highcharts.Chart(chartBarSingleOptions);
 	chartBarSingle.setTitle({text: seriesName}, {text: chartSubtitle});
 	chartBarSingle.xAxis[0].setCategories(chartCategories, false);
 	chartBarSingle.series[0].setData(chartValues, true);
 	chartBarSingle.series[0].name=seriesName;
+        chartBarSingle.series[0].update({}, false);
 	chartBarSingle.redraw();
         $('#highchartsbarmultiple').show();
         currentChart = chartBarSingle;
 //        $('#highchartsbarmultiple').show('slow', function() {
             // Animation complete.
 //        });
-	
+    } else {
+        var measPretty = measurePrettyName(compareMeasure);
+        var newSeries = {
+            data: chartValues,
+            name: measPretty,
+            type: currentChart.series[0].type,
+            yAxis: 1,
+            color: "#FFBC75",
+            showInLegend: false
+        };
+        if (currentChart.yAxis.length == 1) {
+            currentChart.addAxis({
+                labels: {
+                    align: 'right',
+                    x: -3
+                },
+                title: {
+                    text: measPretty
+                },
+                top: "0%",
+                height: "47%",
+                offset: 0,
+                lineWidth: 2
+            });
+            currentChart.yAxis[0].update({
+                labels: {
+                    align: 'right',
+                    x: -3
+                },
+                title: {
+                    text: measurePrettyName(javaSelectedMeasure)
+                },
+                top: "53%",
+                height: "47%",
+                offset: 0,
+                opposite: false,
+                lineWidth: 2
+            });
+            currentChart.series[0].update({
+                name: measurePrettyName(javaSelectedMeasure),
+                showInLegend: false
+            });
+            currentChart.addSeries(newSeries);
+        } else if (currentChart.yAxis.length == 2) {
+            currentChart.yAxis[1].update({
+                title: {
+                    text: measPretty
+                }
+            });
+            currentChart.series[1].remove();
+            currentChart.addSeries(newSeries);
+        }
+        currentChart.redraw();
+    }
 }
 
 function chartsInitVuk(){
@@ -74,7 +129,7 @@ function chartsInitVuk(){
 	        }
 	    },
 	    yAxis: {
-	    	min: 0,
+//	    	min: 0,
 //	        title: {
 //	            text: 'Population (millions)',
 //	            align: 'high'

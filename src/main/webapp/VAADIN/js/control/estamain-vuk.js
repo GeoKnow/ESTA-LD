@@ -41,6 +41,11 @@ function hidePopupAndMask() {
 }
 
 function compare(event) {
+    if (javaFreeDimensions.length < 1 || javaFreeDimensions.length > 2) {
+        alert('There have to be 1 or 2 free dimensions!');
+        hidePopupAndMask();
+        return;
+    }
     $("#popup-measures .list-measures li").removeClass("selected-measure");
     var target = $(event.target);
     var selectedMeasure = target.attr("measure");

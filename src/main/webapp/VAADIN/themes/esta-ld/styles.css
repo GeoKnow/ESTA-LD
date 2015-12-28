@@ -293,8 +293,13 @@ div#popup-measures {
 
 #popup-measures li:hover {
     background: #E2E2E2;
+    cursor: pointer;
 }
 
 .selected-measure {
     background: #B5E0FF;
+}
+
+.dim-name:hover, v-button:hover {
+    cursor: pointer;
 }

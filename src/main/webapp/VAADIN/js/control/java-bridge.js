@@ -110,6 +110,12 @@ function toggleStacking() {
             $.extend(true, chartBarMultiple.options.plotOptions, plotOptionsObject);
         }
 
+//        $(chartBarMultiple.xAxis).each(function(k,v) {
+//            v.update({}, false);
+//        });
+//        $(chartBarMultiple.yAxis).each(function(k,v) {
+//            v.update({}, false);
+//        });
         chartBarMultiple.xAxis[0].update({}, false);
         chartBarMultiple.yAxis[0].update({}, false);
         $(chartBarMultiple.series).each(function (k,v) {
@@ -129,8 +135,17 @@ function toggleInvert() {
         else
             currentChart.inverted = true;
 
+//        $(currentChart.xAxis).each(function(k,v) {
+//            v.update({}, false);
+//        });
+//        $(currentChart.yAxis).each(function(k,v) {
+//            v.update({}, false);
+//        });
         currentChart.xAxis[0].update({}, false);
         currentChart.yAxis[0].update({}, false);
+//        if (currentChart.xAxis.length > 2) currentChart.xAxis[2].update({}, false);
+//        if (currentChart.yAxis.length > 2) currentChart.yAxis[2].update({}, false);
+// this doesn't work the axes get inverted, but series take the whole space
         $(currentChart.series).each(function (k,v) {
             v.update({}, false);
         });
@@ -160,6 +175,7 @@ function javaSetFreeDimensions(dims, doNotUpdateCharts){
     javaFreeDimensions = dims;
     if (doNotUpdateCharts) return;
     
+    populateMeasuresPopup();
     var isTimeGraph = javaHasTimeDimension && javaFreeDimensions.indexOf(0)>=0 && javaFreeDimensions.length===1;
     if (wasTimeGraph || isTimeGraph)
         runSparqlDimensionValueChangedVuk();
@@ -170,6 +186,7 @@ function javaSetFreeDimensions(dims, doNotUpdateCharts){
 function javaSetAggregDimensions(dims, isGeoAggregated) {
     javaAggregDimensions = dims;
     javaGeoAggregated = isGeoAggregated;
+    populateMeasuresPopup();
     runSparqlDimensionValueChangedVuk();
 }
 
@@ -182,6 +199,7 @@ function populateMeasuresPopup() {
     listElem.empty();
     for (var i = 0; i<javaMeasures.length; i++) {
         var measureUri = javaMeasures[i];
+        if (measureUri == javaSelectedMeasure) continue;
         var measureName = measureUri;
         if (javaMeasureNames && javaMeasureNames[i]) measureName = javaMeasureNames[i];
         listElem.append('<li measure="' + measureUri + '">' + measureName + '</li>');
@@ -200,6 +218,7 @@ function javaSetMeasures(measures, measureNames){
 
 function javaSelectMeasure(measure){
     javaSelectedMeasure = measure;
+    populateMeasuresPopup();
 }
 
 function getMeasureUri(){
@@ -224,6 +243,7 @@ function javaSetDimsVals(dims,vals,execPopulateFirst){
     javaSelectedDimensions = dims;
     javaDimensionValues = vals;
 //    runSparqlForGeoMapVuk();
+    populateMeasuresPopup();
     if (execPopulateFirst)
         populateGeoLevelsLists(runSparqlDimensionValueChangedVuk);
     else
@@ -245,6 +265,7 @@ function javaSetGeoValue(val){
         alert('Number of free dimensions is greater than 2, namely ' + javaFreeDimensions.length);
         return;
     }
+    populateMeasuresPopup();
     execSparqlDimensionValueChangedVuk(cbfuncOneFreeVuk,cbfuncTwoFreeVuk);
 }
 
@@ -257,6 +278,7 @@ function javaSetAll(dims,vals,free){
     javaDimensionValues = vals;
     javaFreeDimensions = free;
 //    runSparqlForGeoMapVuk();
+    populateMeasuresPopup();
     runSparqlDimensionValueChangedVuk();
 }
 
