@@ -546,15 +546,10 @@ public class EstaLdComponent extends CustomComponent {
         hl.setComponentAlignment(levelLabel, Alignment.MIDDLE_LEFT);
         btnAggregColor = new Button("Aggregated Coloring");
         btnAggregColor.addStyleName("dim-name");
+        btnAggregColor.addStyleName("btn-aggreg-coloring");
         btnAggregColor.addListener(new Button.ClickListener() {
             public void buttonClick(Button.ClickEvent event) {
-                if (btnAggregColor.getStyleName().contains("selected")){
-                    btnAggregColor.removeStyleName("selected");
-                    getWindow().executeJavaScript("javaUnselectAggregColoring()");
-                } else {
-                    btnAggregColor.addStyleName("selected");
-                    getWindow().executeJavaScript("javaSelectAggregColoring()");
-                }
+                getWindow().executeJavaScript("toggleAggregatedColoring()");
             }
         });
         hl.addComponent(btnAggregColor);

@@ -13,6 +13,8 @@ var redrawCount = 0;
 
 var timeChartMin = 0;
 var timeChartMax = 0;
+var timeChartFirstTime = undefined;
+var timeChartLastTime = undefined;
 
 function calculateAggreg() {
     
@@ -30,14 +32,18 @@ function onTimeWindowChange(event) {
     var s = new Date().getTime();
     var minInt = event.target.xAxis[0].min;
     var maxInt = event.target.xAxis[0].max;
+    // TODO figure out a better way to do this, breaks on dense charts when the user hits roght or left boundary
+    if (javaAggregatedColoring && Math.abs((maxInt - minInt) - (timeChartMax - timeChartMin)) > 10) {
+        clearAggregatedColoring();
+    }
+    timeChartMin =  minInt;
+    timeChartMax = maxInt;
     if (geoForMapAllTimesData.active && geoForMapAllTimesData.dataAllTimes.results.bindings.length > 0) {
         var newData = {
             results: {
                 bindings: []
             }
         };
-        minObservationValueAggregated = 0;
-        maxObservationValueAggregated = 0;
         var selectedGeoLevelCodes = geoLevels[visibleGeoLevel];
         var timeSpan = maxInt - minInt;
         var lastItemTime = geoForMapAllTimesData.dataAllTimes.results.bindings[geoForMapAllTimesData.dataAllTimes.results.bindings.length - 1].parsedTime.millis;
@@ -99,10 +105,16 @@ function onTimeWindowChange(event) {
                 sumCurrent += sumToAdd;
                 sumCurrent -= sumToSubtract;
                 item.observation.value = sumCurrent.toString();
-                // TODO do the calculations for aggregated coloring
             });
         } else $(geoForMapAllTimesData.dataAllTimes.results.bindings).each(function (index, item) {
 //            var currentDate = Date.UTC(item.parsedTime.year, item.parsedTime.month);
+            var curTimeInMillis = item.parsedTime.millis;
+            if (timeChartFirstTime === undefined && timeChartLastTime === undefined) {
+                timeChartFirstTime = timeChartLastTime = curTimeInMillis;
+            } else {
+                if (curTimeInMillis < timeChartFirstTime) timeChartFirstTime = curTimeInMillis;
+                if (curTimeInMillis > timeChartLastTime) timeChartLastTime = curTimeInMillis;
+            }
             geoForMapAllTimesData.firstPass = false;
             var currentDate = item.parsedTime.millis;
             if (currentDate !== beforeTime) {
@@ -128,57 +140,7 @@ function onTimeWindowChange(event) {
                     itemToIncrease.maxIndex = index;
                 }
             }
-
-            ///////////////////////////////////////
-            // and now calculation of min and max
-            ///////////////////////////////////////
-            if (geoLevels.length > visibleGeoLevel) {
-                var rsgeoUri = item.rsgeo.value;
-//                                    var code = rsgeoUri.substring(CODE_PREFIX.length, rsgeoUri.length);
-                if (!rsgeoUri)
-                    return true;
-
-                // if this item/geo is not on the map go to next iteration
-                if (selectedGeoLevelCodes.indexOf(rsgeoUri) < 0)
-                    return true; //!!! this shouldn't happen before all geo levels are added
-
-                // update min/,ax
-                // create new current and calc local min and max
-
-                var currentGeo = item.rsgeo.value;
-                var currentSum = parseFloat(item.observation.value);
-                if (currentSum === undefined || currentSum === null)
-                    currentSum = 0;
-                var currentTime = item.parsedTime.millis;
-
-                // if the previus time was in the the time span looking from behind
-                // do not update min and max since this window is not possible
-                if (lastItemTime - previousTime < timeSpan)
-                    return true;
-
-                $(geoForMapAllTimesData.dataAllTimes.results.bindings.slice(index + 1)).each(function (j, timeItem) {
-                    // break if we are at the next geo
-                    if (timeItem.rsgeo.value !== currentGeo)
-                        return false;
-                    // break if the time is out of the window
-                    if (timeItem.parsedTime.millis - currentTime > timeSpan)
-                        return false;
-                    // if it is in the window increase the sum
-                    if (timeItem.observation.value) {
-                        if (!isNaN(timeItem.observation.value))
-                            currentSum += parseFloat(timeItem.observation.value);
-                    }
-                });
-                // now I have the sum for this element, so update min and max
-                if (maxObservationValueAggregated === 0 || currentSum > maxObservationValueAggregated)
-                    maxObservationValueAggregated = currentSum;
-                if (minObservationValueAggregated === 0 || currentSum < minObservationValueAggregated)
-                    minObservationValueAggregated = currentSum;
-            }
-
         });
-        console.log('Min: ' + minObservationValueAggregated);
-        console.log('Max: ' + maxObservationValueAggregated);
         lastNewData = newData;
         lastMinIndex = minInt;
         lastMaxIndex = maxInt;
@@ -187,8 +149,8 @@ function onTimeWindowChange(event) {
     }
     var e = new Date().getTime();
     redrawCount++;
-                        console.log('Redraw called: ' + redrawCount);
-                        console.log('Execution time: ' + (e - s));
+    console.log('Redraw called: ' + redrawCount);
+    console.log('Execution time: ' + (e - s));
 }
 
 function exampleShit(containerName, granularity) {
@@ -409,6 +371,13 @@ function createTimeChart(containerName, chartData, titleText, subtitleText, seri
             currentChart.addSeries(newSeries);
         }
     } else {
+        timeChartMin = 0;
+        timeChartMax = 0;
+        timeChartFirstTime = undefined;
+        timeChartLastTime = undefined;
+        minObservationValueAggregated = 0;
+        maxObservationValueAggregated = 0;
+        clearAggregatedColoring();
         var options = {
 	    chart: {
 	    	renderTo : containerName,

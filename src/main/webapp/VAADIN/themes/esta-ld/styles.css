@@ -105,7 +105,7 @@ div#l-settings {
     background-image: none;
 }
 
-.v-button.v-button-dim-name.dim-name.v-button-selected.selected {
+.v-button.v-button-dim-name.dim-name.selected {
     background-color: #B5E0FF;
     /*background-color: #B7D6FF;*/
     background-image: none;

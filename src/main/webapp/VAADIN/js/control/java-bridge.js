@@ -331,18 +331,77 @@ function uriLastPart(uri){
     return uri.substring(uri.lastIndexOf('/')+1, uri.length);
 }
 
+function toggleAggregatedColoring() {
+    if (javaAggregatedColoring) {
+        $(".v-button.btn-aggreg-coloring").removeClass("selected");
+        javaUnselectAggregColoring();
+    } else {
+        $(".v-button.btn-aggreg-coloring").addClass("selected");
+        javaSelectAggregColoring();
+    }
+}
+
 function javaSelectAggregColoring(){
     console.log('Select Aggreg Coloring');
     javaAggregatedColoring = true;
-    if (geoForMapAllTimesData.cbFunction && geoForMapAllTimesData.newData)
-        geoForMapAllTimesData.cbFunction(geoForMapAllTimesData.newData, true);
+    $('#esta-modal').show();
+    // TODO: there has to be a better, cleaner way to do this
+    window.setTimeout(function() {
+        try { calcAggregMinMax(); } catch(error) { console.err(error); }
+        if (geoForMapAllTimesData.cbFunction)
+            geoForMapAllTimesData.cbFunction(lastNewData, true);
+        $('#esta-modal').hide();
+    }, 100);
 }
 
 function javaUnselectAggregColoring(){
     console.log('Unselect Aggreg Coloring');
     javaAggregatedColoring = false;
-    if (geoForMapAllTimesData.cbFunction && geoForMapAllTimesData.newData)
-        geoForMapAllTimesData.cbFunction(geoForMapAllTimesData.newData, true);
+    if (geoForMapAllTimesData.cbFunction)
+        geoForMapAllTimesData.cbFunction(lastNewData, true);
+}
+
+function clearAggregatedColoring() {
+    javaAggregatedColoring = false;
+    $(".v-button.btn-aggreg-coloring").removeClass("selected");
+}
+
+function calcAggregMinMax() {
+    var selectedGeoLevelCodes = geoLevels[visibleGeoLevel];
+    var curMin = undefined;
+    var curMax = undefined;
+    var beforeTime = -1;
+    var previousTime = -1;
+    var timeSpan = timeChartMax - timeChartMin;
+    var hasReachedLastWindow = false;
+    var lastGeo = undefined;
+    $(geoForMapAllTimesData.dataAllTimes.results.bindings).each(function(index, item) {
+        var curGeo = item.rsgeo.value;
+        if (!curGeo || selectedGeoLevelCodes.indexOf(curGeo) < 0) return true;
+        if (hasReachedLastWindow && curGeo === lastGeo) return true;
+        lastGeo = curGeo;
+        hasReachedLastWindow = (curDate <= timeChartLastTime-timeSpan);
+        
+        var curDate = item.parsedTime.millis;
+        var curValue = parseFloat(item.observation.value);
+        if (curValue === undefined || curValue === null) curValue = 0;
+        $(geoForMapAllTimesData.dataAllTimes.results.bindings.slice(index+1)).each(function(indexNew, itemNew) {
+            var newGeo = itemNew.rsgeo.value;
+            if (newGeo !== curGeo) return false;
+            var newDate = itemNew.parsedTime.millis;
+            if (newDate > curDate+timeSpan) return false;
+            if (!isNaN(itemNew.observation.value))
+                curValue += parseFloat(itemNew.observation.value);
+        });
+        if (curMin === undefined && curMax === undefined) {
+            curMin = curMax = curValue;
+        } else {
+            if (curValue < curMin) curMin = curValue;
+            if (curValue > curMax) curMax = curValue;
+        }
+    });
+    maxObservationValueAggregated = curMax;
+    minObservationValueAggregated = curMin;
 }
 
 function setVisibleGeoLevel(lvl) {

@@ -135,6 +135,7 @@ function domReadyVuk() {
 	//onclick for plus and minus buttons for selecting geo level
 	// Plus button will increment the visibleLayerLevel till max
     $('#geoplus').click(function(e){
+        clearAggregatedColoring();
         console.log('Geo Plus');
         // Stop acting like a button
         e.preventDefault();
@@ -155,6 +156,7 @@ function domReadyVuk() {
     });
     // Minus button will decrement the visibleLayerLevel till 0
     $("#geominus").click(function(e) {
+        clearAggregatedColoring();
         console.log('Geo Minus');
         // Stop acting like a button
         e.preventDefault();
