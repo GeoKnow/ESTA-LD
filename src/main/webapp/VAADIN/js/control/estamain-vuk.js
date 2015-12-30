@@ -53,6 +53,7 @@ function compare(event) {
     hidePopupAndMask();
     console.log("User selected: " + selectedMeasure);
     if (selectedMeasure != javaSelectedMeasure) {
+        chartActivityControl.setCompareActive(true);
         var q = generateQuery(selectedMeasure);
         $('#esta-modal').show();
         $.ajax({

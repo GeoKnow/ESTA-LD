@@ -27,7 +27,143 @@ var vaadinRedrawsMap = false;
 
 var javaAggregatedColoring = false;
 
+var chartTypes = {
+    single: 0,
+    multi: 1,
+    time: 2
+};
+var chartActivityControl = {};
+function setControlButtonEnabled(buttonId, enabled) {
+    if (!enabled) {
+        $('#' + buttonId).addClass("disabled");
+    } else {
+        $('#' + buttonId).removeClass("disabled");
+    }
+}
+(function() {
+    var curChartType = undefined;
+    var compareActive = false;
+    var compareEnabled = true;
+    var swapActive = false;
+    var swapEnabled = true;
+    var switchActive = false;
+    var switchEnabled = true;
+    var stackActive = false;
+    var stackEnabled = true;
+    function clearStatuses() {
+        compareActive = false;
+        swapActive = false;
+        switchActive = false;
+        stackActive = false;
+    }
+    function setSwapEnabled(enabled) {
+        if (swapEnabled === enabled) return;
+        swapEnabled = enabled;
+        setControlButtonEnabled("btn-swap", enabled);
+    }
+    function setStackEnabled(enabled) {
+        if (stackEnabled === enabled) return;
+        stackEnabled = enabled;
+        setControlButtonEnabled("btn-stack", enabled);
+    }
+    function setSwitchEnabled(enabled) {
+        if (switchEnabled === enabled) return;
+        switchEnabled = enabled;
+        setControlButtonEnabled("btn-invert", enabled);
+    }
+    function setCompareEnabled(enabled) {
+        if (compareEnabled === enabled) return;
+        compareEnabled = enabled;
+        setControlButtonEnabled("btn-compare", enabled);
+    }
+    function getChartType() {
+        return curChartType;
+    }
+    function setChartType(chartType) {
+        curChartType = chartType;
+        clearStatuses();
+        switch (chartType) {
+            case chartTypes.single:
+                setStackEnabled(false);
+                setSwitchEnabled(true);
+                setCompareEnabled(true);
+                setSwapEnabled(false);
+                break;
+            case chartTypes.multi:
+                setStackEnabled(true);
+                setSwitchEnabled(true);
+                setCompareEnabled(false);
+                setSwapEnabled(true);
+                break;
+            case chartTypes.time:
+                setStackEnabled(false);
+                setSwitchEnabled(false);
+                setCompareEnabled(true);
+                setSwapEnabled(false);
+                break;
+            default:
+                curChartType = undefined;
+                alert("Tried to set an unknown chart type");
+        }
+    }
+    function setCompareActive(active) {
+        if (compareActive === active) return;
+        compareActive = active;
+        if (compareActive) {
+            setStackEnabled(false);
+            setSwapEnabled(false);
+            setSwitchEnabled(false);
+        } else {
+            if (curChartType !== chartTypes.time) setSwitchEnabled(true);
+            if (curChartType === chartTypes.multi) {
+                setSwapEnabled(true);
+                setStackEnabled(true);
+            }
+        }
+    }
+    function toggleCompare() {
+        if (!compareEnabled) return false;
+        return true;
+    }
+    function updateCompareEnabled() {
+        if (switchActive || swapActive || stackActive || curChartType === chartTypes.multi) {
+            setCompareEnabled(false);
+        } else {
+            setCompareEnabled(true);
+        }
+    }
+    function toggleSwitch() {
+        if (!switchEnabled) return false;
+        switchActive = !switchActive;
+        updateCompareEnabled();
+        return true;
+    }
+    function toggleSwap() {
+        if (!swapEnabled) return false;
+        swapActive = !swapActive;
+        updateCompareEnabled();
+        return true;
+    }
+    function toggleStack() {
+        if (!stackEnabled) return false;
+        stackActive = !stackActive;
+        updateCompareEnabled();
+        return true;
+    }
+    
+    chartActivityControl = {
+        setChartType: setChartType,
+        getChartType: getChartType,
+        toggleCompare: toggleCompare,
+        setCompareActive: setCompareActive,
+        toggleSwitch: toggleSwitch,
+        toggleSwap: toggleSwap,
+        toggleStack: toggleStack
+    };
+})();
+
 function toggleCompare() {
+    if (!chartActivityControl.toggleCompare()) return;
     // get position of #btn-compare and calculate position of the popup
     var btnCompareElem = $('#btn-compare').parent();
     var btnComparePos = btnCompareElem.offset();
@@ -48,6 +184,7 @@ function toggleCompare() {
 }
 
 function toggleSwap(){
+    if (!chartActivityControl.toggleSwap()) return;
     if (currentChart === chartBarMultiple){
         // iterate through all series
         var newCategories = [];
@@ -98,6 +235,7 @@ function toggleSwap(){
 }
 
 function toggleStacking() {
+    if (!chartActivityControl.toggleStack()) return;
     if (currentChart === chartBarMultiple) {
         if (chartBarMultiple.options.plotOptions.column.stacking)
             delete chartBarMultiple.options.plotOptions.column.stacking;
@@ -127,6 +265,7 @@ function toggleStacking() {
 }
 
 function toggleInvert() {
+    if (!chartActivityControl.toggleSwitch()) return;
     console.log('Current chart: ');
     console.log(currentChart);
     if (currentChart !== undefined && currentChart !== null) {

@@ -114,6 +114,15 @@ div#l-settings {
     border-color: grey;
 }
 
+#l-chart-controls .v-button.disabled {
+    background: #CECECE;
+    cursor: default;
+}
+
+#l-chart-controls .v-button {
+    cursor: pointer;
+}
+
 .v-button.v-button-dim-name.dim-name.v-button-unselectable.unselectable {
     background-color: lightgray;
     background-image: none;

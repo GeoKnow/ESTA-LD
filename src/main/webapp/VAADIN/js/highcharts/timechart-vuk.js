@@ -377,6 +377,7 @@ function createTimeChart(containerName, chartData, titleText, subtitleText, seri
         timeChartLastTime = undefined;
         minObservationValueAggregated = 0;
         maxObservationValueAggregated = 0;
+        chartActivityControl.setChartType(chartTypes.time);
         clearAggregatedColoring();
         var options = {
 	    chart: {

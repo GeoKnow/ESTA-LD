@@ -1,4 +1,6 @@
 
+/* global chartActivityControl, chartTypes */
+
 var chartBarSingleOptions;
 
 var chartBarMultipleOptions;
@@ -15,7 +17,7 @@ function hideCharts() {
 
 
 function createChartBarMultiple(chartSubtitle, arrayMultiple, chartCategories, seriesNames ) {
-	
+    chartActivityControl.setChartType(chartTypes.multi);
 	chartBarMultiple = new Highcharts.Chart(chartBarMultipleOptions);
     chartBarMultiple.setTitle({text: ''}, {text: chartSubtitle});
     chartBarMultiple.xAxis[0].setCategories(chartCategories, false);
@@ -40,6 +42,7 @@ function createChartBarMultiple(chartSubtitle, arrayMultiple, chartCategories, s
 
 function createChartBarSingle(chartSubtitle, chartCategories, chartValues, seriesName, compareMeasure) {
     if (!compareMeasure) {
+        chartActivityControl.setChartType(chartTypes.single);
         var chartBarSingle = new Highcharts.Chart(chartBarSingleOptions);
 	chartBarSingle.setTitle({text: seriesName}, {text: chartSubtitle});
 	chartBarSingle.xAxis[0].setCategories(chartCategories, false);
