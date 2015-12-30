@@ -88,18 +88,24 @@ function setControlButtonEnabled(buttonId, enabled) {
                 setSwitchEnabled(true);
                 setCompareEnabled(true);
                 setSwapEnabled(false);
+                clearAggregatedColoring();
+                $(".v-button.btn-aggreg-coloring").addClass("disabled");
                 break;
             case chartTypes.multi:
                 setStackEnabled(true);
                 setSwitchEnabled(true);
                 setCompareEnabled(false);
                 setSwapEnabled(true);
+                clearAggregatedColoring();
+                $(".v-button.btn-aggreg-coloring").addClass("disabled");
                 break;
             case chartTypes.time:
                 setStackEnabled(false);
                 setSwitchEnabled(false);
                 setCompareEnabled(true);
                 setSwapEnabled(false);
+                clearAggregatedColoring();
+                $(".v-button.btn-aggreg-coloring").removeClass("disabled");
                 break;
             default:
                 curChartType = undefined;
@@ -471,6 +477,7 @@ function uriLastPart(uri){
 }
 
 function toggleAggregatedColoring() {
+    if ($(".v-button.btn-aggreg-coloring").hasClass("disabled")) return;
     if (javaAggregatedColoring) {
         $(".v-button.btn-aggreg-coloring").removeClass("selected");
         javaUnselectAggregColoring();

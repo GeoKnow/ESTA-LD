@@ -114,7 +114,7 @@ div#l-settings {
     border-color: grey;
 }
 
-#l-chart-controls .v-button.disabled {
+#l-chart-controls .v-button.disabled, .v-button.btn-aggreg-coloring.dim-name.disabled {
     background: #CECECE;
     cursor: default;
 }
