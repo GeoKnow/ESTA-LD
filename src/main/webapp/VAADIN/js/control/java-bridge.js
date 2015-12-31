@@ -94,7 +94,7 @@ function setControlButtonEnabled(buttonId, enabled) {
             case chartTypes.multi:
                 setStackEnabled(true);
                 setSwitchEnabled(true);
-                setCompareEnabled(false);
+                setCompareEnabled(true);
                 setSwapEnabled(true);
                 clearAggregatedColoring();
                 $(".v-button.btn-aggreg-coloring").addClass("disabled");
@@ -132,7 +132,7 @@ function setControlButtonEnabled(buttonId, enabled) {
         return true;
     }
     function updateCompareEnabled() {
-        if (switchActive || swapActive || stackActive || curChartType === chartTypes.multi) {
+        if (switchActive || swapActive || stackActive) {
             setCompareEnabled(false);
         } else {
             setCompareEnabled(true);

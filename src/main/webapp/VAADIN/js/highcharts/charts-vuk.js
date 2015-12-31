@@ -16,28 +16,106 @@ function hideCharts() {
 }
 
 
-function createChartBarMultiple(chartSubtitle, arrayMultiple, chartCategories, seriesNames ) {
-    chartActivityControl.setChartType(chartTypes.multi);
-	chartBarMultiple = new Highcharts.Chart(chartBarMultipleOptions);
-    chartBarMultiple.setTitle({text: ''}, {text: chartSubtitle});
-    chartBarMultiple.xAxis[0].setCategories(chartCategories, false);
+function createChartBarMultiple(chartSubtitle, arrayMultiple, chartCategories, seriesNames, compareMeasure) {
     var numberOfSeries = seriesNames.length;
-    for (var i = numberOfSeries - 1; i >= 0; i--) {
-    	var array = new Array();
-    	for (var j = 0; j < arrayMultiple[i].length; j++) {
-			array.push(parseFloat(arrayMultiple[i][j]));
-		}
-    	chartBarMultiple.addSeries({                        
-		    name: seriesNames[i],
-		    legendIndex: i + 1,
-		    data: array,
-		    visible: (numberOfSeries > 5) ? (i === 0) : true   //if there are too many series initially show only the first one
-		}, false);
-	}
-    
-    chartBarMultiple.redraw();
-    $('#highchartsbarmultiple').show();
-    currentChart = chartBarMultiple;
+    if (!compareMeasure) {
+        chartActivityControl.setChartType(chartTypes.multi);
+        chartBarMultiple = new Highcharts.Chart(chartBarMultipleOptions);
+        chartBarMultiple.setTitle({text: ''}, {text: chartSubtitle});
+        chartBarMultiple.xAxis[0].setCategories(chartCategories, false);
+        for (var i = numberOfSeries - 1; i >= 0; i--) {
+            var array = new Array();
+            for (var j = 0; j < arrayMultiple[i].length; j++) {
+                array.push(parseFloat(arrayMultiple[i][j]));
+            }
+            chartBarMultiple.addSeries({                        
+                name: seriesNames[i],
+                legendIndex: i + 1,
+                data: array,
+                // TODO these get lost after swapping, fix it
+                events: {
+                    hide: function() {
+                        if (chartBarMultiple.series.length <= numberOfSeries) return;
+                        var index = this.chart.series.indexOf(this);
+                        if (index < 0) {console.err("Didn't find the shown/hidden series"); return; }
+                        chartBarMultiple.series[numberOfSeries + index].setVisible(false);
+                    }, 
+                    show: function() {
+                        if (chartBarMultiple.series.length <= numberOfSeries) return;
+                        var index = this.chart.series.indexOf(this);
+                        if (index < 0) {console.err("Didn't find the shown/hidden series"); return; }
+                        chartBarMultiple.series[numberOfSeries + index].setVisible(true);
+                    }
+                },
+                visible: (numberOfSeries > 5) ? (i === 0) : true   //if there are too many series initially show only the first one
+            }, false);
+        }
+
+        chartBarMultiple.redraw();
+        $('#highchartsbarmultiple').show();
+        currentChart = chartBarMultiple;   
+    } else {
+        var measPretty = measurePrettyName(compareMeasure);
+        // modify the axes if compare wasn't already active
+        if (currentChart.yAxis.length < 2) {
+            currentChart.addAxis({
+                labels: {
+                    align: 'right',
+                    x: -3
+                },
+                title: {
+                    text: measPretty
+                },
+                top: "0%",
+                height: "47%",
+                offset: 0,
+                lineWidth: 2
+            });
+            currentChart.yAxis[0].update({
+                labels: {
+                    align: 'right',
+                    x: -3
+                },
+                title: {
+                    text: measurePrettyName(javaSelectedMeasure)
+                },
+                top: "53%",
+                height: "47%",
+                offset: 0,
+                opposite: false,
+                lineWidth: 2
+            });
+            for (var i = numberOfSeries - 1; i >= 0; i--) {
+                var array = new Array();
+                for (var j = 0; j < arrayMultiple[i].length; j++) {
+                    array.push(parseFloat(arrayMultiple[i][j]));
+                }
+                chartBarMultiple.addSeries({                        
+                    name: seriesNames[i],
+//                    legendIndex: i + 1,
+                    data: array,
+                    yAxis: 1,
+                    showInLegend: false,
+                    color: chartBarMultiple.series[numberOfSeries-1-i].color,
+                    visible: chartBarMultiple.series[numberOfSeries-1-i].visible,
+                    type: chartBarMultiple.series[numberOfSeries-1-i].type
+                }, false);
+            }
+        } else { // there already are comparison series, remove them
+            for (var upIndex = 2*numberOfSeries - 1; upIndex >= numberOfSeries; upIndex--) {
+                var array = new Array();
+                var i2 = upIndex - numberOfSeries;
+                for (var j = 0; j < arrayMultiple[i2].length; j++) {
+                    array.push(parseFloat(arrayMultiple[i2][j]));
+                }   
+                chartBarMultiple.series[numberOfSeries-1-i2].update({
+                    data: array
+                }, false);
+            }
+        }
+        chartBarMultiple.redraw();
+        $('#highchartsbarmultiple').show();
+    }
 }
 
 function createChartBarSingle(chartSubtitle, chartCategories, chartValues, seriesName, compareMeasure) {
@@ -184,51 +262,6 @@ chartBarMultipleOptions = {
 	        type: 'column',
             margin: [50, 70, 70, 130]
 	    },
-//            exporting: {
-//                buttons: {
-//                    stackButton: {
-//                        text: 'Stack', 
-////                        symbol: 'square', 
-//                        onclick: function () {
-//                            if (chartBarMultiple.options.plotOptions.column.stacking)
-//                                delete chartBarMultiple.options.plotOptions.column.stacking;
-//                            else {
-//                                var plotOptionsObject = {
-//                                    column: {
-//                                        stacking: 'normal'
-//                                    }
-//                                };
-//                                $.extend(true, chartBarMultiple.options.plotOptions, plotOptionsObject);
-//                            }
-//                            
-//                            chartBarMultiple.xAxis[0].update({}, false);
-//                            chartBarMultiple.yAxis[0].update({}, false);
-//                            $(chartBarMultiple.series).each(function (k,v) {
-//                                v.update({}, false);
-//                            });
-//            
-//                            chartBarMultiple.redraw();
-//                        }
-//                    }, 
-//                    invertButton: {
-//                        text: 'Invert', 
-//                        onclick: function () {
-//                            if (chartBarMultiple.inverted)
-//                                chartBarMultiple.inverted = false;
-//                            else
-//                                chartBarMultiple.inverted = true;
-//                            
-//                            chartBarMultiple.xAxis[0].update({}, false);
-//                            chartBarMultiple.yAxis[0].update({}, false);
-//                            $(chartBarMultiple.series).each(function (k,v) {
-//                                v.update({}, false);
-//                            });
-//            
-//                            chartBarMultiple.redraw();
-//                        }
-//                    }
-//                }
-//            }, 
 	    title: {
 	    	margin: 30,
 	        text: 'Regional development incentives'
@@ -243,7 +276,7 @@ chartBarMultipleOptions = {
 	        }
 	    },
 	    yAxis: {
-	        min: 0,
+//	        min: 0,
 //	        title: {
 //	            text: 'Population (millions)',
 //	            align: 'high'
