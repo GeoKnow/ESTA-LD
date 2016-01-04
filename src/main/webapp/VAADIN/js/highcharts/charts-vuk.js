@@ -15,11 +15,20 @@ function hideCharts() {
 //	$('#highchartsbarmultiple').hide();
 }
 
+function seriesShowHide(numberOfSeries, visible) {
+    return function() {
+        if (chartBarMultiple.series.length <= numberOfSeries) return;
+        var index = this.chart.series.indexOf(this);
+        if (index < 0) { console.err("Didn't find the shown/hidden series"); return; }
+        chartBarMultiple.series[numberOfSeries + index].setVisible(visible);
+    }
+}
 
 function createChartBarMultiple(chartSubtitle, arrayMultiple, chartCategories, seriesNames, compareMeasure) {
     var numberOfSeries = seriesNames.length;
     if (!compareMeasure) {
         chartActivityControl.setChartType(chartTypes.multi);
+        chartActivityControl.numberOfSeries(numberOfSeries);
         chartBarMultiple = new Highcharts.Chart(chartBarMultipleOptions);
         chartBarMultiple.setTitle({text: ''}, {text: chartSubtitle});
         chartBarMultiple.xAxis[0].setCategories(chartCategories, false);
@@ -34,18 +43,8 @@ function createChartBarMultiple(chartSubtitle, arrayMultiple, chartCategories, s
                 data: array,
                 // TODO these get lost after swapping, fix it
                 events: {
-                    hide: function() {
-                        if (chartBarMultiple.series.length <= numberOfSeries) return;
-                        var index = this.chart.series.indexOf(this);
-                        if (index < 0) {console.err("Didn't find the shown/hidden series"); return; }
-                        chartBarMultiple.series[numberOfSeries + index].setVisible(false);
-                    }, 
-                    show: function() {
-                        if (chartBarMultiple.series.length <= numberOfSeries) return;
-                        var index = this.chart.series.indexOf(this);
-                        if (index < 0) {console.err("Didn't find the shown/hidden series"); return; }
-                        chartBarMultiple.series[numberOfSeries + index].setVisible(true);
-                    }
+                    hide: seriesShowHide(numberOfSeries, false), 
+                    show: seriesShowHide(numberOfSeries, true)
                 },
                 visible: (numberOfSeries > 5) ? (i === 0) : true   //if there are too many series initially show only the first one
             }, false);

@@ -50,11 +50,20 @@ function setControlButtonEnabled(buttonId, enabled) {
     var switchEnabled = true;
     var stackActive = false;
     var stackEnabled = true;
+    var numSeries = 0;
     function clearStatuses() {
         compareActive = false;
         swapActive = false;
         switchActive = false;
         stackActive = false;
+    }
+    function numberOfSeries(ns) {
+        if (ns === undefined)
+            return numSeries;
+        else if (!isNaN(ns) && ns>=0)
+            numSeries = ns;
+        else 
+            console.err("Illegal argument for numberOfSeries: " + ns);
     }
     function setSwapEnabled(enabled) {
         if (swapEnabled === enabled) return;
@@ -164,7 +173,8 @@ function setControlButtonEnabled(buttonId, enabled) {
         setCompareActive: setCompareActive,
         toggleSwitch: toggleSwitch,
         toggleSwap: toggleSwap,
-        toggleStack: toggleStack
+        toggleStack: toggleStack,
+        numberOfSeries: numberOfSeries
     };
 })();
 
@@ -232,9 +242,16 @@ function toggleSwap(){
 //            v.update({}, false);
 //        });
         chartBarMultiple.redraw(false);
+        var numberOfSeries = chartActivityControl.numberOfSeries();
         $(chartBarMultiple.series).each(function(index, series){
             if (moreThanFiveSeries && index < newSeries.length - 1) 
                 series.setVisible(false,false);
+            series.update({
+                events: {
+                    hide: seriesShowHide(numberOfSeries, false),
+                    show: seriesShowHide(numberOfSeries, true)
+                }
+            }, false);
         });
         chartBarMultiple.redraw();
     }
